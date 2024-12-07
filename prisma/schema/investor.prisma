@@ -1,0 +1,3 @@
+model Investor {
+  id String @id @default(uuid())
+}
