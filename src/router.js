@@ -146,7 +146,6 @@ router.get("/getAllEducation", getAllEducation);
 router.delete("/deleteEducation", deleteOneEducation);
 
 //user
-
 router.get("/getAllUsers", getAllUser);
 router.get("/getOneUser", getOneUser);
 router.delete("/deleteUser", deleteUser);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,38 +10,118 @@ export default function Signup() {
 
 	const [formData, setFormData] = useState({
 		name: "",
+		username: "",
 		email: "",
 		password: "",
+		confirmPassword: "",
 		description: "",
 		title: "Mr",
 	});
 
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
+	const [usernameTaken, setUsernameTaken] = useState(false);
+	const [emailTaken, setEmailTaken] = useState(false);
+	const [suggestedUsernames, setSuggestedUsernames] = useState([]);
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	};
 
+	useEffect(() => {
+		const checkUsername = async () => {
+			if (formData.username == "") {
+				setUsernameTaken(false);
+				return;
+			}
+			try {
+				const response = await axios.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/checkUsername`,
+					{ params: { username: formData.username } },
+				);
+				setUsernameTaken(response.data.exists);
+			} catch (e) {
+				setUsernameTaken(false);
+			}
+		};
+		const timeoutId = setTimeout(checkUsername, 500);
+		return () => clearTimeout(timeoutId);
+	}, [formData.username]);
+
+	useEffect(() => {
+		const checkEmail = async () => {
+			if (formData.email == "") {
+				setEmailTaken(false);
+				return;
+			}
+			try {
+				const response = await axios.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/checkEmail`,
+					{ params: { email: formData.email } },
+				);
+				setEmailTaken(response.data.exists);
+			} catch (e) {
+				setEmailTaken(false);
+			}
+		};
+		const timeoutId = setTimeout(checkEmail, 500);
+		return () => clearTimeout(timeoutId);
+	}, [formData.email]);
+
+	useEffect(() => {
+		const suggestUsername = async () => {
+			if (
+				!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ||
+				formData.name == ""
+			)
+				return;
+
+			try {
+				const response = await axios.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/suggestUsername`,
+					{ params: { email: formData.email, name: formData.name } },
+				);
+				console.log(response.data.username);
+				if (!usernameTaken) {
+					setSuggestedUsernames(response.data.username);
+				}
+			} catch (e) {
+				console.error("Error suggesting username", e);
+			}
+		};
+
+		const timeoutId = setTimeout(suggestUsername, 500);
+		return () => clearTimeout(timeoutId);
+	}, [formData.email, formData.name]);
+
+	const handleUsernameSuggestion = (suggestedUsername) => {
+		setFormData((prev) => ({ ...prev, username: suggestedUsername }));
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setLoading(true);
 		setMessage("");
-
+		if (isUsernameTaken) {
+			setMessage("Username is already taken.");
+			setLoading(false);
+			return;
+		}
 		try {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createUser`,
 				{ formData },
 				{ withCredentials: true },
 			);
-
 			if (response.status == 200) {
 				setMessage("Signup successful!");
 				setFormData({
 					name: "",
+					username: "",
 					email: "",
 					password: "",
+					confirmPassword: "",
 					description: "",
 					title: "Mr",
 				});
@@ -51,10 +131,15 @@ export default function Signup() {
 				setMessage("Signup failed.");
 			}
 		} catch (error) {
-			console.log(error);
-			setMessage("An error occurred. Please try again.");
+			console.log(error.response.data.message);
+			setMessage(error.response.data.message);
 		} finally {
 			setLoading(false);
+			setFormData((prev) => ({
+				...prev,
+				password: "",
+				confirmPassword: "",
+			}));
 		}
 	};
 
@@ -75,6 +160,7 @@ export default function Signup() {
 							value={formData.name}
 							onChange={handleChange}
 							required
+							placeholder={formData.name}
 							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
 						/>
 					</div>
@@ -88,8 +174,42 @@ export default function Signup() {
 							value={formData.email}
 							onChange={handleChange}
 							required
+							placeholder={formData.email}
 							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
 						/>
+						{emailTaken && (
+							<p className="text-red-500 text-sm mt-1">
+								An account exists with this email.
+							</p>
+						)}
+					</div>
+					<div className="mb-4">
+						<label className="block text-sm font-medium text-gray-700">
+							Username
+						</label>
+						<input
+							name="username"
+							value={formData.username}
+							onChange={handleChange}
+							required
+							placeholder={formData.username}
+							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+						/>
+						{usernameTaken && (
+							<p className="text-red-500 text-sm mt-1">
+								Username is already taken.
+							</p>
+						)}
+						{suggestedUsernames.map((suggestedUsername, index) => (
+							<a
+								key={index}
+								type="button"
+								onClick={() => handleUsernameSuggestion(suggestedUsername)}
+								className="px-4 py-2 rounded-lg cursor-pointer underline text-blue-700"
+							>
+								{suggestedUsername}
+							</a>
+						))}
 					</div>
 					<div className="mb-4">
 						<label className="block text-sm font-medium text-gray-700">
@@ -106,12 +226,26 @@ export default function Signup() {
 					</div>
 					<div className="mb-4">
 						<label className="block text-sm font-medium text-gray-700">
+							Confirm Password
+						</label>
+						<input
+							name="confirmPassword"
+							type="password"
+							value={formData.confirmPassword}
+							onChange={handleChange}
+							required
+							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+						/>
+					</div>
+					<div className="mb-4">
+						<label className="block text-sm font-medium text-gray-700">
 							Description
 						</label>
 						<textarea
 							name="description"
 							value={formData.description}
 							onChange={handleChange}
+							placeholder={formData.description}
 							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
 						></textarea>
 					</div>
@@ -122,6 +256,7 @@ export default function Signup() {
 						<select
 							name="title"
 							value={formData.title}
+							placeholder={formData.title}
 							onChange={handleChange}
 							className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
 						>
