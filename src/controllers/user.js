@@ -1,7 +1,6 @@
 import prisma from "../db.js";
 import NodeMailer from "nodemailer";
 import jwt from "jsonwebtoken";
-
 import { comparePasswords } from "./auth.js";
 import { hashPassword } from "./auth.js";
 import { createJWT } from "./auth.js";
@@ -13,6 +12,7 @@ export const createUser = async (req, res) => {
 		const newUser = await prisma.user.create({
 			data: {
 				name: userData.name,
+				username: userData.username,
 				email: userData.email,
 				password: hashedPassword,
 				description: userData.description || "",
@@ -98,11 +98,21 @@ export const verifyUser = async (req, res) => {
 
 export const signIn = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		let user = await prisma.user.findUnique({
 			where: {
 				email: req.body.email,
 			},
 		});
+		if (!user) {
+			user = await prisma.user.findUnique({
+				where: {
+					username: req.body.email,
+				},
+			});
+		}
+		if (!user) {
+			res.status(400).json({ message: "Error signing in" });
+		}
 
 		const isValid = await comparePasswords(req.body.password, user.password);
 
@@ -175,5 +185,69 @@ export const deleteUser = async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error deleting user" });
+	}
+};
+
+export const checkUsername = async (req, res) => {
+	try {
+		const username = await prisma.user.findUnique({
+			where: {
+				username: req.query.username,
+			},
+		});
+		if (username) {
+			res.status(200).json({ exists: true });
+		} else {
+			res.status(200).json({ exists: false });
+		}
+	} catch (e) {
+		console.error(e);
+	}
+};
+
+export const checkEmail = async (req, res) => {
+	try {
+		const email = await prisma.user.findFirst({
+			where: {
+				email: req.query.email,
+			},
+		});
+		if (email) {
+			res.status(200).json({ exists: true });
+		} else {
+			res.status(200).json({ exists: false });
+		}
+	} catch (e) {
+		console.error(e);
+	}
+};
+
+export const suggestUsername = async (req, res) => {
+	try {
+		const baseusername = req.query.email.split("@")[0].toLowerCase();
+		const basename = req.query.name.split(" ");
+		const basenameI = basename[0].toLowerCase();
+		const basenameF = basename[basename.length - 1].toLowerCase();
+		let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
+		let username2 =
+			basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
+		let username3 =
+			basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
+		let count;
+		while (await prisma.user.findUnique({ where: { username: username1 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username1 = baseusername + count;
+		}
+		while (await prisma.user.findUnique({ where: { username: username2 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username2 = basenameI + basenameF + count;
+		}
+		while (await prisma.user.findUnique({ where: { username: username3 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username3 = basenameF + "_" + basenameI + count;
+		}
+		res.status(200).json({ username: [username1, username2, username3] });
+	} catch (e) {
+		console.error(e);
 	}
 };

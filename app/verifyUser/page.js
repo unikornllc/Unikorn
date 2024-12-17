@@ -17,7 +17,7 @@ export default function Verify() {
 				setMessage(error.response.data.error || "Verification failed."),
 			)
 			.finally(() => {
-				setLoading(false); // Ensure loading stops after the request completes
+				setLoading(false);
 			});
 	});
 

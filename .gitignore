@@ -1,0 +1,6 @@
+node_modules
+.env
+.prettierrc
+/build
+.DS_Store
+.next

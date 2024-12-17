@@ -46,6 +46,8 @@ export default function SignIn() {
 		}
 	};
 
+	const loginWithGoogle = () => console.log("login with google");
+
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center bg-[#fff0db]">
 			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
@@ -62,7 +64,6 @@ export default function SignIn() {
 						</label>
 						<div className="mt-1 relative rounded-md shadow-sm">
 							<input
-								type="email"
 								id="email"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -103,7 +104,7 @@ export default function SignIn() {
 						<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
 							<FaFacebook className="text-blue-600 h-6 w-6" />
 						</button>
-						<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
+						<button onClick={loginWithGoogle} className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
 							<FcGoogle className="text-red-500 h-6 w-6" />
 						</button>
 					</div>
