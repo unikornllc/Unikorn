@@ -103,7 +103,7 @@ export default function Signup() {
 		e.preventDefault();
 		setLoading(true);
 		setMessage("");
-		if (isUsernameTaken) {
+		if (usernameTaken) {
 			setMessage("Username is already taken.");
 			setLoading(false);
 			return;

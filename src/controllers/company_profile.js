@@ -1,9 +1,14 @@
 import prisma from "../db.js";
+import NodeMailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import { comparePasswords } from "./auth.js";
+import { hashPassword } from "./auth.js";
+import { createJWT } from "./auth.js";
 
 export const createCompany = async (req, res) => {
 	try {
 		const companyData = req.body;
-
+		
 		const newCompany = await prisma.company_Profile.create({
 			data: {
 				name: companyData.name,
