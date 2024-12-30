@@ -138,7 +138,7 @@ io.use(async (socket, next) => {
 	next();
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	const users = [];
 	for (let [id, socket] of io.of("/").sockets) {
 		users.push({
@@ -148,24 +148,31 @@ io.on("connection", (socket) => {
 			messages: [],
 		});
 	}
+
 	socket.emit("users", users);
-	// notify existing users
+
 	socket.broadcast.emit("user connected", {
 		userID: socket.id,
 		username: socket.username,
+		connected: true,
+		messages: [],
 	});
+
 	socket.on("private message", ({ content, to }) => {
 		socket.to(to).emit("private message", {
 			content,
 			from: socket.id,
 		});
+		console.log(users);
 	});
+
 	socket.on("disconnect", async () => {
 		socket.broadcast.emit("user disconnected", {
 			userID: socket.id,
 			username: socket.username,
 			connected: "offline",
 		});
+		console.log("server disconnect");
 	});
 });
 
