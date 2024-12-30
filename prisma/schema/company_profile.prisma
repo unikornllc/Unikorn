@@ -8,6 +8,9 @@ enum Company_Type {
 model Company_Profile {
   id          String       @id @default(uuid())
   name        String
+  username    String       @unique
+  email       String       @unique
+  password    String
   description String       @db.VarChar(500)
   website     String
   founded     DateTime

@@ -2,7 +2,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import router from "./router.js";
 import cookieParser from "cookie-parser";
-import socketio from "socket.io";
 import http from "http";
 import csrf from "csurf";
 import jwt from "jsonwebtoken";
@@ -18,6 +17,8 @@ import {
 } from "./controllers/user.js";
 import { verifiedUser } from "./middlewares/verified_mail.js";
 import { confirmPassword } from "./middlewares/signup.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const app = express();
 
@@ -40,11 +41,10 @@ const corsOptions = {
 	optionSuccessStatus: 200,
 };
 
-const server = http.createServer(app);
-const io = socketio(server, {
+const server = createServer(app);
+const io = new Server(server, {
 	cors: {
 		origin: "http://localhost:3000",
-		methods: ["GET", "POST"],
 		credentials: true,
 	},
 });
@@ -62,55 +62,59 @@ app.get("/", (req, res, next) => {
 	}, 1);
 });
 
-io.use((socket, next) => {
-	const token = socket.handshake.headers.cookie
-		.split("; ")[0]
-		.split("token=")[1];
-	//console.log(token);
-	if (!token) {
-		return next(new Error("Authentication error"));
-	}
+// try {
+// 	io.use((socket, next) => {
+// 		// const token = socket.handshake.headers.cookie
+// 		// 	.split("; ")[0]
+// 		// 	.split("token=")[1];
+// 		const token =
+// 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmZTI3NTUyLTcyOTQtNDdiNy1iNzkwLTQ1YTJhYjg3Mjk4MyIsImVtYWlsIjoiYm9vZHlAZ21haWwuY29tIiwiaWF0IjoxNzM1MDY3MTU4fQ.YOQsjbW8MXG2a6CHOO_vQleoTkWAuZx3PzkgAPV8Zio";
+// 		if (!token) {
+// 			return next(new Error("Authentication error"));
+// 		}
+// 		jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+// 			if (err) {
+// 				return next(new Error("Authentication error"));
+// 			}
+// 			socket.user = decoded;
+// 			//next();
+// 		});
+// 		//next();
+// 	});
 
-	// Verify the token (for example, using JWT)
-	jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-		if (err) {
-			return next(new Error("Authentication error"));
-		}
-		socket.user = decoded; // Attach the decoded user data to the socket
-		next();
-	});
-});
+// 	io.on("connection", (socket) => {
+// 		console.log(`A user connected: ${socket.id}`);
 
-io.on("connection", (socket) => {
-	console.log(`A user connected: ${socket.id}`);
+// 		socket.on("joinRoom", ({ senderId, receiverId }) => {
+// 			const room = getRoomName(senderId, receiverId);
+// 			socket.join(room);
+// 			console.log(`User ${senderId} joined room: ${room}`);
+// 		});
 
-	socket.on("joinRoom", ({ senderId, receiverId }) => {
-		const room = getRoomName(senderId, receiverId);
-		socket.join(room);
-		console.log(`User ${senderId} joined room: ${room}`);
-	});
+// 		socket.on("sendMessage", ({ senderId, receiverId, content }) => {
+// 			const room = getRoomName(senderId, receiverId);
 
-	socket.on("sendMessage", ({ senderId, receiverId, content }) => {
-		const room = getRoomName(senderId, receiverId);
+// 			io.to(room).emit("newMessage", {
+// 				senderId,
+// 				receiverId,
+// 				content,
+// 				timestamp: new Date(),
+// 			});
 
-		io.to(room).emit("newMessage", {
-			senderId,
-			receiverId,
-			content,
-			timestamp: new Date(),
-		});
+// 			console.log(content);
+// 		});
 
-		console.log(content);
-	});
+// 		socket.on("disconnect", () => {
+// 			console.log(`User disconnected: ${socket.id}`);
+// 		});
+// 	});
 
-	socket.on("disconnect", () => {
-		console.log(`User disconnected: ${socket.id}`);
-	});
-});
-
-function getRoomName(userId1, userId2) {
-	return [userId1, userId2].sort().join("_");
-}
+// 	function getRoomName(userId1, userId2) {
+// 		return [userId1, userId2].sort().join("_");
+// 	}
+// } catch (e) {
+// 	console.log(e);
+// }l
 
 app.post("/createUser", confirmPassword, createUser);
 app.get("/verifyUser", verifyUser);
@@ -122,6 +126,47 @@ app.use(protect, router);
 
 server.listen(3002, () => {
 	console.log("Server is running on port 3002");
+});
+
+io.use(async (socket, next) => {
+	const username = socket.handshake.auth.username;
+	console.log(socket.handshake.auth.username);
+	if (!username) {
+		return next(new Error("invalid username"));
+	}
+	socket.username = username;
+	next();
+});
+
+io.on("connection", (socket) => {
+	const users = [];
+	for (let [id, socket] of io.of("/").sockets) {
+		users.push({
+			userID: id,
+			username: socket.username,
+			connected: "online",
+			messages: [],
+		});
+	}
+	socket.emit("users", users);
+	// notify existing users
+	socket.broadcast.emit("user connected", {
+		userID: socket.id,
+		username: socket.username,
+	});
+	socket.on("private message", ({ content, to }) => {
+		socket.to(to).emit("private message", {
+			content,
+			from: socket.id,
+		});
+	});
+	socket.on("disconnect", async () => {
+		socket.broadcast.emit("user disconnected", {
+			userID: socket.id,
+			username: socket.username,
+			connected: "offline",
+		});
+	});
 });
 
 export default app;
