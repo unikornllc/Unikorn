@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function MessagePanel({ user, onInput, className }) {
 	const [message, setMessage] = useState("");
@@ -26,13 +26,14 @@ export default function MessagePanel({ user, onInput, className }) {
 			</div>
 
 			<ul>
-				{console.log(user.messages)}
 				{user.messages.map((message, index) => (
 					<li key={index}>
 						{displaySender(message, index, user.messages) && (
-							<div>{message.fromSelf ? "(yourself)" : user.username}</div>
+							<div className="sender">
+								{message.fromSelf ? "(yourself)" : user.username}
+							</div>
 						)}
-						<p>{message.content}</p>
+						<span>{message.content}</span>
 					</li>
 				))}
 			</ul>

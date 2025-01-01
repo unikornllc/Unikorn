@@ -62,59 +62,25 @@ app.get("/", (req, res, next) => {
 	}, 1);
 });
 
-// try {
-// 	io.use((socket, next) => {
-// 		// const token = socket.handshake.headers.cookie
-// 		// 	.split("; ")[0]
-// 		// 	.split("token=")[1];
-// 		const token =
-// 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmZTI3NTUyLTcyOTQtNDdiNy1iNzkwLTQ1YTJhYjg3Mjk4MyIsImVtYWlsIjoiYm9vZHlAZ21haWwuY29tIiwiaWF0IjoxNzM1MDY3MTU4fQ.YOQsjbW8MXG2a6CHOO_vQleoTkWAuZx3PzkgAPV8Zio";
-// 		if (!token) {
-// 			return next(new Error("Authentication error"));
-// 		}
-// 		jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-// 			if (err) {
-// 				return next(new Error("Authentication error"));
-// 			}
-// 			socket.user = decoded;
-// 			//next();
-// 		});
-// 		//next();
-// 	});
+const cookieOptions = {
+	httpOnly: false,
+	secure: false,
+	maxAge: 24 * 60 * 60 * 1000,
+	sameSite: "lax",
+};
 
-// 	io.on("connection", (socket) => {
-// 		console.log(`A user connected: ${socket.id}`);
-
-// 		socket.on("joinRoom", ({ senderId, receiverId }) => {
-// 			const room = getRoomName(senderId, receiverId);
-// 			socket.join(room);
-// 			console.log(`User ${senderId} joined room: ${room}`);
-// 		});
-
-// 		socket.on("sendMessage", ({ senderId, receiverId, content }) => {
-// 			const room = getRoomName(senderId, receiverId);
-
-// 			io.to(room).emit("newMessage", {
-// 				senderId,
-// 				receiverId,
-// 				content,
-// 				timestamp: new Date(),
-// 			});
-
-// 			console.log(content);
-// 		});
-
-// 		socket.on("disconnect", () => {
-// 			console.log(`User disconnected: ${socket.id}`);
-// 		});
-// 	});
-
-// 	function getRoomName(userId1, userId2) {
-// 		return [userId1, userId2].sort().join("_");
-// 	}
-// } catch (e) {
-// 	console.log(e);
-// }l
+// app.use(
+// 	session({
+// 		secret: randomString.generate({
+// 			length: 20,
+// 			charset: "alphanumeric",
+// 		}),
+// 		resave: false,
+// 		saveUninitialized: false,
+// 		cookie: cookieOptions,
+// 		store: sessionStore,
+// 	}),
+// );
 
 app.post("/createUser", confirmPassword, createUser);
 app.get("/verifyUser", verifyUser);
@@ -128,17 +94,30 @@ server.listen(3002, () => {
 	console.log("Server is running on port 3002");
 });
 
-io.use(async (socket, next) => {
+io.use((socket, next) => {
+	const sessionID = socket.handshake.auth.sessionID;
+	if (sessionID) {
+		// find existing session
+		const session = sessionStore.findSession(sessionID);
+		if (session) {
+			socket.sessionID = sessionID;
+			socket.userID = session.userID;
+			socket.username = session.username;
+			return next();
+		}
+	}
 	const username = socket.handshake.auth.username;
-	console.log(socket.handshake.auth.username);
 	if (!username) {
 		return next(new Error("invalid username"));
 	}
+	// create new session
+	socket.sessionID = randomId();
+	socket.userID = randomId();
 	socket.username = username;
 	next();
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	const users = [];
 	for (let [id, socket] of io.of("/").sockets) {
 		users.push({
@@ -148,24 +127,31 @@ io.on("connection", (socket) => {
 			messages: [],
 		});
 	}
+
 	socket.emit("users", users);
-	// notify existing users
+
 	socket.broadcast.emit("user connected", {
 		userID: socket.id,
 		username: socket.username,
+		connected: "online",
+		messages: [],
 	});
+
 	socket.on("private message", ({ content, to }) => {
 		socket.to(to).emit("private message", {
 			content,
 			from: socket.id,
 		});
+		console.log(users);
 	});
+
 	socket.on("disconnect", async () => {
 		socket.broadcast.emit("user disconnected", {
 			userID: socket.id,
 			username: socket.username,
 			connected: "offline",
 		});
+		console.log("server disconnect");
 	});
 });
 
