@@ -33,7 +33,7 @@ export default function MessagePanel({ user, onInput, className }) {
 								{message.fromSelf ? "(yourself)" : user.username}
 							</div>
 						)}
-						<p>{message.content}</p>
+						<span>{message.content}</span>
 					</li>
 				))}
 			</ul>

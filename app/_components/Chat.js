@@ -6,11 +6,27 @@ import MessagePanel from "./MessagePanel";
 export default function Chat() {
 	const [selectedUser, setSelectedUser] = useState(null);
 	const [users, setUsers] = useState([]);
+	const [messages, setMessages] = useState([]);
 
 	// Initialize reactive properties for each user
 	const initReactiveProperties = (user) => {
 		user.hasNewMessages = false;
 	};
+
+	useEffect(() => {
+		console.log(users);
+	});
+
+	useEffect(() => {
+		if (selectedUser) {
+			const updatedUser = users.find(
+				(user) => user.userID === selectedUser.userID,
+			);
+			if (updatedUser) {
+				setSelectedUser(updatedUser);
+			}
+		}
+	}, [users]);
 
 	useEffect(() => {
 		// Socket event listeners
@@ -42,10 +58,10 @@ export default function Chat() {
 			});
 		});
 
-		socket.on("user disconnected", (id) => {
+		socket.on("user disconnected", (disconnectedUser) => {
 			setUsers((prevUsers) => {
 				return prevUsers.map((user) => {
-					if (user.userID === id) {
+					if (user.userID == disconnectedUser.userID) {
 						user.connected = "offline";
 					}
 					return user;
@@ -55,20 +71,31 @@ export default function Chat() {
 		});
 
 		socket.on("private message", ({ content, from }) => {
-			setUsers((prevUsers) => {
-				return prevUsers.map((user) => {
+			setUsers((prevUsers) =>
+				prevUsers.map((user) => {
 					if (user.userID === from) {
-						user.messages.push({
-							content,
-							fromSelf: false,
-						});
-						if (user !== selectedUser) {
-							user.hasNewMessages = true;
-						}
+						return {
+							...user,
+							messages: [...user.messages, { content, fromSelf: false }],
+							hasNewMessages: selectedUser?.userID !== from, // Mark as new message if not selected
+						};
 					}
 					return user;
-				});
-			});
+				}),
+			);
+			// const msg = {
+			// 	content,
+			// 	fromSelf: true,
+			// };
+			// setMessages((prevMessages) => [...prevMessages, msg]);
+			// for (let user in users) {
+			// 	if (user.userID === from) {
+			// 		user.messages.push({ content, fromSelf: false });
+			// 		if (user !== selectedUser) {
+			// 			user.hasNewMessages = true;
+			// 		}
+			// 	}
+			// }
 		});
 
 		socket.on("connect", () => {
@@ -103,30 +130,27 @@ export default function Chat() {
 			socket.off("user disconnected");
 			socket.off("private message");
 		};
-	}, [selectedUser]);
+	}, [users, selectedUser, messages]);
 
 	const handleMessage = (content) => {
 		if (selectedUser) {
-			selectedUser.messages.push({
-				content,
-				fromSelf: true,
-			});
+			// Emit the message
 			socket.emit("private message", {
 				content,
 				to: selectedUser.userID,
 			});
 
-			// setUsers((prevUsers) => {
-			// 	return prevUsers.map((user) => {
-			// 		if (user.userID === selectedUser.userID) {
-			// 			user.messages.push({
-			// 				content,
-			// 				fromSelf: true,
-			// 			});
-			// 		}
-			// 		return user;
-			// 	});
-			// });
+			// Update the user's messages immutably
+			setUsers((prevUsers) =>
+				prevUsers.map((user) =>
+					user.userID === selectedUser.userID
+						? {
+								...user,
+								messages: [...user.messages, { content, fromSelf: true }],
+							}
+						: user,
+				),
+			);
 		}
 	};
 
