@@ -6,177 +6,177 @@ import { hashPassword } from "./auth.js";
 import { createJWT } from "./auth.js";
 
 export const createUser = async (req, res) => {
-  try {
-    const userData = req.body.formData;
-    const hashedPassword = await hashPassword(userData.password);
-    const newUser = await prisma.user.create({
-      data: {
-        name: userData.name,
-        username: userData.username,
-        email: userData.email,
-        password: hashedPassword,
-        description: userData.description || "",
-        title: userData.title,
-      },
-    });
+	try {
+		const userData = req.body.formData;
+		const hashedPassword = await hashPassword(userData.password);
+		const newUser = await prisma.user.create({
+			data: {
+				name: userData.name,
+				username: userData.username,
+				email: userData.email,
+				password: hashedPassword,
+				description: userData.description || "",
+				title: userData.title,
+			},
+		});
 
-    const email = userData.email;
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+		const email = userData.email;
+		const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+			expiresIn: "1h",
+		});
 
-    res.cookie("token", token, {
-      httpOnly: false,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "lax",
-    });
+		res.cookie("token", token, {
+			httpOnly: false,
+			secure: false,
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: "lax",
+		});
 
-    res.cookie("userId", newUser.id, {
-      httpOnly: false,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-    });
+		res.cookie("userId", newUser.id, {
+			httpOnly: false,
+			secure: false,
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: "strict",
+		});
 
-    const transporter = NodeMailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "unikorn2025@gmail.com",
-        pass: "sihs kadv vsdb yeqn",
-      },
-    });
+		const transporter = NodeMailer.createTransport({
+			service: "gmail",
+			auth: {
+				user: "unikorn2025@gmail.com",
+				pass: "sihs kadv vsdb yeqn",
+			},
+		});
 
-    const verificationLink = `${process.env.FRONTEND}/verifyUser`;
-    await transporter.sendMail({
-      from: "unikorn2025@gmail.com",
-      to: email,
-      subject: "Verify Your Email",
-      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`,
-    });
+		const verificationLink = `${process.env.FRONTEND}/verifyUser`;
+		await transporter.sendMail({
+			from: "unikorn2025@gmail.com",
+			to: email,
+			subject: "Verify Your Email",
+			html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`,
+		});
 
-    res.status(200).json({
-      message: "User created successfully",
-      user: newUser,
-    });
-  } catch (error) {
-    console.error("Error creating user:", error);
+		res.status(200).json({
+			message: "User created successfully",
+			user: newUser,
+		});
+	} catch (error) {
+		console.error("Error creating user:", error);
 
-    res.status(400).json({
-      message: "Error creating user",
-      error: error.message,
-    });
-  }
+		res.status(400).json({
+			message: "Error creating user",
+			error: error.message,
+		});
+	}
 };
 
 export const verifyUser = async (req, res) => {
-  const token = req.cookies["token"];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({
-      where: {
-        email: decoded.email,
-      },
-    });
-    if (!user) {
-      return res.status(400).json({ error: "Invalid token" });
-    }
-    await prisma.user.update({
-      where: {
-        email: decoded.email,
-      },
-      data: {
-        verified: true,
-      },
-    });
-    res.status(200).send("Account successfully verified! You can now log in.");
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error: "Invalid or expired token" });
-  }
+	const token = req.cookies["token"];
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const user = await prisma.user.findUnique({
+			where: {
+				email: decoded.email,
+			},
+		});
+		if (!user) {
+			return res.status(400).json({ error: "Invalid token" });
+		}
+		await prisma.user.update({
+			where: {
+				email: decoded.email,
+			},
+			data: {
+				verified: true,
+			},
+		});
+		res.status(200).send("Account successfully verified! You can now log in.");
+	} catch (error) {
+		console.log(error);
+		res.status(400).json({ error: "Invalid or expired token" });
+	}
 };
 
 export const signIn = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+	try {
+		const { email, password } = req.body;
 
-    // Find the user or company
-    const user =
-      (await prisma.user.findUnique({
-        where: {
-          email: email,
-        },
-      })) ||
-      (await prisma.user.findUnique({
-        where: {
-          username: email,
-        },
-      }));
+		// Find the user or company
+		const user =
+			(await prisma.user.findUnique({
+				where: {
+					email: email,
+				},
+			})) ||
+			(await prisma.user.findUnique({
+				where: {
+					username: email,
+				},
+			}));
 
-    const company = !user
-      ? (await prisma.company_Profile.findUnique({
-          where: {
-            username: email,
-          },
-        })) ||
-        (await prisma.company_Profile.findUnique({
-          where: {
-            email: email,
-          },
-        }))
-      : null;
+		const company = !user
+			? (await prisma.company_Profile.findUnique({
+					where: {
+						username: email,
+					},
+				})) ||
+				(await prisma.company_Profile.findUnique({
+					where: {
+						email: email,
+					},
+				}))
+			: null;
 
-    // If neither user nor company is found
-    if (!user && !company) {
-      return res
-        .status(400)
-        .json({ message: "Error signing in: Invalid credentials." });
-    }
+		// If neither user nor company is found
+		if (!user && !company) {
+			return res
+				.status(400)
+				.json({ message: "Error signing in: Invalid credentials." });
+		}
 
-    // Validate password
-    const account = user || company;
-    const isValid = await comparePasswords(password, account.password);
-    if (!isValid) {
-      return res.status(401).json({ message: "Invalid password." });
-    }
+		// Validate password
+		const account = user || company;
+		const isValid = await comparePasswords(password, account.password);
+		if (!isValid) {
+			return res.status(401).json({ message: "Invalid password." });
+		}
 
-    // Create JWT token
-    const token = createJWT({
-      id: account.id,
-      role: user ? "user" : "company",
-    });
+		// Create JWT token
+		const token = createJWT({
+			id: account.id,
+			role: user ? "user" : "company",
+		});
 
-    // Set cookies
-    res.cookie("token", token, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+		// Set cookies
+		res.cookie("token", token, {
+			httpOnly: false,
+			secure: false,
+			sameSite: "Lax",
+			maxAge: 24 * 60 * 60 * 1000, // 1 day
+		});
 
-    res.cookie("userId", account.id, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+		res.cookie("userId", account.id, {
+			httpOnly: false,
+			secure: false,
+			sameSite: "Lax",
+			maxAge: 24 * 60 * 60 * 1000, // 1 day
+		});
 
-    // Successful login response
-    res.status(200).json({ message: "Login successful" });
-  } catch (error) {
-    console.error("Error during sign-in:", error);
-    res.status(500).json({ message: "An error occurred while signing in." });
-  }
+		// Successful login response
+		res.status(200).json({ message: "Login successful" });
+	} catch (error) {
+		console.error("Error during sign-in:", error);
+		res.status(500).json({ message: "An error occurred while signing in." });
+	}
 };
 
 export const getAllUser = async (req, res) => {
-  try {
-    const user = await prisma.user.findMany();
-    res.status(200).json(user);
-  } catch (e) {
-    console.error(e);
-    res.status(400).json({ message: "Error fetching users" });
-  }
+	try {
+		const user = await prisma.user.findMany();
+		res.status(200).json(user);
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching users" });
+	}
 };
 export const getOneUser = async (req, res) => {
 	try {
@@ -185,7 +185,7 @@ export const getOneUser = async (req, res) => {
 				username: req.query.username,
 			},
 		});
-		const { verified, id, password, email, ...safeUser } = user;
+		const { verified, password, email, ...safeUser } = user;
 		res.status(200).json({ user: safeUser });
 	} catch (e) {
 		console.error(e);
@@ -224,50 +224,123 @@ export const isCurrentUser = async (req, res) => {
 	}
 };
 export const deleteUser = async (req, res) => {
-  try {
-    const id = req.body.userId;
-    await prisma.social_Media.deleteMany({ where: { userId: id } });
-    await prisma.interest.deleteMany({ where: { userId: id } });
-    await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
-    await prisma.expertise.deleteMany({ where: { userId: id } });
-    await prisma.education.deleteMany({ where: { userId: id } });
-    await prisma.language.deleteMany({ where: { userId: id } });
-    await prisma.startup_Experience.deleteMany({ where: { userId: id } });
-    await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
-    const user = await prisma.user.delete({ where: { id: id } });
-    res.status(200).json(user);
-  } catch (e) {
-    console.error(e);
-    res.status(400).json({ message: "Error deleting user" });
-  }
+	try {
+		const id = req.body.userId;
+		await prisma.social_Media.deleteMany({ where: { userId: id } });
+		await prisma.interest.deleteMany({ where: { userId: id } });
+		await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
+		await prisma.expertise.deleteMany({ where: { userId: id } });
+		await prisma.education.deleteMany({ where: { userId: id } });
+		await prisma.language.deleteMany({ where: { userId: id } });
+		await prisma.startup_Experience.deleteMany({ where: { userId: id } });
+		await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
+		const user = await prisma.user.delete({ where: { id: id } });
+		res.status(200).json(user);
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error deleting user" });
+	}
 };
 
 export const suggestUsername = async (req, res) => {
-  try {
-    const baseusername = req.query.email.split("@")[0].toLowerCase();
-    const basename = req.query.name.split(" ");
-    const basenameI = basename[0].toLowerCase();
-    const basenameF = basename[basename.length - 1].toLowerCase();
-    let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
-    let username2 =
-      basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
-    let username3 =
-      basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
-    let count;
-    while (await prisma.user.findUnique({ where: { username: username1 } })) {
-      count = Math.floor(Math.random() * 900) + 100;
-      username1 = baseusername + count;
-    }
-    while (await prisma.user.findUnique({ where: { username: username2 } })) {
-      count = Math.floor(Math.random() * 900) + 100;
-      username2 = basenameI + basenameF + count;
-    }
-    while (await prisma.user.findUnique({ where: { username: username3 } })) {
-      count = Math.floor(Math.random() * 900) + 100;
-      username3 = basenameF + "_" + basenameI + count;
-    }
-    res.status(200).json({ username: [username1, username2, username3] });
-  } catch (e) {
-    console.error(e);
-  }
+	try {
+		const baseusername = req.query.email.split("@")[0].toLowerCase();
+		const basename = req.query.name.split(" ");
+		const basenameI = basename[0].toLowerCase();
+		const basenameF = basename[basename.length - 1].toLowerCase();
+		let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
+		let username2 =
+			basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
+		let username3 =
+			basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
+		let count;
+		while (await prisma.user.findUnique({ where: { username: username1 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username1 = baseusername + count;
+		}
+		while (await prisma.user.findUnique({ where: { username: username2 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username2 = basenameI + basenameF + count;
+		}
+		while (await prisma.user.findUnique({ where: { username: username3 } })) {
+			count = Math.floor(Math.random() * 900) + 100;
+			username3 = basenameF + "_" + basenameI + count;
+		}
+		res.status(200).json({ username: [username1, username2, username3] });
+	} catch (e) {
+		console.error(e);
+	}
+};
+
+export const followUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (isAlreadyFollowing) {
+			res.status(400).json({ message: "User already followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: [...user.following, req.body.followerId],
+					},
+				},
+			});
+			res.status(200).json({ message: "User followed successfully" });
+		}
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error following user" });
+	}
+};
+
+export const isFollowingUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+		const followingId = await prisma.user.findUnique({
+			where: { username: req.query.username },
+			select: { id: true },
+		});
+		const isFollowing = user.following.includes(followingId.id);
+		console.log(isFollowing);
+		res.status(200).json({ isFollowing });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
+
+export const unfollowUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (!isAlreadyFollowing) {
+			res.status(400).json({ message: "User not followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: user.following.filter((id) => id != req.body.followerId),
+					},
+				},
+			});
+			res.status(200).json({ message: "User unfollowed successfully" });
+		}
+	} catch (error) {
+		console.error(error);
+		res.status(400).json({ message: "Error unfollowing user" });
+	}
 };
