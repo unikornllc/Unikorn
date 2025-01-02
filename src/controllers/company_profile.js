@@ -100,18 +100,14 @@ export const deleteCompany = async (req, res) => {
 };
 
 export const isCurrentCompany = async (req, res) => {
-  let isCurrentCompany = false;
   try {
+    let isCurrentCompany = false;
     const company = await prisma.company_Profile.findUnique({
       where: {
         username: req.query.username,
       },
     });
-    if (
-      req.cookies.companyId &&
-      company.id &&
-      req.cookies.companyId == company.id
-    ) {
+    if (req.cookies.userId && company.id && req.cookies.userId == company.id) {
       isCurrentCompany = true;
     }
     res.status(200).json({ company, isCurrentCompany });
@@ -129,7 +125,22 @@ export const getOneCompanyProfile = async (req, res) => {
       },
     });
     const { id, password, email, ...safeCompany } = company;
-    res.status(200).json({ safeCompany });
+    res.status(200).json({ company: safeCompany });
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error fetching company" });
+  }
+};
+
+export const getCurrentCompanyProfile = async (req, res) => {
+  try {
+    const company = await prisma.company_Profile.findUnique({
+      where: {
+        id: req.cookies.userId,
+      },
+    });
+    const { id, password, email, ...safeCompany } = company;
+    res.status(200).json({ company: safeCompany });
   } catch (e) {
     console.error(e);
     res.status(400).json({ message: "Error fetching company" });

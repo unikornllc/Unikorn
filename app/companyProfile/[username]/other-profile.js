@@ -68,7 +68,7 @@ export default function OtherProfile({ username }) {
             withCredentials: true,
           }
         );
-        setCompanyData(res.data.safeCompany);
+        setCompanyData(res.data.company);
       } catch (err) {
         console.error("Error fetching user data:", err);
       }

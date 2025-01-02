@@ -17,10 +17,14 @@ export default async function UserProfile({ params }) {
         },
       }
     );
-    const isCurrentUser = res.data.isCurrentUser;
+    const isCurrentCompany = res.data.isCurrentCompany;
     return (
       <div>
-        {isCurrentUser ? <MyProfile /> : <OtherProfile username={username} />}
+        {isCurrentCompany ? (
+          <MyProfile />
+        ) : (
+          <OtherProfile username={username} />
+        )}
       </div>
     );
   } catch (error) {
