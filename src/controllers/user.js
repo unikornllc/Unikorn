@@ -6,248 +6,238 @@ import { hashPassword } from "./auth.js";
 import { createJWT } from "./auth.js";
 
 export const createUser = async (req, res) => {
-	try {
-		const userData = req.body.formData;
-		const hashedPassword = await hashPassword(userData.password);
-		const newUser = await prisma.user.create({
-			data: {
-				name: userData.name,
-				username: userData.username,
-				email: userData.email,
-				password: hashedPassword,
-				description: userData.description || "",
-				title: userData.title,
-			},
-		});
+  try {
+    const userData = req.body.formData;
+    const hashedPassword = await hashPassword(userData.password);
+    const newUser = await prisma.user.create({
+      data: {
+        name: userData.name,
+        username: userData.username,
+        email: userData.email,
+        password: hashedPassword,
+        description: userData.description || "",
+        title: userData.title,
+      },
+    });
 
-		const email = userData.email;
-		const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-			expiresIn: "1h",
-		});
+    const email = userData.email;
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-		res.cookie("token", token, {
-			httpOnly: false,
-			secure: false,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: "lax",
-		});
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: false,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+    });
 
-		res.cookie("userId", newUser.id, {
-			httpOnly: false,
-			secure: false,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: "strict",
-		});
+    res.cookie("userId", newUser.id, {
+      httpOnly: false,
+      secure: false,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+    });
 
-		const transporter = NodeMailer.createTransport({
-			service: "gmail",
-			auth: {
-				user: "unikorn2025@gmail.com",
-				pass: "sihs kadv vsdb yeqn",
-			},
-		});
+    const transporter = NodeMailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "unikorn2025@gmail.com",
+        pass: "sihs kadv vsdb yeqn",
+      },
+    });
 
-		const verificationLink = `${process.env.FRONTEND}/verifyUser`;
-		await transporter.sendMail({
-			from: "unikorn2025@gmail.com",
-			to: email,
-			subject: "Verify Your Email",
-			html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`,
-		});
+    const verificationLink = `${process.env.FRONTEND}/verifyUser`;
+    await transporter.sendMail({
+      from: "unikorn2025@gmail.com",
+      to: email,
+      subject: "Verify Your Email",
+      html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`,
+    });
 
-		res.status(200).json({
-			message: "User created successfully",
-			user: newUser,
-		});
-	} catch (error) {
-		console.error("Error creating user:", error);
+    res.status(200).json({
+      message: "User created successfully",
+      user: newUser,
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
 
-		res.status(400).json({
-			message: "Error creating user",
-			error: error.message,
-		});
-	}
+    res.status(400).json({
+      message: "Error creating user",
+      error: error.message,
+    });
+  }
 };
 
 export const verifyUser = async (req, res) => {
-	const token = req.cookies["token"];
-	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		const user = await prisma.user.findUnique({
-			where: {
-				email: decoded.email,
-			},
-		});
-		if (!user) {
-			return res.status(400).json({ error: "Invalid token" });
-		}
-		await prisma.user.update({
-			where: {
-				email: decoded.email,
-			},
-			data: {
-				verified: true,
-			},
-		});
-		res.status(200).send("Account successfully verified! You can now log in.");
-	} catch (error) {
-		console.log(error);
-		res.status(400).json({ error: "Invalid or expired token" });
-	}
+  const token = req.cookies["token"];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await prisma.user.findUnique({
+      where: {
+        email: decoded.email,
+      },
+    });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid token" });
+    }
+    await prisma.user.update({
+      where: {
+        email: decoded.email,
+      },
+      data: {
+        verified: true,
+      },
+    });
+    res.status(200).send("Account successfully verified! You can now log in.");
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "Invalid or expired token" });
+  }
 };
 
 export const signIn = async (req, res) => {
-	try {
-		let user = await prisma.user.findUnique({
-			where: {
-				email: req.body.email,
-			},
-		});
-		if (!user) {
-			user = await prisma.user.findUnique({
-				where: {
-					username: req.body.email,
-				},
-			});
-		}
-		if (!user) {
-			res.status(400).json({ message: "Error signing in" });
-		}
+  try {
+    const { email, password } = req.body;
 
-		const isValid = await comparePasswords(req.body.password, user.password);
+    // Find the user or company
+    const user =
+      (await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      })) ||
+      (await prisma.user.findUnique({
+        where: {
+          username: email,
+        },
+      }));
 
-		if (!isValid) {
-			res.status(401);
-			res.json({ message: "nope" });
-			return;
-		}
+    const company = !user
+      ? (await prisma.company_Profile.findUnique({
+          where: {
+            username: email,
+          },
+        })) ||
+        (await prisma.company_Profile.findUnique({
+          where: {
+            email: email,
+          },
+        }))
+      : null;
 
-		const token = createJWT(user);
+    // If neither user nor company is found
+    if (!user && !company) {
+      return res
+        .status(400)
+        .json({ message: "Error signing in: Invalid credentials." });
+    }
 
-		res.cookie("token", token, {
-			httpOnly: true,
-			secure: true,
-			sameSite: "Strict",
-			maxAge: 24 * 60 * 60 * 1000,
-		});
+    // Validate password
+    const account = user || company;
+    const isValid = await comparePasswords(password, account.password);
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid password." });
+    }
 
-		res.cookie("userId", user.id, {
-			httpOnly: true,
-			secure: true,
-			sameSite: "Strict",
-			maxAge: 24 * 60 * 60 * 1000,
-		});
-		//console.log(res);
-		res.status(200).json({ message: "Login successful" });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error signing in" });
-	}
+    // Create JWT token
+    const token = createJWT({
+      id: account.id,
+      role: user ? "user" : "company",
+    });
+
+    // Set cookies
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    res.cookie("userId", account.id, {
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    // Successful login response
+    res.status(200).json({ message: "Login successful" });
+  } catch (error) {
+    console.error("Error during sign-in:", error);
+    res.status(500).json({ message: "An error occurred while signing in." });
+  }
 };
 
 export const getAllUser = async (req, res) => {
-	try {
-		const user = await prisma.user.findMany();
-		res.status(200).json(user);
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching users" });
-	}
+  try {
+    const user = await prisma.user.findMany();
+    res.status(200).json(user);
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error fetching users" });
+  }
 };
 
 export const getOneUser = async (req, res) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				id: req.body.userId,
-			},
-		});
-		res.status(200).json({ data: user });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching users" });
-	}
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.body.userId,
+      },
+    });
+    res.status(200).json({ data: user });
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error fetching users" });
+  }
 };
 
 export const deleteUser = async (req, res) => {
-	try {
-		const id = req.body.userId;
-		await prisma.social_Media.deleteMany({ where: { userId: id } });
-		await prisma.interest.deleteMany({ where: { userId: id } });
-		await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
-		await prisma.expertise.deleteMany({ where: { userId: id } });
-		await prisma.education.deleteMany({ where: { userId: id } });
-		await prisma.language.deleteMany({ where: { userId: id } });
-		await prisma.startup_Experience.deleteMany({ where: { userId: id } });
-		await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
-		const user = await prisma.user.delete({ where: { id: id } });
-		res.status(200).json(user);
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error deleting user" });
-	}
-};
-
-export const checkUsername = async (req, res) => {
-	try {
-		const username = await prisma.user.findUnique({
-			where: {
-				username: req.query.username,
-			},
-		});
-		if (username) {
-			res.status(200).json({ exists: true });
-		} else {
-			res.status(200).json({ exists: false });
-		}
-	} catch (e) {
-		console.error(e);
-	}
-};
-
-export const checkEmail = async (req, res) => {
-	try {
-		const email = await prisma.user.findFirst({
-			where: {
-				email: req.query.email,
-			},
-		});
-		if (email) {
-			res.status(200).json({ exists: true });
-		} else {
-			res.status(200).json({ exists: false });
-		}
-	} catch (e) {
-		console.error(e);
-	}
+  try {
+    const id = req.body.userId;
+    await prisma.social_Media.deleteMany({ where: { userId: id } });
+    await prisma.interest.deleteMany({ where: { userId: id } });
+    await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
+    await prisma.expertise.deleteMany({ where: { userId: id } });
+    await prisma.education.deleteMany({ where: { userId: id } });
+    await prisma.language.deleteMany({ where: { userId: id } });
+    await prisma.startup_Experience.deleteMany({ where: { userId: id } });
+    await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
+    const user = await prisma.user.delete({ where: { id: id } });
+    res.status(200).json(user);
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error deleting user" });
+  }
 };
 
 export const suggestUsername = async (req, res) => {
-	try {
-		const baseusername = req.query.email.split("@")[0].toLowerCase();
-		const basename = req.query.name.split(" ");
-		const basenameI = basename[0].toLowerCase();
-		const basenameF = basename[basename.length - 1].toLowerCase();
-		let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
-		let username2 =
-			basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
-		let username3 =
-			basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
-		let count;
-		while (await prisma.user.findUnique({ where: { username: username1 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username1 = baseusername + count;
-		}
-		while (await prisma.user.findUnique({ where: { username: username2 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username2 = basenameI + basenameF + count;
-		}
-		while (await prisma.user.findUnique({ where: { username: username3 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username3 = basenameF + "_" + basenameI + count;
-		}
-		res.status(200).json({ username: [username1, username2, username3] });
-	} catch (e) {
-		console.error(e);
-	}
+  try {
+    const baseusername = req.query.email.split("@")[0].toLowerCase();
+    const basename = req.query.name.split(" ");
+    const basenameI = basename[0].toLowerCase();
+    const basenameF = basename[basename.length - 1].toLowerCase();
+    let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
+    let username2 =
+      basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
+    let username3 =
+      basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
+    let count;
+    while (await prisma.user.findUnique({ where: { username: username1 } })) {
+      count = Math.floor(Math.random() * 900) + 100;
+      username1 = baseusername + count;
+    }
+    while (await prisma.user.findUnique({ where: { username: username2 } })) {
+      count = Math.floor(Math.random() * 900) + 100;
+      username2 = basenameI + basenameF + count;
+    }
+    while (await prisma.user.findUnique({ where: { username: username3 } })) {
+      count = Math.floor(Math.random() * 900) + 100;
+      username3 = basenameF + "_" + basenameI + count;
+    }
+    res.status(200).json({ username: [username1, username2, username3] });
+  } catch (e) {
+    console.error(e);
+  }
 };
