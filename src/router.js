@@ -42,6 +42,8 @@ import {
 	deleteUser,
 	getAllUser,
 	getOneUser,
+	getCurrentUser,
+	isCurrentUser,
 	signIn,
 } from "./controllers/user.js";
 
@@ -148,6 +150,8 @@ router.delete("/deleteEducation", deleteOneEducation);
 //user
 router.get("/getAllUsers", getAllUser);
 router.get("/getOneUser", getOneUser);
+router.get("/isCurrentUser", isCurrentUser);
+router.get("/getCurrentUser", getCurrentUser);
 router.delete("/deleteUser", deleteUser);
 
 //Certifications_Courses

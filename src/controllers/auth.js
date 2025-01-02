@@ -21,16 +21,7 @@ export const createJWT = (user) => {
 };
 
 export const protect = (req, res, next) => {
-	const bearer = req.headers.authorization;
-
-	if (!bearer) {
-		res.status(401);
-		res.json({ message: "not authorized" });
-		return;
-	}
-
-	const [, token] = bearer.split(" ");
-
+	const token = req.cookies["token"];
 	if (!token) {
 		res.status(401);
 		res.json({ message: "not valid token" });
@@ -38,8 +29,7 @@ export const protect = (req, res, next) => {
 	}
 
 	try {
-		const user = jwt.verify(token, process.env.JWT_SECRET);
-		req.user = user;
+		jwt.verify(token, process.env.JWT_SECRET);
 		next();
 	} catch (e) {
 		console.error(e);
