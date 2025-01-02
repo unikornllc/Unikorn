@@ -2,119 +2,121 @@ import { Router } from "express";
 import upload from "./multerConfig.js";
 
 import {
-	getAllInterest,
-	getOneInterest,
-	createInterest,
-	deleteInterest,
+  getAllInterest,
+  getOneInterest,
+  createInterest,
+  deleteInterest,
 } from "./controllers/interest.js";
 
 import {
-	getAllCorporateExperience,
-	getOneCorporateExperience,
-	createCorporateExperience,
-	deleteCorporateExperience,
+  getAllCorporateExperience,
+  getOneCorporateExperience,
+  createCorporateExperience,
+  deleteCorporateExperience,
 } from "./controllers/corporate_experience.js";
 
 import {
-	getAllStartupExperience,
-	getOneStartupExperience,
-	createStartupExperience,
-	deleteStartupExperience,
+  getAllStartupExperience,
+  getOneStartupExperience,
+  createStartupExperience,
+  deleteStartupExperience,
 } from "./controllers/startup_experience.js";
 
 import {
-	createExpertise,
-	getOneExpertise,
-	getAllExpertise,
-	deleteOneExpertise,
+  createExpertise,
+  getOneExpertise,
+  getAllExpertise,
+  deleteOneExpertise,
 } from "./controllers/expertise.js";
 
 import {
-	createEducation,
-	getOneEducation,
-	getAllEducation,
-	deleteOneEducation,
+  createEducation,
+  getOneEducation,
+  getAllEducation,
+  deleteOneEducation,
 } from "./controllers/education.js";
 
 import {
-	createUser,
-	verifyUser,
-	deleteUser,
-	getAllUser,
-	getOneUser,
-	getCurrentUser,
-	isCurrentUser,
-	signIn,
+  createUser,
+  verifyUser,
+  deleteUser,
+  getAllUser,
+  getOneUser,
+  getCurrentUser,
+  isCurrentUser,
+  signIn,
 } from "./controllers/user.js";
 
 import {
-	createCertificationsCourses,
-	getAllCertificationsCourses,
-	getOneCertificationsCourses,
-	deleteCertificationsCourses,
+  createCertificationsCourses,
+  getAllCertificationsCourses,
+  getOneCertificationsCourses,
+  deleteCertificationsCourses,
 } from "./controllers/certifications_courses.js";
 import {
-	createLanguage,
-	getAllLanguage,
-	getOneLanguage,
-	deleteLanguage,
+  createLanguage,
+  getAllLanguage,
+  getOneLanguage,
+  deleteLanguage,
 } from "./controllers/languages.js";
 import {
-	createSocialMedia,
-	getAllSocialMedia,
-	getOneSocialMedia,
-	deleteSocialMedia,
+  createSocialMedia,
+  getAllSocialMedia,
+  getOneSocialMedia,
+  deleteSocialMedia,
 } from "./controllers/social_media.js";
 import {
-	createCompany,
-	getAllCompanies,
-	getCompany,
-	deleteCompany,
+  createCompany,
+  getAllCompanies,
+  getCompany,
+  deleteCompany,
+  isCurrentCompany,
+  getOneCompanyProfile,
 } from "./controllers/company_profile.js";
 
 import {
-	createKeyEmployee,
-	getAllKeyEmployee,
-	getOneKeyEmployee,
-	deleteKeyEmployee,
+  createKeyEmployee,
+  getAllKeyEmployee,
+  getOneKeyEmployee,
+  deleteKeyEmployee,
 } from "./controllers/key_employees.js";
 
 import {
-	createFounder,
-	getAllFounder,
-	getOneFounder,
-	deleteFounder,
+  createFounder,
+  getAllFounder,
+  getOneFounder,
+  deleteFounder,
 } from "./controllers/founder.js";
 
 import {
-	createFinancial,
-	getAllFinancial,
-	getOneFinancial,
-	deleteOneFinancial,
+  createFinancial,
+  getAllFinancial,
+  getOneFinancial,
+  deleteOneFinancial,
 } from "./controllers/financial.js";
 import {
-	createFundingRound,
-	deleteOneFundingRound,
-	getAllFundingRound,
-	getOneFundingRound,
+  createFundingRound,
+  deleteOneFundingRound,
+  getAllFundingRound,
+  getOneFundingRound,
 } from "./controllers/funding_round.js";
 import {
-	createProductInformation,
-	deleteOneProductInformation,
-	getAllProductInformation,
-	getOneProductInformation,
+  createProductInformation,
+  deleteOneProductInformation,
+  getAllProductInformation,
+  getOneProductInformation,
 } from "./controllers/product_information.js";
 import {
-	createActivity,
-	deleteOneActivity,
-	getAllActivity,
-	getOneActivity,
+  createActivity,
+  deleteOneActivity,
+  getAllActivity,
+  getOneActivity,
 } from "./controllers/activity.js";
 
 import {
-	uploadUserFile,
-	getUserFile,
-	deleteUserFile,
+  uploadUserFile,
+  getUserFile,
+  deleteUserFile,
 } from "./controllers/user_file.js";
 
 import { verifiedUser } from "./middlewares/verified_mail.js";
@@ -177,6 +179,8 @@ router.post("/createCompany", createCompany);
 router.get("/getAllCompany", getAllCompanies);
 router.get("/getOneCompany", getCompany);
 router.delete("/deleteCompany", deleteCompany);
+router.get("/isCurrentCompany", isCurrentCompany);
+router.get("/getOneCompanyProfile", getOneCompanyProfile);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);
