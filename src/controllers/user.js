@@ -154,21 +154,51 @@ export const getAllUser = async (req, res) => {
 		res.status(400).json({ message: "Error fetching users" });
 	}
 };
-
 export const getOneUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-				id: req.body.userId,
+				username: req.query.username,
 			},
 		});
-		res.status(200).json({ data: user });
+		const { verified, id, password, email, ...safeUser } = user;
+		res.status(200).json({ user: safeUser });
 	} catch (e) {
 		console.error(e);
-		res.status(400).json({ message: "Error fetching users" });
+		res.status(400).json({ message: "Error fetching user" });
 	}
 };
-
+export const getCurrentUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.cookies.userId,
+			},
+		});
+		const { verified, id, password, email, ...safeUser } = user;
+		res.status(200).json({ user: safeUser });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
+export const isCurrentUser = async (req, res) => {
+	try {
+		let isCurrentUser = false;
+		const user = await prisma.user.findUnique({
+			where: {
+				username: req.query.username,
+			},
+		});
+		if (req.cookies.userId && user.id && req.cookies.userId == user.id) {
+			isCurrentUser = true;
+		}
+		res.status(200).json({ user, isCurrentUser });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
 export const deleteUser = async (req, res) => {
 	try {
 		const id = req.body.userId;
