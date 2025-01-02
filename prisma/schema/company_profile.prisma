@@ -17,6 +17,8 @@ model Company_Profile {
   type        Company_Type @default(Public)
   hqlocation  String
   industry    String
+  emailVerify Boolean      @default(false)
+  verified    Boolean      @default(false)
   hunter      Boolean      @default(false)
   board_members String[]
   advisors  String[]
