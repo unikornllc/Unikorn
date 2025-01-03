@@ -135,5 +135,6 @@ model User_File {
   uploadedAt DateTime @default(now())
   userId     String
   user       User     @relation(fields: [userId], references: [id])
+
   @@unique([fileName, userId])
 }
