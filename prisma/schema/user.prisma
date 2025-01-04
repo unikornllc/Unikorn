@@ -46,6 +46,7 @@ model User {
   sentMessages           Message[]                @relation("SentMessages")
   receivedMessages       Message[]                @relation("ReceivedMessages")
   user_file              User_File[]
+  following              String[]
 }
 
 model Expertise {
@@ -134,5 +135,6 @@ model User_File {
   uploadedAt DateTime @default(now())
   userId     String
   user       User     @relation(fields: [userId], references: [id])
+
   @@unique([fileName, userId])
 }

@@ -433,3 +433,76 @@ export const updateUser = async (req, res) => {
 		res.status(400).json({ message: "Error updating user." });
 	}
 };
+
+export const followUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (isAlreadyFollowing) {
+			res.status(400).json({ message: "User already followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: [...user.following, req.body.followerId],
+					},
+				},
+			});
+			res.status(200).json({ message: "User followed successfully" });
+		}
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error following user" });
+	}
+};
+
+export const isFollowingUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+		const followingId = await prisma.user.findUnique({
+			where: { username: req.query.username },
+			select: { id: true },
+		});
+		const isFollowing = user.following.includes(followingId.id);
+		console.log(isFollowing);
+		res.status(200).json({ isFollowing });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
+
+export const unfollowUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (!isAlreadyFollowing) {
+			res.status(400).json({ message: "User not followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: user.following.filter((id) => id != req.body.followerId),
+					},
+				},
+			});
+			res.status(200).json({ message: "User unfollowed successfully" });
+		}
+	} catch (error) {
+		console.error(error);
+		res.status(400).json({ message: "Error unfollowing user" });
+	}
+};

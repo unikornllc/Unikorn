@@ -46,6 +46,9 @@ import {
 	isCurrentUser,
 	updateUser,
 	signIn,
+	followUser,
+	isFollowingUser,
+	unfollowUser,
 } from "./controllers/user.js";
 
 import {
@@ -73,6 +76,7 @@ import {
 	deleteCompany,
 	isCurrentCompany,
 	getOneCompanyProfile,
+	getCurrentCompanyProfile,
 } from "./controllers/company_profile.js";
 
 import {
@@ -158,6 +162,9 @@ router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
 router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
+router.put("/followUser", followUser);
+router.get("/isFollowing", isFollowingUser);
+router.put("/unfollowUser", unfollowUser);
 
 //Certifications_Courses
 router.post("/createCertificationsCourses", createCertificationsCourses);
@@ -184,6 +191,7 @@ router.get("/getOneCompany", getCompany);
 router.delete("/deleteCompany", deleteCompany);
 router.get("/isCurrentCompany", isCurrentCompany);
 router.get("/getOneCompanyProfile", getOneCompanyProfile);
+router.get("/getCurrentCompanyProfile", getCurrentCompanyProfile);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);

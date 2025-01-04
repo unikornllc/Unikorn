@@ -1,12 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { body } from "express-validator";
 
 export default function OtherProfile({ username }) {
 	const [userData, setUserData] = useState(null);
+	const [isFollowing, setIsFollowing] = useState(false);
 	const [availableSlots, setAvailableSlots] = useState([]);
 	const [selectedSlot, setSelectedSlot] = useState("");
 	const [newSlots, setNewSlots] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	const handleSetSchedule = async () => {
 		try {
@@ -51,10 +54,43 @@ export default function OtherProfile({ username }) {
 
 	const handleFollow = async () => {
 		try {
-			// await axios.post(`/api/user/${username}/follow`);
-			alert("Followed!");
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
+				{
+					followerId: userData.id,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(true);
+			console.log(follow.data);
 		} catch (err) {
 			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleUnfollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
+				{
+					followerId: userData.id,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(false);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -73,7 +109,22 @@ export default function OtherProfile({ username }) {
 				console.error("Error fetching user data:", err);
 			}
 		};
+		const following = async () => {
+			try {
+				const res = await axios.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/isFollowing`,
+					{
+						params: { username },
+						withCredentials: true,
+					},
+				);
+				setIsFollowing(res.data.isFollowing);
+			} catch (err) {
+				console.error(err);
+			}
+		};
 		fetchUserData();
+		following();
 	}, [username]);
 
 	if (!userData)
@@ -108,12 +159,23 @@ export default function OtherProfile({ username }) {
 
 					<div>
 						<div className="flex justify-center space-x-4 my-4">
-							<button
-								onClick={handleFollow}
-								className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-							>
-								Follow
-							</button>
+							{isFollowing ? (
+								<button
+									onClick={handleUnfollow}
+									className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+									disabled={loading}
+								>
+									unfollow
+								</button>
+							) : (
+								<button
+									onClick={handleFollow}
+									className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+									disabled={loading}
+								>
+									follow
+								</button>
+							)}
 
 							<a
 								href={"user.calendly_link"}
