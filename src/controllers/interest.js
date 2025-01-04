@@ -1,30 +1,5 @@
 import prisma from "../db.js";
 
-export const getOneInterest = async (req, res) => {
-	try {
-		const interest = await prisma.interest.findUnique({
-			where: {
-				id: req.body.interestId,
-			},
-		});
-		res.status(200).json({ data: interest });
-	} catch (e) {
-		res.status(400);
-	}
-};
-
-export const getAllInterest = async (req, res) => {
-	try {
-		const interests = await prisma.interest.findMany({
-			where: {
-				userId: req.body.userId,
-			},
-		});
-		res.json({ data: interests });
-	} catch (e) {
-		res.status(400);
-	}
-};
 export const createInterest = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
@@ -41,20 +16,52 @@ export const createInterest = async (req, res) => {
 				user: { connect: { id: req.body.userId } },
 			},
 		});
-		res.status(200).send("Created interest successfully");
+		res.status(200).json({ interest });
 	} catch (e) {
-		res.status(400);
+		res.status(400).json({ message: "Error creating interest" });
 	}
 };
+
+export const getOneInterest = async (req, res) => {
+	try {
+		const interest = await prisma.interest.findUnique({
+			where: {
+				id: req.query.interestId,
+			},
+		});
+		res.status(200).json({ interest });
+	} catch (e) {
+		res.status(400).json({ message: "Error getting interest" });
+	}
+};
+export const getAllInterest = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.query.userId,
+			},
+			include: {
+				interest: true,
+			},
+		});
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		res.status(200).json({ interest: user.interest });
+	} catch (error) {
+		res.status(400).json({ message: "Error getting interest" });
+	}
+};
+
 export const deleteInterest = async (req, res) => {
 	try {
 		const deleted = await prisma.interest.delete({
 			where: {
-				id: req.body.interestId,
+				id: req.query.interestId,
 			},
 		});
-		res.status(200).send("Deleted successfully");
+		res.status(200).json({ deleted });
 	} catch (e) {
-		res.status(400);
+		res.status(400).json({ message: "Error deleting interest" });
 	}
 };

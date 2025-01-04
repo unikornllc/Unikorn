@@ -19,7 +19,7 @@ const fileStorage = {
 		}
 
 		const [type, subtype] = file.mimetype.split("/");
-		const filePath = path.join(directory, fileName + "." + type);
+		const filePath = path.join(directory, fileName + "." + subtype);
 		await fs.promises.writeFile(filePath, file.buffer);
 
 		return filePath;

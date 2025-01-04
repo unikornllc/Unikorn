@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { comparePasswords } from "./auth.js";
 import { hashPassword } from "./auth.js";
 import { createJWT } from "./auth.js";
+import { generateUsername } from "unique-username-generator";
 
 export const createUser = async (req, res) => {
 	try {
@@ -199,7 +200,7 @@ export const getCurrentUser = async (req, res) => {
 				id: req.cookies.userId,
 			},
 		});
-		const { verified, id, password, email, ...safeUser } = user;
+		const { verified, password, email, ...safeUser } = user;
 		res.status(200).json({ user: safeUser });
 	} catch (e) {
 		console.error(e);
@@ -225,7 +226,7 @@ export const isCurrentUser = async (req, res) => {
 };
 export const deleteUser = async (req, res) => {
 	try {
-		const id = req.body.userId;
+		const id = req.query.userId;
 		await prisma.social_Media.deleteMany({ where: { userId: id } });
 		await prisma.interest.deleteMany({ where: { userId: id } });
 		await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
@@ -242,33 +243,194 @@ export const deleteUser = async (req, res) => {
 	}
 };
 
+// export const suggestUsername = async (req, res) => {
+// 	try {
+// 		const baseusername = req.query.email.split("@")[0].toLowerCase();
+// 		const basename = req.query.name.split(" ");
+// 		const basenameI = basename[0].toLowerCase();
+// 		const basenameF = basename[basename.length - 1].toLowerCase();
+// 		let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
+// 		let username2 =
+// 			basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
+// 		let username3 =
+// 			basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
+// 		let count;
+// 		while (await prisma.user.findUnique({ where: { username: username1 } })) {
+// 			count = Math.floor(Math.random() * 900) + 100;
+// 			username1 = baseusername + count;
+// 		}
+// 		while (await prisma.user.findUnique({ where: { username: username2 } })) {
+// 			count = Math.floor(Math.random() * 900) + 100;
+// 			username2 = basenameI + basenameF + count;
+// 		}
+// 		while (await prisma.user.findUnique({ where: { username: username3 } })) {
+// 			count = Math.floor(Math.random() * 900) + 100;
+// 			username3 = basenameF + "_" + basenameI + count;
+// 		}
+// 		res.status(200).json({ username: [username1, username2, username3] });
+// 	} catch (e) {
+// 		console.error(e);
+// 	}
+// };
+
 export const suggestUsername = async (req, res) => {
 	try {
-		const baseusername = req.query.email.split("@")[0].toLowerCase();
-		const basename = req.query.name.split(" ");
-		const basenameI = basename[0].toLowerCase();
-		const basenameF = basename[basename.length - 1].toLowerCase();
-		let username1 = baseusername + (Math.floor(Math.random() * 900) + 100);
-		let username2 =
-			basenameI + basenameF + (Math.floor(Math.random() * 900) + 100);
-		let username3 =
-			basenameF + "_" + basenameI + (Math.floor(Math.random() * 900) + 100);
-		let count;
-		while (await prisma.user.findUnique({ where: { username: username1 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username1 = baseusername + count;
+		const { email, name } = req.query;
+
+		if (!email || !name) {
+			return res.status(400).json({ message: "Email and name are required." });
 		}
-		while (await prisma.user.findUnique({ where: { username: username2 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username2 = basenameI + basenameF + count;
+
+		const MIN_USERNAME_LENGTH = 5;
+		const MAX_USERNAME_LENGTH = 16;
+
+		const ensureMinLength = (username) => {
+			if (username.length >= MIN_USERNAME_LENGTH) {
+				return username;
+			}
+			let extendedUsername = username;
+			const potentialAdditions = [firstName, lastName, emailNamePart, initials]
+				.filter((part) => part && !extendedUsername.includes(part))
+				.map((part) =>
+					part.substring(0, MIN_USERNAME_LENGTH - extendedUsername.length),
+				);
+
+			for (const part of potentialAdditions) {
+				extendedUsername += part;
+				if (extendedUsername.length >= MIN_USERNAME_LENGTH) {
+					break;
+				}
+			}
+
+			if (extendedUsername.length < MIN_USERNAME_LENGTH) {
+				const numbersNeeded = MIN_USERNAME_LENGTH - extendedUsername.length;
+				const randomNumber = Math.floor(
+					Math.random() * Math.pow(10, numbersNeeded),
+				);
+				extendedUsername += randomNumber
+					.toString()
+					.padStart(numbersNeeded, "0");
+			}
+			return extendedUsername.substring(0, MAX_USERNAME_LENGTH);
+		};
+
+		const emailNamePart = email
+			.split("@")[0]
+			.toLowerCase()
+			.replace(/[^a-z0-9]/g, "");
+		const names = name.trim().split(" ").filter(Boolean);
+		const firstName = names[0]
+			? names[0].toLowerCase().replace(/[^a-z]/g, "")
+			: "";
+		const lastName =
+			names.length > 1
+				? names[names.length - 1].toLowerCase().replace(/[^a-z]/g, "")
+				: "";
+		const initials = (firstName.charAt(0) || "") + (lastName.charAt(0) || "");
+
+		const trimmedEmailPart = emailNamePart.substring(0, MAX_USERNAME_LENGTH);
+		const trimmedFirstName = firstName.substring(0, MAX_USERNAME_LENGTH);
+		const trimmedLastName = lastName.substring(0, MAX_USERNAME_LENGTH);
+
+		const baseUsernames = [
+			`${trimmedFirstName}.${trimmedLastName}`,
+			`${trimmedFirstName}${trimmedLastName}`,
+			`${initials}${trimmedLastName}`,
+			`${trimmedLastName}${initials}`,
+			`${trimmedEmailPart}`,
+		].map((username) => ensureMinLength(username));
+
+		const generateUniqueUsername = async (base) => {
+			let username = base.substring(0, MAX_USERNAME_LENGTH);
+			let suffix = 0;
+			username = username.replace(/\.$/, "");
+
+			let isUnique = false;
+			do {
+				let potentialUsername = username;
+				if (suffix > 0) {
+					potentialUsername = `${username}${suffix}`;
+					potentialUsername = potentialUsername.substring(
+						0,
+						MAX_USERNAME_LENGTH,
+					);
+				}
+				potentialUsername = ensureMinLength(potentialUsername);
+
+				const userExists = await prisma.user.findUnique({
+					where: { username: potentialUsername },
+				});
+
+				if (!userExists) {
+					isUnique = true;
+					username = potentialUsername;
+				} else {
+					suffix++;
+				}
+			} while (!isUnique && suffix < 1000);
+
+			return username;
+		};
+
+		const usernameSuggestions = [];
+
+		for (const base of baseUsernames) {
+			const username = await generateUniqueUsername(base);
+			if (
+				usernameSuggestions.length < 3 &&
+				!usernameSuggestions.includes(username)
+			) {
+				usernameSuggestions.push(username);
+			}
+			if (usernameSuggestions.length >= 3) {
+				break;
+			}
 		}
-		while (await prisma.user.findUnique({ where: { username: username3 } })) {
-			count = Math.floor(Math.random() * 900) + 100;
-			username3 = basenameF + "_" + basenameI + count;
+		while (usernameSuggestions.length < 3) {
+			const randomUsername = generateUsername("", 2, 0);
+			console.log(randomUsername);
+			let trimmedRandomUsername = randomUsername
+				.toLowerCase()
+				.replace(/[^a-z0-9]/g, "")
+				.substring(0, MAX_USERNAME_LENGTH);
+			trimmedRandomUsername = ensureMinLength(trimmedRandomUsername);
+
+			const userExists = await prisma.user.findUnique({
+				where: { username: trimmedRandomUsername },
+			});
+
+			if (!userExists && !usernameSuggestions.includes(trimmedRandomUsername)) {
+				usernameSuggestions.push(trimmedRandomUsername);
+			}
 		}
-		res.status(200).json({ username: [username1, username2, username3] });
+
+		res.status(200).json({ username: usernameSuggestions });
 	} catch (e) {
 		console.error(e);
+		res.status(400).json({ message: "Internal Server Error" });
+	}
+};
+
+export const updateUser = async (req, res) => {
+	try {
+		const { userId, ...updateData } = req.body;
+		if (!userId) {
+			return res
+				.status(400)
+				.json({ message: "Username is required to update the user." });
+		}
+		const updatedUser = await prisma.user.update({
+			where: {
+				id: userId,
+			},
+			data: updateData,
+		});
+
+		const { verified, password, email, ...safeUser } = updatedUser;
+		res.status(200).json({ user: safeUser });
+	} catch (error) {
+		// console.error("Error updating user:", error);
+		res.status(400).json({ message: "Error updating user." });
 	}
 };
 

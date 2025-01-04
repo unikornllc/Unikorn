@@ -4,7 +4,7 @@ import prisma from "../db.js";
 export const uploadUserFile = async (req, res) => {
 	try {
 		if (!req.file) {
-			return res.status(400).send("No file uploaded");
+			return res.status(400).json({ message: "No file uploaded" });
 		}
 
 		const user = await prisma.user.findUnique({
@@ -14,7 +14,7 @@ export const uploadUserFile = async (req, res) => {
 		});
 
 		if (!user) {
-			return res.status(400).send("User not found");
+			return res.status(400).json({ message: "User not found" });
 		}
 		const savedPath = await fileStorage.saveFile(
 			"user",
@@ -22,22 +22,24 @@ export const uploadUserFile = async (req, res) => {
 			req.body.fileName,
 			req.file,
 		);
-		const [type, subtype] = file.mimetype.split("/");
-
+		let [type, subtype] = req.file.mimetype.split("/");
+		if (subtype == "plain") {
+			subtype = "txt";
+		}
+		console.log(type + "   " + subtype);
 		const file = await prisma.user_File.create({
 			data: {
 				fileName: req.body.fileName,
 				filePath: savedPath,
-				fileType: type,
+				fileType: subtype,
 				user: { connect: { id: req.body.userId } },
 			},
 		});
 
-		res.status(200).json({ data: file });
-		// res.status(200).json({ data: fileRecord });
+		res.status(200).json({ file });
 	} catch (error) {
 		console.error(error);
-		res.status(400).send("Failed to upload file");
+		res.status(400).json({ message: "Failed to upload file" });
 	}
 };
 
@@ -45,32 +47,51 @@ export const getUserFile = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-				id: req.body.userId,
+				id: req.query.userId,
 			},
 		});
 
 		if (!user) {
-			return res.status(400).send("User not found");
+			return res.status(400).json({ message: "User not found" });
 		}
 		const file = await prisma.user_File.findUnique({
 			where: {
-				userId: req.body.userId,
-				fileName: req.body.fileName,
+				fileName_userId: {
+					userId: req.query.userId,
+					fileName: req.query.fileName,
+				},
 			},
 		});
 
 		if (!file) {
-			return res.status(400).send("File not found");
+			return res.status(200).json({ message: "File not found" });
 		}
 		const fileContent = await fileStorage.getFile(file.filePath);
-		console.log(fileType);
 		res
 			.status(200)
-			.json({ data: { ...file, fileContent: fileContent.toString("base64") } });
+			.json({ ...file, fileContent: fileContent.toString("base64") });
 	} catch (error) {
 		console.error(error);
+		return res.status(400).json({ message: "Error getting file" });
+	}
+};
 
-		return res.status(400).send(error.message);
+export const getAllUserFile = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.query.userId,
+			},
+			include: {
+				user_file: true,
+			},
+		});
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		res.status(200).json({ file: user.user_file });
+	} catch (error) {
+		res.status(400).json({ message: "Error getting user files" });
 	}
 };
 
@@ -78,17 +99,19 @@ export const deleteUserFile = async (req, res) => {
 	try {
 		const deleted = await prisma.user_File.delete({
 			where: {
-				userId: req.body.userId,
-				fileName: req.body.fileName,
+				fileName_userId: {
+					userId: req.query.userId,
+					fileName: req.query.fileName,
+				},
 			},
 		});
 		if (!deleted) {
-			return res.status(400).send("File not found");
+			return res.status(400).json({ message: "File not found" });
 		}
 		await fileStorage.deleteFile(deleted.filePath);
-		res.status(200).send("File deleted successfully");
+		res.status(200).json({ message: "File deleted successfully" });
 	} catch (error) {
 		console.error(error);
-		res.status(400).send("Failed to delete file");
+		res.status(400).json({ message: "Failed to delete file" });
 	}
 };
