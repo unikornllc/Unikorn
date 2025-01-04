@@ -5,6 +5,9 @@ export const createExpertise = async (req, res) => {
 		const user = await prisma.user.findUnique({
 			where: { id: req.body.userId },
 		});
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
 		const expertise = await prisma.expertise.create({
 			data: {
 				field: req.body.field,
@@ -14,50 +17,70 @@ export const createExpertise = async (req, res) => {
 			},
 		});
 
-		res.status(200).json({ data: expertise });
+		res.status(200).json({ expertise });
 	} catch (e) {
-		res.status(400).send("Failed to create");
+		res.status(400).json({ message: "Error creating expertise" });
 	}
 };
-
 export const getAllExpertise = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.body.userId },
-		});
-		const expertise = await prisma.expertise.findMany({
 			where: {
-				userId: req.body.userId,
+				id: req.query.userId,
+			},
+			include: {
+				expertise: true,
 			},
 		});
-		res.status(200).json({ data: expertise });
-	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		res.status(200).json({ expertise: user.expertise });
+	} catch (error) {
+		res.status(400).json({ message: "Error getting expertise" });
 	}
 };
+// export const getAllExpertise = async (req, res) => {
+// 	try {
+// 		const user = await prisma.user.findUnique({
+// 			where: { id: req.query.userId },
+// 		});
+// 		if (!user) {
+// 			return res.status(400).json({ message: "User not found" });
+// 		}
+// 		const expertise = await prisma.expertise.findMany({
+// 			where: {
+// 				userId: req.query.userId,
+// 			},
+// 		});
+// 		res.status(200).json({ expertise });
+// 	} catch (e) {
+// 		res.status(400).json({ message: "Error getting expertise" });
+// 	}
+// };
 
 export const getOneExpertise = async (req, res) => {
 	try {
 		const expertise = await prisma.expertise.findUnique({
 			where: {
-				id: req.body.expertiseId,
+				id: req.query.expertiseId,
 			},
 		});
-		res.status(200).json({ data: expertise });
+		res.status(200).json({ expertise });
 	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		res.status(400).json({ message: "Error getting expertise" });
 	}
 };
 
 export const deleteOneExpertise = async (req, res) => {
 	try {
-		const expertise = await prisma.expertise.delete({
+		const deleted = await prisma.expertise.delete({
 			where: {
-				id: req.body.expertiseId,
+				id: req.query.expertiseId,
 			},
 		});
-		res.status(200).send("Deleted successfully");
+		res.status(200).json({ deleted });
 	} catch (e) {
-		res.status(400).send("Failed to delete");
+		res.status(400).json({ message: "Error deleting expertise" });
 	}
 };

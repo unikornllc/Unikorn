@@ -6,6 +6,10 @@ export const createEducation = async (req, res) => {
 		const user = await prisma.user.findUnique({
 			where: { id: req.body.userId },
 		});
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+
 		const education = await prisma.education.create({
 			data: {
 				degree: req.body.degree,
@@ -15,25 +19,28 @@ export const createEducation = async (req, res) => {
 				},
 			},
 		});
-		res.status(200).json({ data: education });
+		res.status(200).json({ education });
 	} catch (e) {
-		res.status(400).send("Failed to create");
+		res.status(400).json({ message: "Error creating education" });
 	}
 };
 
 export const getAllEducation = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.body.userId },
-		});
-		const education = await prisma.education.findMany({
 			where: {
-				userId: req.body.userId,
+				id: req.query.userId,
+			},
+			include: {
+				education: true,
 			},
 		});
-		res.status(200).json({ data: education });
-	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		res.status(200).json({ education: user.education });
+	} catch (error) {
+		res.status(400).json({ message: "Error getting education" });
 	}
 };
 
@@ -41,12 +48,12 @@ export const getOneEducation = async (req, res) => {
 	try {
 		const education = await prisma.education.findUnique({
 			where: {
-				id: req.body.educationId,
+				id: req.query.educationId,
 			},
 		});
-		res.status(200).json({ data: education });
+		res.status(200).json({ education });
 	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		res.status(400).json({ message: "Error getting education" });
 	}
 };
 
@@ -54,11 +61,11 @@ export const deleteOneEducation = async (req, res) => {
 	try {
 		const education = await prisma.education.delete({
 			where: {
-				id: req.body.educationId,
+				id: req.query.educationId,
 			},
 		});
-		res.status(200).send("Deleted successfully");
+		res.status(200).json({ education });
 	} catch (e) {
-		res.status(400).send("Failed to delete");
+		res.status(400).json({ message: "Error deleting education" });
 	}
 };
