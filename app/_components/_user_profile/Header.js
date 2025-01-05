@@ -10,6 +10,8 @@ import Modal from "react-modal";
 import axios from "axios";
 import Webcam from "react-webcam";
 import SettingsOverlay from "../_settings/Settings";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 
 const Header = ({ username, userData, editable }) => {
 	const { name, title, unikornVerified } = userData;
@@ -22,6 +24,7 @@ const Header = ({ username, userData, editable }) => {
 	const [isCameraOpen, setIsCameraOpen] = useState(false);
 	const webcamRef = useRef(null);
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+	// const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleImageUpload = (e) => {
 		setSelectedImage(e.target.files[0]);
@@ -92,6 +95,37 @@ const Header = ({ username, userData, editable }) => {
 		"sepia(100%)",
 		"invert(100%)",
 	];
+
+	const handleOpenModal = () => setIsEditing(true);
+
+	const handleCloseModal = () => {
+		setIsEditing(false);
+		setSelectedImage(null);
+		setFilter("none");
+		setScale(1);
+	};
+
+	useEffect(() => {
+		if (isSettingsOpen) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isSettingsOpen]);
+
+	useEffect(() => {
+		if (isEditing) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isEditing]);
 
 	useEffect(() => {
 		const fetchUserFile = async () => {
@@ -171,127 +205,160 @@ const Header = ({ username, userData, editable }) => {
 			</div>
 			{editable && (
 				<Modal
-					ariaHideApp={false}
 					isOpen={isEditing}
-					onRequestClose={() => setIsEditing(false)}
+					onRequestClose={handleCloseModal}
 					contentLabel="Edit Profile Picture"
-					className="max-w-lg mx-auto mt-20 bg-white rounded-lg overflow-hidden shadow-lg p-6 outline-none"
-					overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+					className="fixed inset-0 z-50 flex items-center justify-center overflow-auto"
+					overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+					ariaHideApp={false}
 				>
-					<h2 className="text-2xl font-semibold mb-4">Edit Profile Picture</h2>
-					<div className="flex flex-col items-center">
-						{selectedImage ? (
-							<div>
-								<AvatarEditor
-									ref={(ref) => setEditor(ref)}
-									image={selectedImage}
-									width={250}
-									height={250}
-									border={50}
-									borderRadius={125}
-									scale={scale}
-									rotate={0}
-									style={{ filter }}
-								/>
-								<div className="mt-4 w-full">
-									<label className="block text-gray-700">Zoom</label>
-									<input
-										type="range"
-										min="1"
-										max="3"
-										step="0.01"
-										value={scale}
-										onChange={(e) => setScale(parseFloat(e.target.value))}
-										className="w-full"
-									/>
-								</div>
-								<div className="mt-4 w-full">
-									<label className="block text-gray-700">Filter</label>
-									<select
-										value={filter}
-										onChange={(e) => setFilter(e.target.value)}
-										className="border border-gray-300 p-2 rounded-md w-full"
-									>
-										<option value="none">None</option>
-										<option value="grayscale(100%)">Grayscale</option>
-										<option value="sepia(100%)">Sepia</option>
-										<option value="invert(100%)">Invert</option>
-									</select>
-								</div>
-							</div>
-						) : isCameraOpen ? (
-							<div>
-								<Webcam
-									audio={false}
-									ref={webcamRef}
-									screenshotFormat="image/png"
-									width={250}
-									height={250}
-								/>
+					<Transition
+						appear
+						show={isEditing}
+						as={React.Fragment}
+						enter="transform transition ease-in-out duration-300"
+						enterFrom="opacity-0 scale-90"
+						enterTo="opacity-100 scale-100"
+						leave="transform transition ease-in-out duration-200"
+						leaveFrom="opacity-100 scale-100"
+						leaveTo="opacity-0 scale-90"
+					>
+						<div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-auto p-6">
+							{/* Modal header */}
+							<div className="flex items-center justify-between mb-4">
+								<h2 className="text-2xl font-semibold">Edit Profile Picture</h2>
 								<button
-									className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary"
-									onClick={capturePhoto}
+									className="p-2 rounded-full hover:bg-gray-100"
+									onClick={handleCloseModal}
+									aria-label="Close"
 								>
-									Capture Photo
-								</button>
-								<button
-									className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-									onClick={() => setIsCameraOpen(false)}
-								>
-									Cancel
+									<XMarkIcon className="w-6 h-6 text-gray-600" />
 								</button>
 							</div>
-						) : (
-							<div>
-								<div className="flex space-x-4">
-									<button
-										className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-										onClick={() => document.getElementById("fileInput").click()}
-									>
-										<CameraIcon className="w-6 h-6 text-gray-600 mr-2" />
-										Upload Photo
-									</button>
-									<button
-										className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-										onClick={() => setIsCameraOpen(true)}
-									>
-										<CameraIcon className="w-6 h-6 text-gray-600 mr-2" />
-										Use Camera
-									</button>
-								</div>
-								<input
-									type="file"
-									id="fileInput"
-									accept="image/*"
-									onChange={handleImageUpload}
-									style={{ display: "none" }}
-								/>
+
+							<div className="flex flex-col items-center">
+								{selectedImage ? (
+									<div>
+										<AvatarEditor
+											ref={(ref) => setEditor(ref)}
+											image={selectedImage}
+											width={250}
+											height={250}
+											border={20}
+											borderRadius={125}
+											scale={scale}
+											rotate={0}
+											style={{ filter }}
+											className="rounded-full overflow-hidden"
+										/>
+										<div className="mt-4 w-full">
+											<label className="block text-gray-700 mb-1">Zoom</label>
+											<input
+												type="range"
+												min="1"
+												max="3"
+												step="0.01"
+												value={scale}
+												onChange={(e) => setScale(parseFloat(e.target.value))}
+												className="w-full accent-primary"
+											/>
+										</div>
+										<div className="mt-4 w-full">
+											<label className="block text-gray-700 mb-1">Filter</label>
+											<select
+												value={filter}
+												onChange={(e) => setFilter(e.target.value)}
+												className="border border-gray-300 p-2 rounded-md w-full"
+											>
+												<option value="none">None</option>
+												<option value="grayscale(100%)">Grayscale</option>
+												<option value="sepia(100%)">Sepia</option>
+												<option value="invert(100%)">Invert</option>
+											</select>
+										</div>
+									</div>
+								) : isCameraOpen ? (
+									<div>
+										<Webcam
+											audio={false}
+											ref={webcamRef}
+											screenshotFormat="image/png"
+											width={250}
+											height={250}
+											className="rounded-lg overflow-hidden"
+										/>
+										<button
+											className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors"
+											onClick={capturePhoto}
+										>
+											Capture Photo
+										</button>
+										<button
+											className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+											onClick={() => setIsCameraOpen(false)}
+										>
+											Cancel
+										</button>
+									</div>
+								) : (
+									<div>
+										<div className="flex space-x-4">
+											<button
+												className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center transition-colors"
+												onClick={() =>
+													document.getElementById("fileInput").click()
+												}
+											>
+												<CameraIcon className="w-6 h-6 text-gray-600 mr-2" />
+												Upload Photo
+											</button>
+											<button
+												className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center transition-colors"
+												onClick={() => setIsCameraOpen(true)}
+											>
+												<CameraIcon className="w-6 h-6 text-gray-600 mr-2" />
+												Use Camera
+											</button>
+										</div>
+										<input
+											type="file"
+											id="fileInput"
+											accept="image/*"
+											onChange={handleImageUpload}
+											style={{ display: "none" }}
+										/>
+									</div>
+								)}
+								{selectedImage && (
+									<div className="mt-6 flex space-x-4">
+										<button
+											className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors"
+											onClick={handleSave}
+										>
+											Save
+										</button>
+										<button
+											className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+											onClick={() => {
+												setSelectedImage(null);
+												setFilter("none");
+												setScale(1);
+											}}
+										>
+											Cancel
+										</button>
+									</div>
+								)}
 							</div>
-						)}
-						{selectedImage && (
-							<div className="mt-6 flex space-x-4">
-								<button
-									className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary"
-									onClick={handleSave}
-								>
-									Save
-								</button>
-								<button
-									className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-									onClick={() => {
-										setSelectedImage(null);
-										setFilter("none");
-									}}
-								>
-									Cancel
-								</button>
-							</div>
-						)}
-					</div>
+						</div>
+					</Transition>
 				</Modal>
 			)}
 			{editable && isSettingsOpen && (
-				<SettingsOverlay onClose={() => setIsSettingsOpen(false)} user={userData} />
+				<SettingsOverlay
+					onClose={() => setIsSettingsOpen(false)}
+					user={userData}
+				/>
 			)}
 		</div>
 	);
