@@ -2,19 +2,25 @@ import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const Sidebar = ({ user, userId }) => {
-	const [userLanguages, setUserLanguages] = useState(null);
+const Sidebar = ({
+	username,
+	languageList,
+	interestList,
+	socialMediaList,
+	editable,
+}) => {
+	const [userLanguages, setUserLanguages] = useState(languageList);
 	const [addingLanguage, setAddingLanguage] = useState(false);
 	const [newLanguage, setNewLanguage] = useState({
 		language: "",
 		proficiency: "Beginner",
 	});
 
-	const [userInterests, setUserInterests] = useState(null);
+	const [userInterests, setUserInterests] = useState(interestList);
 	const [addingInterest, setAddingInterest] = useState(false);
 	const [newInterest, setNewInterest] = useState("");
 
-	const [userSocialLinks, setUserSocialLinks] = useState(null);
+	const [userSocialLinks, setUserSocialLinks] = useState(socialMediaList);
 	const [addingSocialLink, setAddingSocialLink] = useState(false);
 	const [newSocialLink, setNewSocialLink] = useState({
 		platform: "LinkedIn",
@@ -32,7 +38,7 @@ const Sidebar = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createLanguage`,
 				{
-					userId,
+					username,
 					...newLanguage,
 				},
 				{ withCredentials: true },
@@ -63,7 +69,7 @@ const Sidebar = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createInterest`,
 				{
-					userId,
+					username,
 					name: newInterest,
 				},
 				{ withCredentials: true },
@@ -95,7 +101,7 @@ const Sidebar = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createSocialMedia`,
 				{
-					userId,
+					username,
 					...newSocialLink,
 				},
 				{ withCredentials: true },
@@ -122,46 +128,50 @@ const Sidebar = ({ user, userId }) => {
 			console.error("Error removing social media link:", error);
 		}
 	};
-	useEffect(() => {
-		const fetchUserData = async () => {
-			try {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllLanguage`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => setUserLanguages(response.data.language));
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllInterest`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => setUserInterests(response.data.interest));
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllSocialMedia`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => setUserSocialLinks(response.data.socialMedia));
-			} catch (err) {
-				console.error("Error fetching user Data:", err);
-			}
-		};
-		fetchUserData();
-	}, []);
+
+	// useEffect(() => {
+	// 	const fetchUserData = async () => {
+	// 		try {
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllLanguage`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => setUserLanguages(response.data.language));
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllInterest`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => setUserInterests(response.data.interest));
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllSocialMedia`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => setUserSocialLinks(response.data.socialMedia));
+	// 		} catch (err) {
+	// 			console.error("Error fetching user Data:", err);
+	// 		}
+	// 	};
+	// 	fetchUserData();
+	// }, []);
+
 	return (
 		<div className="space-y-6">
 			<div className="bg-white p-6 rounded-lg shadow">
 				<div className="flex justify-between items-center mb-4">
 					<h3 className="text-xl font-semibold text-textPrimary">Languages</h3>
-					<button
-						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-						onClick={() => setAddingLanguage(true)}
-					>
-						<PlusIcon className="w-5 h-5 text-gray-600" />
-					</button>
+					{editable && (
+						<button
+							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+							onClick={() => setAddingLanguage(true)}
+						>
+							<PlusIcon className="w-5 h-5 text-gray-600" />
+						</button>
+					)}
 				</div>
-				{addingLanguage && (
+				{editable && addingLanguage && (
 					<div className="mb-4">
 						<input
 							type="text"
@@ -212,12 +222,14 @@ const Sidebar = ({ user, userId }) => {
 								<span>
 									{lang.language} - {lang.proficiency}
 								</span>
-								<button
-									className="p-2 text-red-500 hover:text-red-700"
-									onClick={() => removeLanguage(lang.id)}
-								>
-									<TrashIcon className="w-5 h-5" />
-								</button>
+								{editable && (
+									<button
+										className="p-2 text-red-500 hover:text-red-700"
+										onClick={() => removeLanguage(lang.id)}
+									>
+										<TrashIcon className="w-5 h-5" />
+									</button>
+								)}
 							</li>
 						))}
 				</ul>
@@ -225,14 +237,16 @@ const Sidebar = ({ user, userId }) => {
 			<div className="bg-white p-6 rounded-lg shadow">
 				<div className="flex justify-between items-center mb-4">
 					<h3 className="text-xl font-semibold text-textPrimary">Interests</h3>
-					<button
-						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-						onClick={() => setAddingInterest(true)}
-					>
-						<PlusIcon className="w-5 h-5 text-gray-600" />
-					</button>
+					{editable && (
+						<button
+							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+							onClick={() => setAddingInterest(true)}
+						>
+							<PlusIcon className="w-5 h-5 text-gray-600" />
+						</button>
+					)}
 				</div>
-				{addingInterest && (
+				{editable && addingInterest && (
 					<div className="mb-4 flex">
 						<input
 							type="text"
@@ -266,12 +280,14 @@ const Sidebar = ({ user, userId }) => {
 								className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center"
 							>
 								<span>{interest.name}</span>
-								<button
-									className="ml-2 text-red-500 hover:text-red-700"
-									onClick={() => removeInterest(interest.id)}
-								>
-									<TrashIcon className="w-4 h-4" />
-								</button>
+								{editable && (
+									<button
+										className="ml-2 text-red-500 hover:text-red-700"
+										onClick={() => removeInterest(interest.id)}
+									>
+										<TrashIcon className="w-4 h-4" />
+									</button>
+								)}
 							</div>
 						))}
 				</div>
@@ -282,14 +298,16 @@ const Sidebar = ({ user, userId }) => {
 					<h3 className="text-xl font-semibold text-textPrimary">
 						Social Media
 					</h3>
-					<button
-						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-						onClick={() => setAddingSocialLink(true)}
-					>
-						<PlusIcon className="w-5 h-5 text-gray-600" />
-					</button>
+					{editable && (
+						<button
+							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+							onClick={() => setAddingSocialLink(true)}
+						>
+							<PlusIcon className="w-5 h-5 text-gray-600" />
+						</button>
+					)}
 				</div>
-				{addingSocialLink && (
+				{editable && addingSocialLink && (
 					<div className="mb-4">
 						<select
 							value={newSocialLink.platform}
@@ -349,12 +367,14 @@ const Sidebar = ({ user, userId }) => {
 									/>
 									<span>{link.platform}</span>
 								</a>
-								<button
-									className="p-2 text-red-500 hover:text-red-700"
-									onClick={() => removeSocialLink(link.id)}
-								>
-									<TrashIcon className="w-5 h-5" />
-								</button>
+								{editable && (
+									<button
+										className="p-2 text-red-500 hover:text-red-700"
+										onClick={() => removeSocialLink(link.id)}
+									>
+										<TrashIcon className="w-5 h-5" />
+									</button>
+								)}
 							</div>
 						))}
 				</div>

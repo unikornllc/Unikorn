@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const Skills = ({ user, userId }) => {
-	const [skills, setSkills] = useState(null);
+const Expertise = ({ username, expertiseList, editable }) => {
+	const [expertise, setExpertise] = useState(expertiseList);
 	const [newSkill, setNewSkill] = useState("");
 	const [addingSkill, setAddingSkill] = useState(false);
 
@@ -12,12 +12,12 @@ const Skills = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createExpertise`,
 				{
-					userId,
+					username,
 					field: newSkill,
 				},
 				{ withCredentials: true },
 			);
-			setSkills([...skills, response.data.expertise]);
+			setExpertise([...expertise, response.data.expertise]);
 			setNewSkill("");
 			setAddingSkill(false);
 		} catch (error) {
@@ -34,40 +34,44 @@ const Skills = ({ user, userId }) => {
 					withCredentials: true,
 				},
 			);
-			setSkills(skills.filter((skill) => skill.id !== skillId));
+			setExpertise(expertise.filter((skill) => skill.id !== skillId));
 		} catch (error) {
 			console.error("Error removing skill:", error);
 		}
 	};
-	useEffect(() => {
-		const fetchUserSkills = async () => {
-			try {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllExpertise`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => setSkills(response.data.expertise));
-			} catch (err) {
-				console.error("Error fetching user Skills:", err);
-			}
-		};
-		fetchUserSkills();
-	}, []);
+
+	// useEffect(() => {
+	// 	const fetchUserExpertise = async () => {
+	// 		try {
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllExpertise`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => setExpertise(response.data.expertise));
+	// 		} catch (err) {
+	// 			console.error("Error fetching user Expertise:", err);
+	// 		}
+	// 	};
+	// 	fetchUserExpertise();
+	// }, []);
+
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-semibold text-textPrimary">
 					Skills & Expertise
 				</h3>
-				<button
-					className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-					onClick={() => setAddingSkill(true)}
-				>
-					<PlusIcon className="w-5 h-5 text-gray-600" />
-				</button>
+				{editable && (
+					<button
+						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+						onClick={() => setAddingSkill(true)}
+					>
+						<PlusIcon className="w-5 h-5 text-gray-600" />
+					</button>
+				)}
 			</div>
-			{addingSkill && (
+			{editable && addingSkill && (
 				<div className="mb-4 flex">
 					<input
 						type="text"
@@ -94,19 +98,21 @@ const Skills = ({ user, userId }) => {
 				</div>
 			)}
 			<div className="flex flex-wrap">
-				{skills &&
-					skills.map((exp) => (
+				{expertise &&
+					expertise.map((exp) => (
 						<div
 							key={exp.id}
 							className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center"
 						>
 							<span>{exp.field}</span>
-							<button
-								className="ml-2 text-red-500 hover:text-red-700"
-								onClick={() => removeSkill(exp.id)}
-							>
-								<TrashIcon className="w-4 h-4" />
-							</button>
+							{editable && (
+								<button
+									className="ml-2 text-red-500 hover:text-red-700"
+									onClick={() => removeSkill(exp.id)}
+								>
+									<TrashIcon className="w-4 h-4" />
+								</button>
+							)}
 						</div>
 					))}
 			</div>
@@ -114,4 +120,4 @@ const Skills = ({ user, userId }) => {
 	);
 };
 
-export default Skills;
+export default Expertise;

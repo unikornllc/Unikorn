@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const Certifications = ({ user, userId }) => {
-	const [certs, setCerts] = useState(null);
+const Certifications = ({ username, certificationList, editable }) => {
+	const [certs, setCerts] = useState(certificationList);
 	const [addingCert, setAddingCert] = useState(false);
 	const [newCert, setNewCert] = useState({
 		title: "",
@@ -17,7 +17,7 @@ const Certifications = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createCertificationsCourses`,
 				{
-					userId,
+					username,
 					...newCert,
 				},
 				{ withCredentials: true },
@@ -49,38 +49,42 @@ const Certifications = ({ user, userId }) => {
 			console.error("Error removing certification:", error);
 		}
 	};
-	useEffect(() => {
-		const fetchUserCertifications = async () => {
-			try {
-				await axios
-					.get(
-						`${process.env.NEXT_PUBLIC_SERVER}/getAllCertificationsCourses`,
-						{
-							params: { userId },
-							withCredentials: true,
-						},
-					)
-					.then((response) => setCerts(response.data.certificationsCourses));
-			} catch (err) {
-				console.error("Error fetching user Certifications:", err);
-			}
-		};
-		fetchUserCertifications();
-	}, []);
+
+	// useEffect(() => {
+	// 	const fetchUserCertifications = async () => {
+	// 		try {
+	// 			await axios
+	// 				.get(
+	// 					`${process.env.NEXT_PUBLIC_SERVER}/getAllCertificationsCourses`,
+	// 					{
+	// 						params: { username },
+	// 						withCredentials: true,
+	// 					},
+	// 				)
+	// 				.then((response) => setCerts(response.data.certificationsCourses));
+	// 		} catch (err) {
+	// 			console.error("Error fetching user Certifications:", err);
+	// 		}
+	// 	};
+	// 	fetchUserCertifications();
+	// }, []);
+
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-semibold text-textPrimary">
 					Certifications & Courses
 				</h3>
-				<button
-					className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-					onClick={() => setAddingCert(true)}
-				>
-					<PlusIcon className="w-5 h-5 text-gray-600" />
-				</button>
+				{editable && (
+					<button
+						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+						onClick={() => setAddingCert(true)}
+					>
+						<PlusIcon className="w-5 h-5 text-gray-600" />
+					</button>
+				)}
 			</div>
-			{addingCert && (
+			{editable && addingCert && (
 				<div className="mb-4">
 					<input
 						type="text"
@@ -156,12 +160,14 @@ const Certifications = ({ user, userId }) => {
 								Focus Area: {cert.focus_area}
 							</p>
 						</div>
-						<button
-							className="p-2 text-red-500 hover:text-red-700"
-							onClick={() => removeCertification(cert.id)}
-						>
-							<TrashIcon className="w-5 h-5" />
-						</button>
+						{editable && (
+							<button
+								className="p-2 text-red-500 hover:text-red-700"
+								onClick={() => removeCertification(cert.id)}
+							>
+								<TrashIcon className="w-5 h-5" />
+							</button>
+						)}
 					</div>
 				))}
 		</div>

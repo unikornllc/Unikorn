@@ -2,15 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const About = ({ user, userId }) => {
+const About = ({ username, aboutList, editable }) => {
+	const [about, setAbout] = useState(aboutList);
 	const [editing, setEditing] = useState(false);
-	const [description, setDescription] = useState(user.description);
 
 	const handleSave = async () => {
 		try {
 			await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/updateUser`,
-				{ userId, description },
+				{ username, description: about.description },
 				{
 					withCredentials: true,
 				},
@@ -24,19 +24,23 @@ const About = ({ user, userId }) => {
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6 relative">
 			<div className="absolute top-4 right-4">
-				<button
-					className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-					onClick={() => setEditing(!editing)}
-				>
-					<PencilIcon className="w-5 h-5 text-gray-600" />
-				</button>
+				{editable && (
+					<button
+						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+						onClick={() => setEditing(!editing)}
+					>
+						<PencilIcon className="w-5 h-5 text-gray-600" />
+					</button>
+				)}
 			</div>
 			<h3 className="text-2xl font-semibold text-textPrimary mb-4">About</h3>
-			{editing ? (
-				<>
+			{editable && editing ? (
+				<div>
 					<textarea
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
+						value={about.description}
+						onChange={(e) =>
+							setAbout({ ...about, description: e.target.value })
+						}
 						rows="5"
 						className="w-full border border-gray-300 p-2 rounded-md"
 					></textarea>
@@ -54,9 +58,9 @@ const About = ({ user, userId }) => {
 							Cancel
 						</button>
 					</div>
-				</>
+				</div>
 			) : (
-				<p className="text-textSecondary">{description}</p>
+				<p className="text-textSecondary">{about.description}</p>
 			)}
 		</div>
 	);
