@@ -178,10 +178,20 @@ export const getAllUser = async (req, res) => {
 	}
 };
 
+const isPlainObject = (obj) => {
+	if (Object.getPrototypeOf(obj) === null) {
+		return true;
+	}
+	return Object.getPrototypeOf(obj) === Object.prototype;
+};
+
 const removeUserIds = (obj) => {
 	if (Array.isArray(obj)) {
 		return obj.map(removeUserIds);
 	} else if (obj !== null && typeof obj === "object") {
+		if (!isPlainObject(obj)) {
+			return obj;
+		}
 		const newObj = {};
 		for (const key in obj) {
 			if (key !== "userId") {
@@ -304,19 +314,22 @@ export const updateUser = async (req, res) => {
 export const followUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
+			where: { id: req.decodedUser.id },
 			select: { following: true },
 		});
-
-		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		const followUser = await prisma.user.findUnique({
+			where: { username: req.body.username },
+			select: { id: true },
+		});
+		const isAlreadyFollowing = user.following.includes(followUser.id);
 		if (isAlreadyFollowing) {
 			res.status(400).json({ message: "User already followed" });
 		} else {
 			await prisma.user.update({
-				where: { id: req.cookies.userId },
+				where: { id: req.decodedUser.id },
 				data: {
 					following: {
-						set: [...user.following, req.body.followerId],
+						set: [...user.following, followUser.id],
 					},
 				},
 			});
@@ -331,38 +344,43 @@ export const followUser = async (req, res) => {
 export const isFollowingUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
+			where: { id: req.decodedUser.id },
 			select: { following: true },
 		});
 		const followingId = await prisma.user.findUnique({
 			where: { username: req.query.username },
 			select: { id: true },
 		});
+
 		const isFollowing = user.following.includes(followingId.id);
 		console.log(isFollowing);
 		res.status(200).json({ isFollowing });
 	} catch (e) {
 		console.error(e);
-		res.status(400).json({ message: "Error fetching user" });
+		res.status(400).json({ message: "Error checking follow user" });
 	}
 };
 
 export const unfollowUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
+			where: { id: req.decodedUser.id },
 			select: { following: true },
 		});
+		const unfollowUser = await prisma.user.findUnique({
+			where: { username: req.body.username },
+			select: { id: true },
+		});
+		const isAlreadyFollowing = user.following.includes(unfollowUser.id);
 
-		const isAlreadyFollowing = user.following.includes(req.body.followerId);
 		if (!isAlreadyFollowing) {
 			res.status(400).json({ message: "User not followed" });
 		} else {
 			await prisma.user.update({
-				where: { id: req.cookies.userId },
+				where: { id: req.decodedUser.id },
 				data: {
 					following: {
-						set: user.following.filter((id) => id != req.body.followerId),
+						set: user.following.filter((id) => id != unfollowUser.id),
 					},
 				},
 			});

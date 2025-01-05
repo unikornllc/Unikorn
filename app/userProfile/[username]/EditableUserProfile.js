@@ -14,18 +14,51 @@ import SettingsPage from "@/app/_components/_settings/Settings";
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
 
+	const handleFollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
+				{
+					followerUsername: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(true);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleUnfollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
+				{
+					followerUsername: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(false);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		console.log(editable);
 	}, []);
-
-	// if (!user && !loading)
-	// 	return (
-	// 		<div className="bg-gray-100 min-h-screen py-8">
-	// 			<div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-	// 				<p className="text-center p-4">User not found.</p>
-	// 			</div>
-	// 		</div>
-	// 	);
 
 	if (!user)
 		return (
