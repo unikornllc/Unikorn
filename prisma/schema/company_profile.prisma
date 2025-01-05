@@ -28,6 +28,7 @@ model Company_Profile {
   financials          Financial?
   activites           Activity[]
   company_file        Company_File[]
+    followers             UserFollowsCompany[]
 }
 
 model Founder {
