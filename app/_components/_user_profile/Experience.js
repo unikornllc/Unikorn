@@ -2,10 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const Experience = ({ user, userId }) => {
+const Experience = ({
+	username,
+	corporateExperienceList,
+	startupExperienceList,
+	editable,
+}) => {
 	const [activeTab, setActiveTab] = useState("Corporate");
 
-	const [corporateExperiences, setCorporateExperiences] = useState(null);
+	const [corporateExperiences, setCorporateExperiences] = useState(
+		corporateExperienceList,
+	);
 	const [addingCorporateExp, setAddingCorporateExp] = useState(false);
 	const [newCorporateExp, setNewCorporateExp] = useState({
 		job_title: "",
@@ -15,7 +22,9 @@ const Experience = ({ user, userId }) => {
 		responsibilities: "",
 	});
 
-	const [startupExperiences, setStartupExperiences] = useState(null);
+	const [startupExperiences, setStartupExperiences] = useState(
+		startupExperienceList,
+	);
 	const [addingStartupExp, setAddingStartupExp] = useState(false);
 	const [newStartupExp, setNewStartupExp] = useState({
 		startup_name: "",
@@ -28,7 +37,7 @@ const Experience = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createCorporateExperience`,
 				{
-					userId,
+					username,
 					...newCorporateExp,
 				},
 				{ withCredentials: true },
@@ -72,7 +81,7 @@ const Experience = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createStartupExperience`,
 				{
-					userId,
+					username,
 					...newStartupExp,
 				},
 				{ withCredentials: true },
@@ -109,39 +118,41 @@ const Experience = ({ user, userId }) => {
 			console.error("Error removing startup experience:", error);
 		}
 	};
-	useEffect(() => {
-		const fetchUserExperiences = async () => {
-			try {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllCorporateExperience`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => {
-						// console.log(response.data.corporateExperience);
-						setCorporateExperiences(response.data.corporateExperience);
-					});
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllStartupExperience`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => {
-						// console.log(response.data.startupExperience);
-						setStartupExperiences(response.data.startupExperience);
-					});
-			} catch (err) {
-				console.error("Error fetching user Experiences:", err);
-			}
-		};
-		fetchUserExperiences();
-	}, []);
+
+	// useEffect(() => {
+	// 	const fetchUserExperiences = async () => {
+	// 		try {
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllCorporateExperience`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => {
+	// 					// console.log(response.data.corporateExperience);
+	// 					setCorporateExperiences(response.data.corporateExperience);
+	// 				});
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllStartupExperience`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => {
+	// 					// console.log(response.data.startupExperience);
+	// 					setStartupExperiences(response.data.startupExperience);
+	// 				});
+	// 		} catch (err) {
+	// 			console.error("Error fetching user Experiences:", err);
+	// 		}
+	// 	};
+	// 	fetchUserExperiences();
+	// }, []);
+
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-semibold text-textPrimary">Experience</h3>
 				<div className="flex space-x-4">
-					{activeTab === "Corporate" && (
+					{editable && activeTab === "Corporate" && (
 						<button
 							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
 							onClick={() => setAddingCorporateExp(true)}
@@ -149,7 +160,7 @@ const Experience = ({ user, userId }) => {
 							<PlusIcon className="w-5 h-5 text-gray-600" />
 						</button>
 					)}
-					{activeTab === "Startup" && (
+					{editable && activeTab === "Startup" && (
 						<button
 							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
 							onClick={() => setAddingStartupExp(true)}
@@ -183,8 +194,8 @@ const Experience = ({ user, userId }) => {
 			</div>
 
 			{activeTab === "Corporate" && (
-				<>
-					{addingCorporateExp && (
+				<div>
+					{editable && addingCorporateExp && (
 						<div className="mb-6">
 							<input
 								type="text"
@@ -294,19 +305,21 @@ const Experience = ({ user, userId }) => {
 										{exp.responsibilities}
 									</p>
 								</div>
-								<button
-									className="p-2 text-red-500 hover:text-red-700"
-									onClick={() => removeCorporateExperience(exp.id)}
-								>
-									<TrashIcon className="w-5 h-5" />
-								</button>
+								{editable && (
+									<button
+										className="p-2 text-red-500 hover:text-red-700"
+										onClick={() => removeCorporateExperience(exp.id)}
+									>
+										<TrashIcon className="w-5 h-5" />
+									</button>
+								)}
 							</div>
 						))}
-				</>
+				</div>
 			)}
 			{activeTab === "Startup" && (
-				<>
-					{addingStartupExp && (
+				<div>
+					{editable && addingStartupExp && (
 						<div className="mb-6">
 							<input
 								type="text"
@@ -380,15 +393,17 @@ const Experience = ({ user, userId }) => {
 									<p className="text-textSecondary">{exp.startup_name}</p>
 									<p className="text-textSecondary mt-2">{exp.description}</p>
 								</div>
-								<button
-									className="p-2 text-red-500 hover:text-red-700"
-									onClick={() => removeStartupExperience(exp.id)}
-								>
-									<TrashIcon className="w-5 h-5" />
-								</button>
+								{editable && (
+									<button
+										className="p-2 text-red-500 hover:text-red-700"
+										onClick={() => removeStartupExperience(exp.id)}
+									>
+										<TrashIcon className="w-5 h-5" />
+									</button>
+								)}
 							</div>
 						))}
-				</>
+				</div>
 			)}
 		</div>
 	);

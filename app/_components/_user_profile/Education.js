@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
-const Education = ({ user, userId }) => {
-	const [educations, setEducations] = useState(null);
+const Education = ({ username, educationList, editable }) => {
+	const [educations, setEducations] = useState(educationList);
 	const [addingEducation, setAddingEducation] = useState(false);
 	const [newEducation, setNewEducation] = useState({
 		degree: "NONE",
@@ -16,7 +16,7 @@ const Education = ({ user, userId }) => {
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/createEducation`,
 				{
-					userId,
+					username,
 					...newEducation,
 				},
 				{ withCredentials: true },
@@ -43,33 +43,37 @@ const Education = ({ user, userId }) => {
 			console.error("Error removing education:", error);
 		}
 	};
-	useEffect(() => {
-		const fetchUserEducation = async () => {
-			try {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllEducation`, {
-						params: { userId },
-						withCredentials: true,
-					})
-					.then((response) => setEducations(response.data.education));
-			} catch (err) {
-				console.error("Error fetching user Education:", err);
-			}
-		};
-		fetchUserEducation();
-	}, []);
+
+	// useEffect(() => {
+	// 	const fetchUserEducation = async () => {
+	// 		try {
+	// 			await axios
+	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllEducation`, {
+	// 					params: { username },
+	// 					withCredentials: true,
+	// 				})
+	// 				.then((response) => setEducations(response.data.education));
+	// 		} catch (err) {
+	// 			console.error("Error fetching user Education:", err);
+	// 		}
+	// 	};
+	// 	fetchUserEducation();
+	// }, []);
+
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-semibold text-textPrimary">Education</h3>
-				<button
-					className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-					onClick={() => setAddingEducation(true)}
-				>
-					<PlusIcon className="w-5 h-5 text-gray-600" />
-				</button>
+				{editable && (
+					<button
+						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+						onClick={() => setAddingEducation(true)}
+					>
+						<PlusIcon className="w-5 h-5 text-gray-600" />
+					</button>
+				)}
 			</div>
-			{addingEducation && (
+			{editable && addingEducation && (
 				<div className="mb-4">
 					<select
 						value={newEducation.degree}
@@ -121,12 +125,14 @@ const Education = ({ user, userId }) => {
 							</h4>
 							<p className="text-textSecondary">{edu.degree}</p>
 						</div>
-						<button
-							className="p-2 text-red-500 hover:text-red-700"
-							onClick={() => removeEducation(edu.id)}
-						>
-							<TrashIcon className="w-5 h-5" />
-						</button>
+						{editable && (
+							<button
+								className="p-2 text-red-500 hover:text-red-700"
+								onClick={() => removeEducation(edu.id)}
+							>
+								<TrashIcon className="w-5 h-5" />
+							</button>
+						)}
 					</div>
 				))}
 		</div>

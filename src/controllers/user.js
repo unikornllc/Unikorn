@@ -134,14 +134,12 @@ export const signIn = async (req, res) => {
 				.json({ message: "Error signing in: Invalid credentials." });
 		}
 
-		// Validate password
 		const account = user || company;
 		const isValid = await comparePasswords(password, account.password);
 		if (!isValid) {
 			return res.status(401).json({ message: "Invalid password." });
 		}
 
-		// Create JWT token
 		const token = createJWT({
 			id: account.id,
 			role: user ? "user" : "company",
@@ -179,20 +177,72 @@ export const getAllUser = async (req, res) => {
 		res.status(400).json({ message: "Error fetching users" });
 	}
 };
+
+const removeUserIds = (obj) => {
+	if (Array.isArray(obj)) {
+		return obj.map(removeUserIds);
+	} else if (obj !== null && typeof obj === "object") {
+		const newObj = {};
+		for (const key in obj) {
+			if (key !== "userId") {
+				newObj[key] = removeUserIds(obj[key]);
+			}
+		}
+		return newObj;
+	} else {
+		return obj;
+	}
+};
+
 export const getOneUser = async (req, res) => {
 	try {
+		const { username, include } = req.query;
+
+		if (!username) {
+			return res
+				.status(400)
+				.json({ message: "Username is required to update the user." });
+		}
+
 		const user = await prisma.user.findUnique({
 			where: {
-				username: req.query.username,
+				username,
 			},
+			...(include
+				? {
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
+				: {}),
 		});
-		const { verified, password, email, ...safeUser } = user;
-		res.status(200).json({ user: safeUser });
+
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		const isCurrentUser = user.id === req.decodedUser.id;
+
+		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
+
+		if (!isCurrentUser) {
+			delete safeUser.email;
+		}
+
+		const cleanedUser = removeUserIds(safeUser);
+
+		res.status(200).json({
+			isCurrentUser,
+			user: cleanedUser,
+		});
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching user" });
 	}
 };
+
 export const getCurrentUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
@@ -224,6 +274,106 @@ export const isCurrentUser = async (req, res) => {
 		res.status(400).json({ message: "Error fetching user" });
 	}
 };
+
+export const updateUser = async (req, res) => {
+	try {
+		const { username, ...updateData } = req.body;
+
+		if (!username) {
+			return res
+				.status(400)
+				.json({ message: "Username is required to update the user." });
+		}
+
+		const updatedUser = await prisma.user.update({
+			where: {
+				id: req.decodedUser.id,
+				username: username,
+			},
+			data: updateData,
+		});
+		res.status(200).json({
+			user: (({ verified, id, password, email, ...safe }) => safe)(updatedUser),
+		});
+	} catch (error) {
+		// console.error("Error updating user:", error);
+		res.status(400).json({ message: "Error updating user." });
+	}
+};
+
+export const followUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (isAlreadyFollowing) {
+			res.status(400).json({ message: "User already followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: [...user.following, req.body.followerId],
+					},
+				},
+			});
+			res.status(200).json({ message: "User followed successfully" });
+		}
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error following user" });
+	}
+};
+
+export const isFollowingUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+		const followingId = await prisma.user.findUnique({
+			where: { username: req.query.username },
+			select: { id: true },
+		});
+		const isFollowing = user.following.includes(followingId.id);
+		console.log(isFollowing);
+		res.status(200).json({ isFollowing });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
+
+export const unfollowUser = async (req, res) => {
+	try {
+		const user = await prisma.user.findUnique({
+			where: { id: req.cookies.userId },
+			select: { following: true },
+		});
+
+		const isAlreadyFollowing = user.following.includes(req.body.followerId);
+		if (!isAlreadyFollowing) {
+			res.status(400).json({ message: "User not followed" });
+		} else {
+			await prisma.user.update({
+				where: { id: req.cookies.userId },
+				data: {
+					following: {
+						set: user.following.filter((id) => id != req.body.followerId),
+					},
+				},
+			});
+			res.status(200).json({ message: "User unfollowed successfully" });
+		}
+	} catch (error) {
+		console.error(error);
+		res.status(400).json({ message: "Error unfollowing user" });
+	}
+};
+
 export const deleteUser = async (req, res) => {
 	try {
 		const id = req.query.userId;
@@ -408,101 +558,5 @@ export const suggestUsername = async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Internal Server Error" });
-	}
-};
-
-export const updateUser = async (req, res) => {
-	try {
-		const { userId, ...updateData } = req.body;
-		if (!userId) {
-			return res
-				.status(400)
-				.json({ message: "Username is required to update the user." });
-		}
-		const updatedUser = await prisma.user.update({
-			where: {
-				id: userId,
-			},
-			data: updateData,
-		});
-
-		const { verified, password, email, ...safeUser } = updatedUser;
-		res.status(200).json({ user: safeUser });
-	} catch (error) {
-		// console.error("Error updating user:", error);
-		res.status(400).json({ message: "Error updating user." });
-	}
-};
-
-export const followUser = async (req, res) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
-			select: { following: true },
-		});
-
-		const isAlreadyFollowing = user.following.includes(req.body.followerId);
-		if (isAlreadyFollowing) {
-			res.status(400).json({ message: "User already followed" });
-		} else {
-			await prisma.user.update({
-				where: { id: req.cookies.userId },
-				data: {
-					following: {
-						set: [...user.following, req.body.followerId],
-					},
-				},
-			});
-			res.status(200).json({ message: "User followed successfully" });
-		}
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error following user" });
-	}
-};
-
-export const isFollowingUser = async (req, res) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
-			select: { following: true },
-		});
-		const followingId = await prisma.user.findUnique({
-			where: { username: req.query.username },
-			select: { id: true },
-		});
-		const isFollowing = user.following.includes(followingId.id);
-		console.log(isFollowing);
-		res.status(200).json({ isFollowing });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching user" });
-	}
-};
-
-export const unfollowUser = async (req, res) => {
-	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.cookies.userId },
-			select: { following: true },
-		});
-
-		const isAlreadyFollowing = user.following.includes(req.body.followerId);
-		if (!isAlreadyFollowing) {
-			res.status(400).json({ message: "User not followed" });
-		} else {
-			await prisma.user.update({
-				where: { id: req.cookies.userId },
-				data: {
-					following: {
-						set: user.following.filter((id) => id != req.body.followerId),
-					},
-				},
-			});
-			res.status(200).json({ message: "User unfollowed successfully" });
-		}
-	} catch (error) {
-		console.error(error);
-		res.status(400).json({ message: "Error unfollowing user" });
 	}
 };

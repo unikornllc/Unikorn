@@ -1,0 +1,17 @@
+docker compose down
+docker compose up -d --force-recreate
+docker compose logs -f
+docker ps
+docker compose build
+
+
+ KAFKA_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+
+
+docker run -it --rm -p 8888:8888 -v "D:/Study/GUC Semester 9/Data Engineering/Project/Milestone 3":/home/jovyan/work jupyter/all-spark-notebook
+
+docker exec -it <container_id> bash
+jupyter notebook password

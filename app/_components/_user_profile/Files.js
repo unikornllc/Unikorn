@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 
-const Files = ({ user, userId }) => {
+const Files = ({ username, editable }) => {
 	const [userFiles, setUserFiles] = useState([]);
 	const [addingFile, setAddingFile] = useState(false);
 	const [selectedFile, setSelectedFile] = useState(null);
@@ -13,7 +13,7 @@ const Files = ({ user, userId }) => {
 
 		const formData = new FormData();
 		formData.append("file", selectedFile);
-		formData.append("userId", userId);
+		formData.append("username", username);
 		formData.append("fileName", "resume");
 
 		try {
@@ -40,7 +40,7 @@ const Files = ({ user, userId }) => {
 	const deleteFile = async (fileName) => {
 		try {
 			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/deleteUserFile`, {
-				params: { userId, fileName },
+				params: { username, fileName },
 				withCredentials: true,
 			});
 
@@ -57,19 +57,38 @@ const Files = ({ user, userId }) => {
 			const response = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/getUserFile`,
 				{
-					params: { userId, fileName },
+					params: { username, fileName },
 					withCredentials: true,
 				},
 			);
 
 			const fileData = response.data;
-			const fileContent = atob(fileData.fileContent);
-			const blob = new Blob([fileContent], { type: `${fileData.fileType}/*` });
+
+			const binaryString = atob(fileData.fileContent);
+			const binaryLength = binaryString.length;
+			const binaryArray = new Uint8Array(binaryLength);
+
+			for (let i = 0; i < binaryLength; i++) {
+				binaryArray[i] = binaryString.charCodeAt(i);
+			}
+
+			const blob = new Blob([binaryArray], { type: fileData.fileType });
+
+			let fileExtension = fileData.fileType.split("/").pop();
+			if (fileExtension === "plain") {
+				fileExtension = "txt";
+			}
+
+			const downloadName = fileData.fileName.includes(".")
+				? fileData.fileName
+				: `${fileData.fileName}.${fileExtension}`;
 
 			const link = document.createElement("a");
 			link.href = window.URL.createObjectURL(blob);
-			link.download = fileData.fileName;
+			link.download = downloadName;
 			link.click();
+
+			window.URL.revokeObjectURL(link.href);
 		} catch (error) {
 			console.error("Error downloading file:", error);
 		}
@@ -81,7 +100,7 @@ const Files = ({ user, userId }) => {
 				const response = await axios.get(
 					`${process.env.NEXT_PUBLIC_SERVER}/getUserFile`,
 					{
-						params: { userId, fileName: "resume" },
+						params: { username, fileName: "resume" },
 						withCredentials: true,
 					},
 				);
@@ -95,21 +114,23 @@ const Files = ({ user, userId }) => {
 		};
 
 		fetchUserFiles();
-	}, [userId]);
+	}, [username]);
 
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-semibold text-textPrimary">Resume</h3>
-				<button
-					className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-					onClick={() => setAddingFile(true)}
-				>
-					<PlusIcon className="w-5 h-5 text-gray-600" />
-				</button>
+				{editable && userFiles.length < 1 && (
+					<button
+						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+						onClick={() => setAddingFile(true)}
+					>
+						<PlusIcon className="w-5 h-5 text-gray-600" />
+					</button>
+				)}
 			</div>
 
-			{addingFile && (
+			{editable && addingFile && (
 				<form onSubmit={uploadFile} className="mb-4">
 					<input
 						type="file"
@@ -139,43 +160,46 @@ const Files = ({ user, userId }) => {
 			)}
 
 			<ul className="list-disc list-inside space-y-2">
-				{userFiles.map((file, index) => (
-					<li
-						key={file.id || `file-${index}`}
-						className="flex justify-between items-center"
-					>
-						<div>
-							<span className="text-textSecondary">{file.fileName}</span>
-						</div>
-						<div className="flex space-x-2">
-							<button
-								className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-								onClick={() => downloadFile(file.fileName)}
-							>
-								<svg
-									className="w-5 h-5 text-gray-600"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
+				{userFiles &&
+					userFiles.map((file, index) => (
+						<li
+							key={file.id || `file-${index}`}
+							className="flex justify-between items-center"
+						>
+							<div>
+								<span className="text-textSecondary">{file.fileName}</span>
+							</div>
+							<div className="flex space-x-2">
+								<button
+									className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+									onClick={() => downloadFile(file.fileName)}
 								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12v6m0 0l-3-3m3 3l3-3m0-9h.01"
-									/>
-								</svg>
-							</button>
-							<button
-								className="p-2 text-red-500 hover:text-red-700"
-								onClick={() => deleteFile(file.fileName)}
-							>
-								<TrashIcon className="w-5 h-5" />
-							</button>
-						</div>
-					</li>
-				))}
+									<svg
+										className="w-5 h-5 text-gray-600"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12v6m0 0l-3-3m3 3l3-3m0-9h.01"
+										/>
+									</svg>
+								</button>
+								{editable && (
+									<button
+										className="p-2 text-red-500 hover:text-red-700"
+										onClick={() => deleteFile(file.fileName)}
+									>
+										<TrashIcon className="w-5 h-5" />
+									</button>
+								)}
+							</div>
+						</li>
+					))}
 			</ul>
 		</div>
 	);

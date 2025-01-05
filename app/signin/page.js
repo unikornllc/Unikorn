@@ -104,7 +104,10 @@ export default function SignIn() {
 						<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
 							<FaFacebook className="text-blue-600 h-6 w-6" />
 						</button>
-						<button onClick={loginWithGoogle} className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
+						<button
+							onClick={loginWithGoogle}
+							className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow"
+						>
 							<FcGoogle className="text-red-500 h-6 w-6" />
 						</button>
 					</div>
@@ -112,11 +115,18 @@ export default function SignIn() {
 				{error && <p className="text-red-500 text-sm mt-4">{message}</p>}
 				{success && <p className="text-green-500 text-sm mt-4">{message}</p>}
 			</div>
+			<p className="mt-4 text-sm text-gray-500">Don’t have an account? </p>
 			<p className="mt-4 text-sm text-gray-500">
-				Don’t have an account?{" "}
-				<Link href="/signup" className="text-blue-500 hover:underline">
-					Sign Up
+				Are you a user?{" "}
+				<Link href="/signup/user" className="text-blue-500 hover:underline">
+					Sign up
 				</Link>
+			</p>
+			<p className="mt-4 text-sm text-gray-500">
+				Are you a company?{" "}
+				<Link href="/signup/company" className="text-blue-500 hover:underline">
+					Sign up
+				</Link>{" "}
 			</p>
 		</div>
 	);
