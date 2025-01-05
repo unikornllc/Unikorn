@@ -1,9 +1,5 @@
 import prisma from "../db.js";
-import NodeMailer from "nodemailer";
-import jwt from "jsonwebtoken";
-import { comparePasswords } from "./auth.js";
 import { hashPassword } from "./auth.js";
-import { createJWT } from "./auth.js";
 
 export const createCompany = async (req, res) => {
 	try {
@@ -45,27 +41,6 @@ export const getAllCompanies = async (req, res) => {
 	} catch (error) {
 		console.error(error);
 		res.status(400).json({ message: "Error fetching companies" });
-	}
-};
-
-export const getCompany = async (req, res) => {
-	try {
-		const { companyId } = req.body;
-
-		const company = await prisma.company_Profile.findUnique({
-			where: {
-				id: companyId,
-			},
-		});
-
-		if (!company) {
-			return res.status(404).json({ message: "Company not found" });
-		}
-
-		res.status(200).json(company);
-	} catch (error) {
-		console.error(error);
-		res.status(400).json({ message: "Error fetching company" });
 	}
 };
 
@@ -118,40 +93,134 @@ export const isCurrentCompany = async (req, res) => {
 	}
 };
 
-export const getOneCompanyProfile = async (req, res) => {
-	try {
-		const company = await prisma.company_Profile.findUnique({
-			where: {
-				username: req.query.username,
-			},
-		});
-		const { id, password, email, ...safeCompany } = company;
-		res.status(200).json({ company: safeCompany });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching company" });
+const isPlainObject = (obj) => {
+	if (Object.getPrototypeOf(obj) === null) {
+		return true;
+	}
+	return Object.getPrototypeOf(obj) === Object.prototype;
+};
+
+const removeCompanyIds = (obj) => {
+	if (Array.isArray(obj)) {
+		return obj.map(removeCompanyIds);
+	} else if (obj !== null && typeof obj === "object") {
+		if (!isPlainObject(obj)) {
+			return obj;
+		}
+		const newObj = {};
+		for (const key in obj) {
+			if (key !== "userId") {
+				newObj[key] = removeCompanyIds(obj[key]);
+			}
+		}
+		return newObj;
+	} else {
+		return obj;
 	}
 };
 
-export const getCurrentCompanyProfile = async (req, res) => {
+export const getOneCompanyProfile = async (req, res) => {
 	try {
+		const { username, include } = req.query;
+
+		if (!username) {
+			return res
+				.status(400)
+				.json({ message: "Provide a correct a username to login." });
+		}
+
 		const company = await prisma.company_Profile.findUnique({
 			where: {
-				id: req.cookies.userId,
+				username,
 			},
-			include: {
-				founders: true,
-				key_employees: true,
-				product_information: true,
-				financials: true,
-				activites: true,
-				company_file: true,
-			},
+			...(include
+				? {
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
+				: {}),
 		});
-		const { id, password, emailVerify, verified, ...safeCompany } = company;
-		res.status(200).json({ company: safeCompany });
+
+		if (!company) {
+			return res.status(400).json({ message: "Company not found" });
+		}
+		const isCurrentCompany = company.id === req.decodedUser.id;
+
+		const safeCompany = (({ verified, id, password, ...rest }) => rest)(
+			company,
+		);
+
+		if (!isCurrentCompany) {
+			delete safeCompany.email;
+		}
+
+		const cleanedCompany = removeCompanyIds(safeCompany);
+
+		res.status(200).json({
+			isCurrentCompany,
+			company: cleanedCompany,
+		});
 	} catch (e) {
 		console.error(e);
-		res.status(400).json({ message: "Error fetching company" });
+		res.status(400).json({ message: "Error fetching Profile" });
+	}
+};
+
+export const updateCompanyProfile = async (req, res) => {
+	try {
+		const id = req.decodedUser.id;
+		const { fieldName, fieldValue } = req.body;
+		if (!id) {
+			return res
+				.status(400)
+				.json({ message: "Username is required to update the profile." });
+		}
+		const allowedFields = [
+			"name",
+			"email",
+			"username",
+			"description",
+			"website",
+			"founded",
+			"hqlocation",
+			"hunter",
+			"industry",
+			"type",
+		];
+
+		if (!allowedFields.includes(fieldName)) {
+			return res.status(400).json({ error: "Invalid field name" });
+		}
+
+		const company = await prisma.company_Profile.findUnique({
+			where: { id },
+		});
+		if (!company) {
+			return res.status(404).json({ error: "Company not found" });
+		}
+
+		const updateData = {};
+		updateData[fieldName] = fieldValue;
+
+		const updatedCompany = await prisma.company_Profile.update({
+			where: { id },
+			data: updateData,
+		});
+
+		// Optionally, fetch the updated company data with associations if needed
+		// const updatedCompany = await Company.findOne({
+		// 	where: { id: company.id },
+		// 	// Include any associations if necessary
+		// include: [{ model: Founder }, { model: BoardMember }, ...],
+		//});
+
+		res.json({ company: updatedCompany });
+	} catch (error) {
+		console.error("Error updating company profile:", error);
+		res.status(500).json({ error: "Internal server error" });
 	}
 };

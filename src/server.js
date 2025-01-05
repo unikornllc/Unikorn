@@ -2,9 +2,6 @@ import express from "express";
 import bodyParser from "body-parser";
 import router from "./router.js";
 import cookieParser from "cookie-parser";
-import http from "http";
-import csrf from "csurf";
-import jwt from "jsonwebtoken";
 import cors from "cors";
 import { protect } from "./controllers/auth.js";
 import {
