@@ -13,7 +13,7 @@ export const createJWT = (user) => {
 	const token = jwt.sign(
 		{
 			id: user.id,
-			email: user.email,
+			role: user.role,
 		},
 		process.env.JWT_SECRET,
 	);
@@ -28,7 +28,8 @@ export const protect = (req, res, next) => {
 			res.json({ message: "not valid token" });
 			return;
 		}
-		jwt.verify(token, process.env.JWT_SECRET);
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		req.decodedUser = decoded;
 		next();
 	} catch (e) {
 		console.error(e);

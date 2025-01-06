@@ -11,17 +11,17 @@ import session from "express-session";
 import configurePassport from "./passport.js";
 import { protect } from "./controllers/auth.js";
 import {
-  createUser,
-  verifyUser,
-  signIn,
-  suggestUsername,
+	createUser,
+	verifyUser,
+	signIn,
+	suggestUsername,
 } from "./controllers/user.js";
 import { createCompany } from "./controllers/company_profile.js";
 import { verifiedUser } from "./middlewares/verified_mail.js";
 import {
-  confirmPassword,
-  checkEmail,
-  checkUsername,
+	confirmPassword,
+	checkEmail,
+	checkUsername,
 } from "./middlewares/signup.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -44,17 +44,17 @@ configurePassport(passport);
 // app.use(csrfProtection);
 
 const corsOptions = {
-  origin: "http://localhost:3000",
-  credentials: true,
-  optionSuccessStatus: 200,
+	origin: "http://localhost:3000",
+	credentials: true,
+	optionSuccessStatus: 200,
 };
 
 const server = createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    credentials: true,
-  },
+	cors: {
+		origin: "http://localhost:3000",
+		credentials: true,
+	},
 });
 
 app.use(bodyParser.json());
@@ -75,16 +75,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/", (req, res, next) => {
-  setTimeout(() => {
-    next(new Error("hello"));
-  }, 1);
+	setTimeout(() => {
+		next(new Error("hello"));
+	}, 1);
 });
 
 const cookieOptions = {
-  httpOnly: false,
-  secure: false,
-  maxAge: 24 * 60 * 60 * 1000,
-  sameSite: "lax",
+	httpOnly: false,
+	secure: false,
+	maxAge: 24 * 60 * 60 * 1000,
+	sameSite: "lax",
 };
 
 // app.use(
@@ -139,11 +139,11 @@ app.get("/auth/logout", function (req, res, next) {
 
 app.post("/createUser", checkEmail, checkUsername, confirmPassword, createUser);
 app.post(
-  "/createCompany",
-  checkEmail,
-  checkUsername,
-  confirmPassword,
-  createCompany
+	"/createCompany",
+	checkEmail,
+	checkUsername,
+	confirmPassword,
+	createCompany,
 );
 app.get("/verifyUser", verifyUser);
 app.post("/signIn", verifiedUser, signIn);
@@ -151,57 +151,58 @@ app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
 app.use(protect, router);
+//app.use(router);
 
 server.listen(3002, () => {
-  console.log("Server is running on port 3002");
+	console.log("Server is running on port 3002");
 });
 
 io.use(async (socket, next) => {
-  const username = socket.handshake.auth.username;
-  console.log(socket.handshake.auth.username);
-  if (!username) {
-    return next(new Error("invalid username"));
-  }
-  socket.username = username;
-  next();
+	const username = socket.handshake.auth.username;
+	console.log(socket.handshake.auth.username);
+	if (!username) {
+		return next(new Error("invalid username"));
+	}
+	socket.username = username;
+	next();
 });
 
 io.on("connection", async (socket) => {
-  const users = [];
-  for (let [id, socket] of io.of("/").sockets) {
-    users.push({
-      userID: id,
-      username: socket.username,
-      connected: "online",
-      messages: [],
-    });
-  }
+	const users = [];
+	for (let [id, socket] of io.of("/").sockets) {
+		users.push({
+			userID: id,
+			username: socket.username,
+			connected: "online",
+			messages: [],
+		});
+	}
 
-  socket.emit("users", users);
+	socket.emit("users", users);
 
-  socket.broadcast.emit("user connected", {
-    userID: socket.id,
-    username: socket.username,
-    connected: "online",
-    messages: [],
-  });
+	socket.broadcast.emit("user connected", {
+		userID: socket.id,
+		username: socket.username,
+		connected: "online",
+		messages: [],
+	});
 
-  socket.on("private message", ({ content, to }) => {
-    socket.to(to).emit("private message", {
-      content,
-      from: socket.id,
-    });
-    console.log(users);
-  });
+	socket.on("private message", ({ content, to }) => {
+		socket.to(to).emit("private message", {
+			content,
+			from: socket.id,
+		});
+		console.log(users);
+	});
 
-  socket.on("disconnect", async () => {
-    socket.broadcast.emit("user disconnected", {
-      userID: socket.id,
-      username: socket.username,
-      connected: "offline",
-    });
-    console.log("server disconnect");
-  });
+	socket.on("disconnect", async () => {
+		socket.broadcast.emit("user disconnected", {
+			userID: socket.id,
+			username: socket.username,
+			connected: "offline",
+		});
+		console.log("server disconnect");
+	});
 });
 
 export default app;

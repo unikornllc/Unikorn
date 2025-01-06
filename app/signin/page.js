@@ -114,9 +114,18 @@ export default function SignIn() {
       </div>
       <p className="mt-4 text-sm text-gray-500">
         Don’t have an account?{" "}
-        <Link href="/signup" className="text-blue-500 hover:underline">
-          Sign Up
-        </Link>
+        <p className="mt-4 text-sm text-gray-500">
+				Are you a user?{" "}
+				<Link href="/signup/user" className="text-blue-500 hover:underline">
+					Sign up
+				</Link>
+			</p>
+			<p className="mt-4 text-sm text-gray-500">
+				Are you a company?{" "}
+				<Link href="/signup/company" className="text-blue-500 hover:underline">
+					Sign up
+				</Link>{" "}
+			</p>
       </p>
     </div>
   );

@@ -44,10 +44,13 @@ import {
 	getOneUser,
 	getCurrentUser,
 	isCurrentUser,
+	updateUser,
 	signIn,
 	followUser,
 	isFollowingUser,
 	unfollowUser,
+	getFollowers,
+	getFollowing,
 } from "./controllers/user.js";
 
 import {
@@ -119,6 +122,7 @@ import {
 
 import {
 	uploadUserFile,
+	getAllUserFile,
 	getUserFile,
 	deleteUserFile,
 } from "./controllers/user_file.js";
@@ -145,13 +149,13 @@ router.delete("/deleteStartupExperience", deleteStartupExperience);
 router.post("/createExpertise", createExpertise);
 router.get("/getOneExpertise", getOneExpertise);
 router.get("/getAllExpertise", getAllExpertise);
-router.delete("/deleteExpertise", deleteOneExpertise);
+router.delete("/deleteOneExpertise", deleteOneExpertise);
 
 //education
 router.post("/createEducation", createEducation);
 router.get("/getOneEducation", getOneEducation);
 router.get("/getAllEducation", getAllEducation);
-router.delete("/deleteEducation", deleteOneEducation);
+router.delete("/deleteOneEducation", deleteOneEducation);
 
 //user
 router.get("/getAllUsers", getAllUser);
@@ -159,9 +163,15 @@ router.get("/getOneUser", getOneUser);
 router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
 router.delete("/deleteUser", deleteUser);
+router.put("/updateUser", updateUser);
 router.put("/followUser", followUser);
 router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
+
+//get followers and following returns an array of usernames
+router.get("/getFollowers", getFollowers);
+router.get("/getFollowing", getFollowing);
+
 //Certifications_Courses
 router.post("/createCertificationsCourses", createCertificationsCourses);
 router.get("/getAllCertificationsCourses", getAllCertificationsCourses);
@@ -227,6 +237,7 @@ router.delete("/deleteActivity", deleteOneActivity);
 
 router.post("/uploadUserFile", upload.single("file"), uploadUserFile);
 router.get("/getUserFile", getUserFile);
+router.get("/getAllUserFile", getAllUserFile);
 router.delete("/deleteUserFile", deleteUserFile);
 
 export default router;
