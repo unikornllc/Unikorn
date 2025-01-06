@@ -112,21 +112,24 @@ export default function SignIn() {
         {error && <p className="text-red-500 text-sm mt-4">{message}</p>}
         {success && <p className="text-green-500 text-sm mt-4">{message}</p>}
       </div>
-      <p className="mt-4 text-sm text-gray-500">
+      <div className="mt-4 text-sm text-gray-500">
         Don’t have an account?{" "}
-        <p className="mt-4 text-sm text-gray-500">
-				Are you a user?{" "}
-				<Link href="/signup/user" className="text-blue-500 hover:underline">
-					Sign up
-				</Link>
-			</p>
-			<p className="mt-4 text-sm text-gray-500">
-				Are you a company?{" "}
-				<Link href="/signup/company" className="text-blue-500 hover:underline">
-					Sign up
-				</Link>{" "}
-			</p>
-      </p>
+        <div className="mt-4 text-sm text-gray-500">
+          Are you a user?{" "}
+          <Link href="/signup/user" className="text-blue-500 hover:underline">
+            Sign up
+          </Link>
+        </div>
+        <div className="mt-4 text-sm text-gray-500">
+          Are you a company?{" "}
+          <Link
+            href="/signup/company"
+            className="text-blue-500 hover:underline"
+          >
+            Sign up
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
