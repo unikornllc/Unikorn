@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function OtherProfile({ username }) {
+export default function ViewCompanyProfile({ username }) {
   const [companyData, setCompanyData] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState("");

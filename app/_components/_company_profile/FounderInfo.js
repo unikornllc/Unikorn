@@ -1,60 +1,83 @@
+import React, { useState } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
-import SaveIcon from "@/app/_icons/SaveIcon";
-import React, { useState } from "react";
+import EditIcon from "@/app/_icons/EditIcon.jsx";
+import SaveIcon from "@/app/_icons/SaveIcon.jsx";
 
 const FounderInfo = ({ founders = [], onUpdate }) => {
+	const [localFounders, setLocalFounders] = useState(founders);
 	const [editingIndex, setEditingIndex] = useState(null);
-	const [newFounder, setNewFounder] = useState({
+	const [tempFounder, setTempFounder] = useState({
 		name: "",
 		role: "",
 		crunch_base_link: "",
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
-	const handleChange = (index, field, value) => {
-		const updatedFounders = [...founders];
-		updatedFounders[index] = { ...updatedFounders[index], [field]: value };
-		onUpdate("founders", updatedFounders);
+	// Start editing an existing founder
+	const startEditing = (index) => {
+		setEditingIndex(index);
+		setTempFounder({ ...localFounders[index] });
 	};
 
-	const handleDelete = (index) => {
-		const updatedFounders = founders.filter((_, i) => i !== index);
-		onUpdate("founders", updatedFounders);
-	};
-
-	const toggleEdit = (index) => {
-		setEditingIndex(editingIndex === index ? null : index);
-	};
-
-	const handleAddClick = () => {
-		setIsAdding(true);
-	};
-
-	const handleAddSubmit = () => {
-		const updatedFounders = [...(founders || []), newFounder];
-		onUpdate("founders", updatedFounders);
-		setNewFounder({ name: "", role: "", crunch_base_link: "" });
+	// Cancel editing or adding
+	const cancelEditing = () => {
+		setEditingIndex(null);
+		setTempFounder({ name: "", role: "", crunch_base_link: "" });
 		setIsAdding(false);
 	};
 
-	const handleNewFounderChange = (field, value) => {
-		setNewFounder({ ...newFounder, [field]: value });
+	// Save changes to an existing founder
+	const saveFounder = () => {
+		const updatedFounders = [...localFounders];
+		updatedFounders[editingIndex] = tempFounder;
+		setLocalFounders(updatedFounders);
+		setEditingIndex(null);
+		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		// Call onUpdate to update the backend and parent state
+		onUpdate("founders", updatedFounders);
+	};
+
+	// Delete a founder
+	const handleDelete = (index) => {
+		const updatedFounders = localFounders.filter((_, i) => i !== index);
+		setLocalFounders(updatedFounders);
+		onUpdate("founders", updatedFounders);
+	};
+
+	// Start adding a new founder
+	const handleAddClick = () => {
+		setIsAdding(true);
+		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+	};
+
+	// Save the new founder
+	const handleAddSubmit = () => {
+		const updatedFounders = [...localFounders, tempFounder];
+		setLocalFounders(updatedFounders);
+		setIsAdding(false);
+		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		onUpdate("founders", updatedFounders);
+	};
+
+	// Handle input changes for both editing and adding
+	const handleChange = (field, value) => {
+		setTempFounder((prev) => ({ ...prev, [field]: value }));
 	};
 
 	return (
 		<div className="mb-6">
 			<h2 className="text-xl font-semibold mb-4">Founders</h2>
-			{founders && founders.length > 0 ? (
-				founders.map((founder, index) => (
+			{localFounders && localFounders.length > 0 ? (
+				localFounders.map((founder, index) => (
 					<div key={index} className="mb-4 p-4 border rounded">
 						<div className="flex items-center mb-2">
 							<span className="font-medium w-1/3">Name:</span>
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={founder.name}
-									onChange={(e) => handleChange(index, "name", e.target.value)}
+									value={tempFounder.name}
+									onChange={(e) => handleChange("name", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							) : (
@@ -66,8 +89,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={founder.role}
-									onChange={(e) => handleChange(index, "role", e.target.value)}
+									value={tempFounder.role}
+									onChange={(e) => handleChange("role", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							) : (
@@ -79,9 +102,9 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={founder.crunch_base_link}
+									value={tempFounder.crunch_base_link}
 									onChange={(e) =>
-										handleChange(index, "crunch_base_link", e.target.value)
+										handleChange("crunch_base_link", e.target.value)
 									}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
@@ -97,24 +120,43 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 							)}
 						</div>
 						<div className="flex justify-end">
-							<button
-								onClick={() => toggleEdit(index)}
-								className="text-blue-500 underline mr-2"
-							>
-								{editingIndex === index ? "Save" : "Edit"}
-							</button>
-							<button
-								onClick={() => handleDelete(index)}
-								className="text-red-500 underline"
-							>
-								<DeleteIcon />
-							</button>
+							{editingIndex === index ? (
+								<>
+									<button
+										onClick={saveFounder}
+										className="text-blue-500 underline mr-2"
+									>
+										<SaveIcon />
+									</button>
+									<button
+										onClick={cancelEditing}
+										className="text-red-500 underline"
+									>
+										Cancel
+									</button>
+								</>
+							) : (
+								<>
+									<button
+										onClick={() => startEditing(index)}
+										className="text-blue-500 underline mr-2"
+									>
+										<EditIcon />
+									</button>
+									<button
+										onClick={() => handleDelete(index)}
+										className="text-red-500 underline"
+									>
+										<DeleteIcon />
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				))
 			) : (
 				<p className="text-gray-500">
-					No founders available. Click "Add Founder" to get started.
+					No founders available. Click "Add" to get started.
 				</p>
 			)}
 
@@ -124,8 +166,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						<span className="font-medium w-1/3">Name:</span>
 						<input
 							type="text"
-							value={newFounder.name}
-							onChange={(e) => handleNewFounderChange("name", e.target.value)}
+							value={tempFounder.name}
+							onChange={(e) => handleChange("name", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
@@ -133,8 +175,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						<span className="font-medium w-1/3">Role:</span>
 						<input
 							type="text"
-							value={newFounder.role}
-							onChange={(e) => handleNewFounderChange("role", e.target.value)}
+							value={tempFounder.role}
+							onChange={(e) => handleChange("role", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
@@ -142,10 +184,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						<span className="font-medium w-1/3">CrunchBase Link:</span>
 						<input
 							type="text"
-							value={newFounder.crunch_base_link}
-							onChange={(e) =>
-								handleNewFounderChange("crunch_base_link", e.target.value)
-							}
+							value={tempFounder.crunch_base_link}
+							onChange={(e) => handleChange("crunch_base_link", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
@@ -156,11 +196,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						>
 							<SaveIcon />
 						</button>
-						<button
-							onClick={() => setIsAdding(false)}
-							className="text-red-500 underline"
-						>
-							<DeleteIcon />
+						<button onClick={cancelEditing} className="text-red-500 underline">
+							Cancel
 						</button>
 					</div>
 				</div>

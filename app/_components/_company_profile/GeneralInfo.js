@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
-import React, { useState } from "react";
+import DeleteIcon from "@/app/_icons/DeleteIcon";
 
 const Company_Type = {
 	Profit: "Profit",
@@ -11,26 +12,47 @@ const Company_Type = {
 
 const GeneralInfo = ({ company, onUpdate }) => {
 	const [editingField, setEditingField] = useState(null);
+	const [tempValue, setTempValue] = useState("");
 
-	const handleChange = (e) => {
-		const { name, type, checked, value } = e.target;
+	const startEditing = (fieldName) => {
+		setEditingField(fieldName);
+		setTempValue(company[fieldName] || "");
+	};
 
-		if (type === "checkbox") {
-			// If it's a checkbox, set the value to true or false
-			onUpdate(name, checked);
-		} else {
-			onUpdate(name, value);
+	const cancelEditing = () => {
+		setEditingField(null);
+		setTempValue("");
+	};
+
+	const saveField = () => {
+		if (editingField !== null) {
+			onUpdate(editingField, tempValue);
+			setEditingField(null);
+			setTempValue("");
 		}
 	};
 
-	const toggleEdit = (field) => {
-		setEditingField(editingField === field ? null : field);
+	const handleChange = (e) => {
+		const { type, checked, value } = e.target;
+		setTempValue(type === "checkbox" ? checked : value);
+	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === "Enter") {
+			e.preventDefault(); // Prevent default form submission
+			saveField();
+		} else if (e.key === "Escape") {
+			cancelEditing();
+		}
 	};
 
 	return (
 		<div className="mb-6">
 			<h2 className="text-xl font-semibold mb-4">General Information</h2>
-			<form className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			<form
+				className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+				onSubmit={(e) => e.preventDefault()} // Prevent form default submission
+			>
 				{[
 					{ label: "Name", name: "name", type: "text" },
 					{ label: "Email", name: "email", type: "email" },
@@ -43,7 +65,7 @@ const GeneralInfo = ({ company, onUpdate }) => {
 					{ label: "Industry", name: "industry", type: "text" },
 					{
 						label: "Company Type",
-						name: "companyType",
+						name: "type",
 						type: "select",
 						options: Object.values(Company_Type),
 					},
@@ -54,8 +76,9 @@ const GeneralInfo = ({ company, onUpdate }) => {
 							field.type === "select" ? (
 								<select
 									name={field.name}
-									value={company[field.name] || ""}
+									value={tempValue}
 									onChange={handleChange}
+									onKeyDown={handleKeyDown}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								>
 									{field.options.map((option) => (
@@ -68,16 +91,18 @@ const GeneralInfo = ({ company, onUpdate }) => {
 								<input
 									type="checkbox"
 									name={field.name}
-									checked={company[field.name] || false}
+									checked={tempValue}
 									onChange={handleChange}
+									onKeyDown={handleKeyDown}
 									className="mr-2"
 								/>
 							) : (
 								<input
 									type={field.type}
 									name={field.name}
-									value={company[field.name] || ""}
+									value={tempValue}
 									onChange={handleChange}
+									onKeyDown={handleKeyDown}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							)
@@ -91,10 +116,23 @@ const GeneralInfo = ({ company, onUpdate }) => {
 									)
 								) : field.type === "select" ? (
 									company[field.name] || "-"
+								) : field.type === "date" ? (
+									company[field.name] ? (
+										new Date(company[field.name]).toLocaleDateString()
+									) : (
+										"-"
+									)
 								) : field.name === "website" ? (
 									<a
-										href={company[field.name]}
+										href={
+											company[field.name]?.startsWith("http://") ||
+											company[field.name]?.startsWith("https://")
+												? company[field.name]
+												: `https://${company[field.name]}`
+										}
 										className="text-blue-500 underline"
+										target="_blank"
+										rel="noopener noreferrer"
 									>
 										{company[field.name]}
 									</a>
@@ -103,13 +141,32 @@ const GeneralInfo = ({ company, onUpdate }) => {
 								)}
 							</span>
 						)}
-						<button
-							type="button"
-							onClick={() => toggleEdit(field.name)}
-							className="text-blue-500 underline"
-						>
-							{editingField === field.name ? <SaveIcon /> : <EditIcon />}
-						</button>
+						{editingField === field.name ? (
+							<>
+								<button
+									type="button"
+									onClick={saveField}
+									className="text-blue-500 underline"
+								>
+									<SaveIcon />
+								</button>
+								<button
+									type="button"
+									onClick={cancelEditing}
+									className="text-red-500 underline ml-2"
+								>
+									<DeleteIcon />
+								</button>
+							</>
+						) : (
+							<button
+								type="button"
+								onClick={() => startEditing(field.name)}
+								className="text-blue-500 underline"
+							>
+								<EditIcon />
+							</button>
+						)}
 					</div>
 				))}
 			</form>

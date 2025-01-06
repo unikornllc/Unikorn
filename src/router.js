@@ -74,11 +74,10 @@ import {
 import {
 	createCompany,
 	getAllCompanies,
-	getCompany,
 	deleteCompany,
 	isCurrentCompany,
 	getOneCompanyProfile,
-	getCurrentCompanyProfile,
+	updateCompanyProfile,
 } from "./controllers/company_profile.js";
 
 import {
@@ -193,11 +192,10 @@ router.delete("/deleteSocialMedia", deleteSocialMedia);
 //company
 router.post("/createCompany", createCompany);
 router.get("/getAllCompany", getAllCompanies);
-router.get("/getOneCompany", getCompany);
 router.delete("/deleteCompany", deleteCompany);
 router.get("/isCurrentCompany", isCurrentCompany);
 router.get("/getOneCompanyProfile", getOneCompanyProfile);
-router.get("/getCurrentCompanyProfile", getCurrentCompanyProfile);
+router.put("/updateCompanyProfile", updateCompanyProfile);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);

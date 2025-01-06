@@ -1,59 +1,99 @@
+import React, { useState } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
 import EditIcon from "@/app/_icons/EditIcon.jsx";
 import SaveIcon from "@/app/_icons/SaveIcon.jsx";
-import React, { useState } from "react";
 
 const BoardMembers = ({ members, onUpdate }) => {
+	// Local state to handle board members within the component
+	const [localMembers, setLocalMembers] = useState(members || []);
 	const [editingIndex, setEditingIndex] = useState(null);
+	const [tempValue, setTempValue] = useState("");
 
-	const handleChange = (index, value) => {
-		const updatedMembers = [...members];
-		updatedMembers[index] = value;
+	const startEditing = (index) => {
+		setEditingIndex(index);
+		setTempValue(localMembers[index]);
+	};
+
+	const cancelEditing = () => {
+		setEditingIndex(null);
+		setTempValue("");
+	};
+
+	const saveMember = (index) => {
+		const updatedMembers = [...localMembers];
+		updatedMembers[index] = tempValue;
+		setLocalMembers(updatedMembers);
+		setEditingIndex(null);
+		setTempValue("");
+		// Update the backend and parent state
 		onUpdate("board_members", updatedMembers);
 	};
 
 	const handleDelete = (index) => {
-		const updatedMembers = members.filter((_, i) => i !== index);
+		const updatedMembers = localMembers.filter((_, i) => i !== index);
+		setLocalMembers(updatedMembers);
+		// Update the backend and parent state
 		onUpdate("board_members", updatedMembers);
 	};
 
-	const toggleEdit = (index) => {
-		setEditingIndex(editingIndex === index ? null : index);
+	const handleAdd = () => {
+		const newMembers = [...localMembers, ""];
+		setLocalMembers(newMembers);
+		setEditingIndex(newMembers.length - 1);
+		setTempValue("");
 	};
 
-	const handleAdd = () => {
-		onUpdate("board_members", [...members, ""]);
-		setEditingIndex(members.length);
+	const handleChange = (e) => {
+		setTempValue(e.target.value);
 	};
 
 	return (
 		<div className="mb-6">
 			<h2 className="text-xl font-semibold mb-4">Board Members</h2>
-			{members.map((member, index) => (
+			{localMembers.map((member, index) => (
 				<div key={index} className="flex items-center mb-2">
 					{editingIndex === index ? (
 						<input
 							type="text"
-							value={member}
-							onChange={(e) => handleChange(index, e.target.value)}
+							value={tempValue}
+							onChange={handleChange}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					) : (
 						<span className="flex-grow mr-2">{member}</span>
 					)}
-					<button
-						onClick={() => toggleEdit(index)}
-						className="text-blue-500 underline mr-2"
-					>
-						{editingIndex === index ? <SaveIcon /> : <EditIcon />}
-					</button>
-					<button
-						onClick={() => handleDelete(index)}
-						className="text-red-500 underline"
-					>
-						<DeleteIcon />
-					</button>
+					{editingIndex === index ? (
+						<>
+							<button
+								onClick={() => saveMember(index)}
+								className="text-blue-500 underline mr-2"
+							>
+								<SaveIcon />
+							</button>
+							<button
+								onClick={cancelEditing}
+								className="text-red-500 underline"
+							>
+								Cancel
+							</button>
+						</>
+					) : (
+						<>
+							<button
+								onClick={() => startEditing(index)}
+								className="text-blue-500 underline mr-2"
+							>
+								<EditIcon />
+							</button>
+							<button
+								onClick={() => handleDelete(index)}
+								className="text-red-500 underline"
+							>
+								<DeleteIcon />
+							</button>
+						</>
+					)}
 				</div>
 			))}
 			<div className="text-right">
