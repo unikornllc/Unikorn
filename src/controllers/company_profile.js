@@ -230,3 +230,75 @@ export const updateCompanyProfile = async (req, res) => {
 		res.status(500).json({ error: "Internal server error" });
 	}
 };
+
+export const isFollowingCompany = async (req, res) => {
+	try {
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		const isFollowing = await prisma.userFollowsCompany.findFirst({
+			where: {
+				companyId: company.id,
+				userId: req.decodedUser.id,
+			},
+		});
+
+		isFollowing
+			? res.status(200).json({ isFollowing: true })
+			: res.status(200).json({ isFollowing: false });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching Profile" });
+	}
+};
+
+export const followCompany = async (req, res) => {
+	try {
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				username: req.body.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		await prisma.userFollowsCompany.create({
+			data: {
+				companyId: company.id,
+				userId: req.decodedUser.id,
+			},
+		});
+		res.status(200).json({ message: "Company followed successfully" });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error following company" });
+	}
+};
+
+export const unfollowCompany = async (req, res) => {
+	try {
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				username: req.body.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		await prisma.userFollowsCompany.deleteMany({
+			where: {
+				companyId: company.id,
+				userId: req.decodedUser.id,
+			},
+		});
+		res.status(200).json({ message: "Company unfollowed successfully" });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error unfollowing company" });
+	}
+};

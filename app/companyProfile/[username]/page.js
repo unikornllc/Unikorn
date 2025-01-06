@@ -28,12 +28,29 @@ export default async function CompanyProfile({ params }) {
 			},
 		);
 		const isCurrentCompany = res.data.isCurrentCompany;
+		const company = res.data.company;
+		if (!isCurrentCompany) {
+			try {
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/isFollowingCompany`, {
+						params: { username: company.username },
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						company.isFollowing = response.data.isFollowing;
+					});
+			} catch (err) {
+				console.error(err);
+			}
+		}
 		return (
 			<div>
 				{isCurrentCompany ? (
-					<MyCompanyProfile company={res.data.company} />
+					<MyCompanyProfile company={company} />
 				) : (
-					<ViewCompanyProfile company={res.data.company} />
+					<ViewCompanyProfile company={company} />
 				)}
 			</div>
 		);

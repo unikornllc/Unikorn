@@ -78,6 +78,9 @@ import {
 	isCurrentCompany,
 	getOneCompanyProfile,
 	updateCompanyProfile,
+	followCompany,
+	unfollowCompany,
+	isFollowingCompany,
 } from "./controllers/company_profile.js";
 
 import {
@@ -196,6 +199,9 @@ router.delete("/deleteCompany", deleteCompany);
 router.get("/isCurrentCompany", isCurrentCompany);
 router.get("/getOneCompanyProfile", getOneCompanyProfile);
 router.put("/updateCompanyProfile", updateCompanyProfile);
+router.get("/isFollowingCompany", isFollowingCompany);
+router.put("/followCompany", followCompany);
+router.put("/unfollowCompany", unfollowCompany);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);
