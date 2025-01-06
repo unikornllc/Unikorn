@@ -190,6 +190,12 @@ export const updateCompanyProfile = async (req, res) => {
 			"hunter",
 			"industry",
 			"type",
+			"board_members",
+			"activities",
+			"founders",
+			"key_employees",
+			"product_information",
+			"financials",
 		];
 
 		if (!allowedFields.includes(fieldName)) {

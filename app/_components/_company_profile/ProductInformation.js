@@ -1,101 +1,113 @@
 import React, { useState } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
+import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
 
 const ProductInformation = ({ productInformationList = [], onUpdate }) => {
+	const [localProductInfoList, setLocalProductInfoList] = useState(
+		productInformationList,
+	);
 	const [editingIndex, setEditingIndex] = useState(null);
-	const [newProductInfo, setNewProductInfo] = useState({
+	const [tempProductInfo, setTempProductInfo] = useState({
 		product: "",
 		market: "",
 		partnerships: [],
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
-	const handleChange = (index, field, value) => {
-		const updatedList = [...productInformationList];
-		updatedList[index] = { ...updatedList[index], [field]: value };
-		onUpdate("productInformationList", updatedList);
+	// Start editing an existing product information
+	const startEditing = (index) => {
+		setEditingIndex(index);
+		setTempProductInfo({ ...localProductInfoList[index] });
 	};
 
-	const handlePartnershipChange = (productIndex, partnershipIndex, value) => {
-		const updatedList = [...productInformationList];
-		const updatedPartnerships = [...updatedList[productIndex].partnerships];
-		updatedPartnerships[partnershipIndex] = value;
-		updatedList[productIndex].partnerships = updatedPartnerships;
-		onUpdate("productInformationList", updatedList);
-	};
-
-	const handleAddPartnership = (productIndex) => {
-		const updatedList = [...productInformationList];
-		updatedList[productIndex].partnerships.push("");
-		onUpdate("productInformationList", updatedList);
-	};
-
-	const handleRemovePartnership = (productIndex, partnershipIndex) => {
-		const updatedList = [...productInformationList];
-		updatedList[productIndex].partnerships.splice(partnershipIndex, 1);
-		onUpdate("productInformationList", updatedList);
-	};
-
-	const handleDelete = (index) => {
-		const updatedList = productInformationList.filter((_, i) => i !== index);
-		onUpdate("productInformationList", updatedList);
-	};
-
-	const toggleEdit = (index) => {
-		setEditingIndex(editingIndex === index ? null : index);
-	};
-
-	const handleAddClick = () => {
-		setIsAdding(true);
-	};
-
-	const handleAddSubmit = () => {
-		const updatedList = [...(productInformationList || []), newProductInfo];
-		onUpdate("productInformationList", updatedList);
-		setNewProductInfo({ product: "", market: "", partnerships: [] });
+	// Cancel editing or adding
+	const cancelEditing = () => {
+		setEditingIndex(null);
+		setTempProductInfo({ product: "", market: "", partnerships: [] });
 		setIsAdding(false);
 	};
 
-	const handleNewProductInfoChange = (field, value) => {
-		setNewProductInfo({ ...newProductInfo, [field]: value });
+	// Save changes to an existing product information
+	const saveProductInfo = () => {
+		const updatedList = [...localProductInfoList];
+		updatedList[editingIndex] = tempProductInfo;
+		setLocalProductInfoList(updatedList);
+		setEditingIndex(null);
+		setTempProductInfo({ product: "", market: "", partnerships: [] });
+		// Update the backend and parent state
+		onUpdate("product_information", updatedList);
 	};
 
-	const handleNewPartnershipChange = (index, value) => {
-		const updatedPartnerships = [...newProductInfo.partnerships];
+	// Delete a product information entry
+	const handleDelete = (index) => {
+		const updatedList = localProductInfoList.filter((_, i) => i !== index);
+		setLocalProductInfoList(updatedList);
+		onUpdate("product_information", updatedList);
+	};
+
+	// Handle changes to the product information fields
+	const handleChange = (field, value) => {
+		setTempProductInfo((prev) => ({ ...prev, [field]: value }));
+	};
+
+	// Handle changes to partnerships
+	const handlePartnershipChange = (index, value) => {
+		const updatedPartnerships = [...tempProductInfo.partnerships];
 		updatedPartnerships[index] = value;
-		setNewProductInfo({ ...newProductInfo, partnerships: updatedPartnerships });
+		setTempProductInfo((prev) => ({
+			...prev,
+			partnerships: updatedPartnerships,
+		}));
 	};
 
-	const handleAddNewPartnership = () => {
-		setNewProductInfo({
-			...newProductInfo,
-			partnerships: [...newProductInfo.partnerships, ""],
-		});
+	// Add a new partnership
+	const addPartnership = () => {
+		setTempProductInfo((prev) => ({
+			...prev,
+			partnerships: [...prev.partnerships, ""],
+		}));
 	};
 
-	const handleRemoveNewPartnership = (index) => {
-		const updatedPartnerships = [...newProductInfo.partnerships];
+	// Remove a partnership
+	const removePartnership = (index) => {
+		const updatedPartnerships = [...tempProductInfo.partnerships];
 		updatedPartnerships.splice(index, 1);
-		setNewProductInfo({ ...newProductInfo, partnerships: updatedPartnerships });
+		setTempProductInfo((prev) => ({
+			...prev,
+			partnerships: updatedPartnerships,
+		}));
+	};
+
+	// Start adding a new product information
+	const handleAddClick = () => {
+		setIsAdding(true);
+		setTempProductInfo({ product: "", market: "", partnerships: [] });
+	};
+
+	// Save the new product information
+	const handleAddSubmit = () => {
+		const updatedList = [...localProductInfoList, tempProductInfo];
+		setLocalProductInfoList(updatedList);
+		setIsAdding(false);
+		setTempProductInfo({ product: "", market: "", partnerships: [] });
+		onUpdate("product_information", updatedList);
 	};
 
 	return (
 		<div className="mb-6">
 			<h2 className="text-xl font-semibold mb-4">Product Information</h2>
-			{productInformationList && productInformationList.length > 0 ? (
-				productInformationList.map((productInfo, index) => (
+			{localProductInfoList && localProductInfoList.length > 0 ? (
+				localProductInfoList.map((productInfo, index) => (
 					<div key={index} className="mb-4 p-4 border rounded">
 						<div className="flex items-center mb-2">
 							<span className="font-medium w-1/3">Product:</span>
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={productInfo.product}
-									onChange={(e) =>
-										handleChange(index, "product", e.target.value)
-									}
+									value={tempProductInfo.product}
+									onChange={(e) => handleChange("product", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							) : (
@@ -109,10 +121,8 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={productInfo.market}
-									onChange={(e) =>
-										handleChange(index, "market", e.target.value)
-									}
+									value={tempProductInfo.market}
+									onChange={(e) => handleChange("market", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							) : (
@@ -131,18 +141,14 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 											<>
 												<input
 													type="text"
-													value={partnership}
+													value={tempProductInfo.partnerships[pIndex]}
 													onChange={(e) =>
-														handlePartnershipChange(
-															index,
-															pIndex,
-															e.target.value,
-														)
+														handlePartnershipChange(pIndex, e.target.value)
 													}
 													className="border rounded px-2 py-1 flex-grow mr-2"
 												/>
 												<button
-													onClick={() => handleRemovePartnership(index, pIndex)}
+													onClick={() => removePartnership(pIndex)}
 													className="text-red-500 underline"
 												>
 													<DeleteIcon />
@@ -162,7 +168,7 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 							)}
 							{editingIndex === index && (
 								<button
-									onClick={() => handleAddPartnership(index)}
+									onClick={addPartnership}
 									className="text-blue-500 underline mt-2"
 								>
 									Add Partnership
@@ -170,24 +176,43 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 							)}
 						</div>
 						<div className="flex justify-end">
-							<button
-								onClick={() => toggleEdit(index)}
-								className="text-blue-500 underline mr-2"
-							>
-								{editingIndex === index ? "Save" : "Edit"}
-							</button>
-							<button
-								onClick={() => handleDelete(index)}
-								className="text-red-500 underline"
-							>
-								<DeleteIcon />
-							</button>
+							{editingIndex === index ? (
+								<>
+									<button
+										onClick={saveProductInfo}
+										className="text-blue-500 underline mr-2"
+									>
+										<SaveIcon />
+									</button>
+									<button
+										onClick={cancelEditing}
+										className="text-red-500 underline"
+									>
+										Cancel
+									</button>
+								</>
+							) : (
+								<>
+									<button
+										onClick={() => startEditing(index)}
+										className="text-blue-500 underline mr-2"
+									>
+										<EditIcon />
+									</button>
+									<button
+										onClick={() => handleDelete(index)}
+										className="text-red-500 underline"
+									>
+										<DeleteIcon />
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				))
 			) : (
 				<p className="text-gray-500">
-					No product information available. Click "Add Product" to get started.
+					No product information available. Click "Add" to get started.
 				</p>
 			)}
 			{isAdding && (
@@ -196,10 +221,8 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 						<span className="font-medium w-1/3">Product:</span>
 						<input
 							type="text"
-							value={newProductInfo.product}
-							onChange={(e) =>
-								handleNewProductInfoChange("product", e.target.value)
-							}
+							value={tempProductInfo.product}
+							onChange={(e) => handleChange("product", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
@@ -207,29 +230,27 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 						<span className="font-medium w-1/3">Market:</span>
 						<input
 							type="text"
-							value={newProductInfo.market}
-							onChange={(e) =>
-								handleNewProductInfoChange("market", e.target.value)
-							}
+							value={tempProductInfo.market}
+							onChange={(e) => handleChange("market", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
 					<div className="mb-2">
 						<span className="font-medium">Partnerships:</span>
-						{newProductInfo.partnerships &&
-						newProductInfo.partnerships.length > 0 ? (
-							newProductInfo.partnerships.map((partnership, index) => (
+						{tempProductInfo.partnerships &&
+						tempProductInfo.partnerships.length > 0 ? (
+							tempProductInfo.partnerships.map((partnership, index) => (
 								<div key={index} className="flex items-center mb-1">
 									<input
 										type="text"
 										value={partnership}
 										onChange={(e) =>
-											handleNewPartnershipChange(index, e.target.value)
+											handlePartnershipChange(index, e.target.value)
 										}
 										className="border rounded px-2 py-1 flex-grow mr-2"
 									/>
 									<button
-										onClick={() => handleRemoveNewPartnership(index)}
+										onClick={() => removePartnership(index)}
 										className="text-red-500 underline"
 									>
 										<DeleteIcon />
@@ -240,7 +261,7 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 							<p className="text-gray-500 ml-4">No partnerships added yet.</p>
 						)}
 						<button
-							onClick={handleAddNewPartnership}
+							onClick={addPartnership}
 							className="text-blue-500 underline mt-2"
 						>
 							Add Partnership
@@ -253,11 +274,8 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 						>
 							<SaveIcon />
 						</button>
-						<button
-							onClick={() => setIsAdding(false)}
-							className="text-red-500 underline"
-						>
-							<DeleteIcon />
+						<button onClick={cancelEditing} className="text-red-500 underline">
+							Cancel
 						</button>
 					</div>
 				</div>

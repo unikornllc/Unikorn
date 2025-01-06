@@ -1,59 +1,82 @@
 import React, { useState } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
+import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
 
 const Activity = ({ activities = [], onUpdate }) => {
+	const [localActivities, setLocalActivities] = useState(activities);
 	const [editingIndex, setEditingIndex] = useState(null);
-	const [newActivity, setNewActivity] = useState({
+	const [tempActivity, setTempActivity] = useState({
 		title: "",
 		description: "",
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
-	const handleChange = (index, field, value) => {
-		const updatedActivities = [...activities];
-		updatedActivities[index] = { ...updatedActivities[index], [field]: value };
-		onUpdate && onUpdate("activities", updatedActivities);
+	// Start editing an existing activity
+	const startEditing = (index) => {
+		setEditingIndex(index);
+		setTempActivity({ ...localActivities[index] });
 	};
 
-	const handleDelete = (index) => {
-		const updatedActivities = activities.filter((_, i) => i !== index);
-		onUpdate && onUpdate("activities", updatedActivities);
-	};
-
-	const toggleEdit = (index) => {
-		setEditingIndex(editingIndex === index ? null : index);
-	};
-
-	const handleAddClick = () => {
-		setIsAdding(true);
-	};
-
-	const handleAddSubmit = () => {
-		const updatedActivities = [...activities, newActivity];
-		onUpdate && onUpdate("activities", updatedActivities);
-		setNewActivity({ title: "", description: "" });
+	// Cancel editing or adding
+	const cancelEditing = () => {
+		setEditingIndex(null);
+		setTempActivity({ title: "", description: "" });
 		setIsAdding(false);
 	};
 
-	const handleNewActivityChange = (field, value) => {
-		setNewActivity({ ...newActivity, [field]: value });
+	// Save changes to an existing activity
+	const saveActivity = async () => {
+		const updatedActivities = [...localActivities];
+		updatedActivities[editingIndex] = tempActivity;
+		setLocalActivities(updatedActivities);
+		setEditingIndex(null);
+		setTempActivity({ title: "", description: "" });
+		// Call onUpdate to update the backend and parent state
+		onUpdate("activities", updatedActivities);
+	};
+
+	// Delete an activity
+	const handleDelete = (index) => {
+		const updatedActivities = localActivities.filter((_, i) => i !== index);
+		setLocalActivities(updatedActivities);
+		onUpdate("activities", updatedActivities);
+	};
+
+	// Start adding a new activity
+	const handleAddClick = () => {
+		setIsAdding(true);
+		setTempActivity({ title: "", description: "" });
+	};
+
+	// Save the new activity
+	const handleAddSubmit = () => {
+		const updatedActivities = [...localActivities, tempActivity];
+		setLocalActivities(updatedActivities);
+		setIsAdding(false);
+		setTempActivity({ title: "", description: "" });
+		onUpdate("activities", updatedActivities);
+	};
+
+	// Handle input changes
+	const handleChange = (field, value) => {
+		setTempActivity((prev) => ({ ...prev, [field]: value }));
 	};
 
 	return (
 		<div className="mb-6">
 			<h2 className="text-xl font-semibold mb-4">Activities</h2>
-			{activities && activities.length > 0 ? (
-				activities.map((activity, index) => (
+			{localActivities && localActivities.length > 0 ? (
+				localActivities.map((activity, index) => (
 					<div key={index} className="mb-4 p-4 border rounded">
 						<div className="flex items-center mb-2">
 							<span className="font-medium w-1/3">Title:</span>
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={activity.title}
-									onChange={(e) => handleChange(index, "title", e.target.value)}
+									value={tempActivity.title}
+									onChange={(e) => handleChange("title", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
 							) : (
@@ -64,10 +87,8 @@ const Activity = ({ activities = [], onUpdate }) => {
 							<span className="font-medium w-1/3">Description:</span>
 							{editingIndex === index ? (
 								<textarea
-									value={activity.description}
-									onChange={(e) =>
-										handleChange(index, "description", e.target.value)
-									}
+									value={tempActivity.description}
+									onChange={(e) => handleChange("description", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 									rows={4}
 								/>
@@ -78,24 +99,43 @@ const Activity = ({ activities = [], onUpdate }) => {
 							)}
 						</div>
 						<div className="flex justify-end">
-							<button
-								onClick={() => toggleEdit(index)}
-								className="text-blue-500 underline mr-2"
-							>
-								{editingIndex === index ? "Save" : "Edit"}
-							</button>
-							<button
-								onClick={() => handleDelete(index)}
-								className="text-red-500 underline"
-							>
-								<DeleteIcon />
-							</button>
+							{editingIndex === index ? (
+								<>
+									<button
+										onClick={saveActivity}
+										className="text-blue-500 underline mr-2"
+									>
+										<SaveIcon />
+									</button>
+									<button
+										onClick={cancelEditing}
+										className="text-red-500 underline"
+									>
+										Cancel
+									</button>
+								</>
+							) : (
+								<>
+									<button
+										onClick={() => startEditing(index)}
+										className="text-blue-500 underline mr-2"
+									>
+										<EditIcon />
+									</button>
+									<button
+										onClick={() => handleDelete(index)}
+										className="text-red-500 underline"
+									>
+										<DeleteIcon />
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				))
 			) : (
 				<p className="text-gray-500">
-					No activities available. Click "Add Activity" to get started.
+					No activities available. Click "Add" to get started.
 				</p>
 			)}
 			{isAdding && (
@@ -104,18 +144,16 @@ const Activity = ({ activities = [], onUpdate }) => {
 						<span className="font-medium w-1/3">Title:</span>
 						<input
 							type="text"
-							value={newActivity.title}
-							onChange={(e) => handleNewActivityChange("title", e.target.value)}
+							value={tempActivity.title}
+							onChange={(e) => handleChange("title", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>
 					<div className="flex items-center mb-2">
 						<span className="font-medium w-1/3">Description:</span>
 						<textarea
-							value={newActivity.description}
-							onChange={(e) =>
-								handleNewActivityChange("description", e.target.value)
-							}
+							value={tempActivity.description}
+							onChange={(e) => handleChange("description", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 							rows={4}
 						/>
@@ -127,11 +165,8 @@ const Activity = ({ activities = [], onUpdate }) => {
 						>
 							<SaveIcon />
 						</button>
-						<button
-							onClick={() => setIsAdding(false)}
-							className="text-red-500 underline"
-						>
-							<DeleteIcon />
+						<button onClick={cancelEditing} className="text-red-500 underline">
+							Cancel
 						</button>
 					</div>
 				</div>
