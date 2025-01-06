@@ -99,6 +99,7 @@ app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
 app.use(protect, router);
+//app.use(router);
 
 server.listen(3002, () => {
 	console.log("Server is running on port 3002");

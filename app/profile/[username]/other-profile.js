@@ -58,7 +58,7 @@ export default function OtherProfile({ username }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
 				{
-					followerId: userData.id,
+					username,
 				},
 				{
 					withCredentials: true,
@@ -79,7 +79,7 @@ export default function OtherProfile({ username }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
 				{
-					followerId: userData.id,
+					username,
 				},
 				{
 					withCredentials: true,
@@ -123,8 +123,8 @@ export default function OtherProfile({ username }) {
 				console.error(err);
 			}
 		};
-		fetchUserData();
 		following();
+		fetchUserData();
 	}, [username]);
 
 	if (!userData)

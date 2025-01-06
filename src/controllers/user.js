@@ -313,24 +313,25 @@ export const updateUser = async (req, res) => {
 
 export const followUser = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.decodedUser.id },
-			select: { following: true },
-		});
-		const followUser = await prisma.user.findUnique({
-			where: { username: req.body.username },
+		const follow = await prisma.user.findUnique({
+			where: {
+				username: req.body.username,
+			},
 			select: { id: true },
 		});
-		const isAlreadyFollowing = user.following.includes(followUser.id);
+		const isAlreadyFollowing = await prisma.userFollowsUser.findFirst({
+			where: {
+				followerId: req.decodedUser.id,
+				followingId: follow.id,
+			},
+		});
 		if (isAlreadyFollowing) {
 			res.status(400).json({ message: "User already followed" });
 		} else {
-			await prisma.user.update({
-				where: { id: req.decodedUser.id },
+			await prisma.userFollowsUser.create({
 				data: {
-					following: {
-						set: [...user.following, followUser.id],
-					},
+					followerId: req.decodedUser.id,
+					followingId: follow.id,
 				},
 			});
 			res.status(200).json({ message: "User followed successfully" });
@@ -343,18 +344,21 @@ export const followUser = async (req, res) => {
 
 export const isFollowingUser = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.decodedUser.id },
-			select: { following: true },
-		});
-		const followingId = await prisma.user.findUnique({
-			where: { username: req.query.username },
+		const follow = await prisma.user.findUnique({
+			where: {
+				username: req.query.username,
+			},
 			select: { id: true },
 		});
-
-		const isFollowing = user.following.includes(followingId.id);
-		console.log(isFollowing);
-		res.status(200).json({ isFollowing });
+		const isFollowing = await prisma.userFollowsUser.findFirst({
+			where: {
+				followerId: req.decodedUser.id,
+				followingId: follow.id,
+			},
+		});
+		isFollowing
+			? res.status(200).json({ isFollowing: true })
+			: res.status(200).json({ isFollowing: false });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error checking follow user" });
@@ -363,25 +367,25 @@ export const isFollowingUser = async (req, res) => {
 
 export const unfollowUser = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
-			where: { id: req.decodedUser.id },
-			select: { following: true },
-		});
-		const unfollowUser = await prisma.user.findUnique({
-			where: { username: req.body.username },
+		const unfollow = await prisma.user.findUnique({
+			where: {
+				username: req.body.username,
+			},
 			select: { id: true },
 		});
-		const isAlreadyFollowing = user.following.includes(unfollowUser.id);
-
-		if (!isAlreadyFollowing) {
-			res.status(400).json({ message: "User not followed" });
+		const isFollowing = await prisma.userFollowsUser.findFirst({
+			where: {
+				followerId: req.decodedUser.id,
+				followingId: unfollow.id,
+			},
+		});
+		if (!isFollowing) {
+			res.status(200).json({ message: "User already not followed" });
 		} else {
-			await prisma.user.update({
-				where: { id: req.decodedUser.id },
-				data: {
-					following: {
-						set: user.following.filter((id) => id != unfollowUser.id),
-					},
+			await prisma.userFollowsUser.deleteMany({
+				where: {
+					followerId: req.decodedUser.id,
+					followingId: unfollow.id,
 				},
 			});
 			res.status(200).json({ message: "User unfollowed successfully" });
@@ -576,5 +580,36 @@ export const suggestUsername = async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Internal Server Error" });
+	}
+};
+
+export const getFollowing = async (req, res) => {
+	try {
+		const followers = await prisma.userFollowsUser.findMany({
+			where: {
+				followerId: req.decodedUser.id,
+			},
+			select: { following: true },
+		});
+		res.status(200).json(followers.map((f) => f.following.username));
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching followers" });
+	}
+};
+
+export const getFollowers = async (req, res) => {
+	try {
+		const followers = await prisma.userFollowsUser.findMany({
+			where: {
+				followingId: req.decodedUser.id,
+			},
+			select: { follower: true },
+		});
+		console.log(followers.map((f) => f.follower.username));
+		res.status(200).json(followers.map((f) => f.follower.username));
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching followers" });
 	}
 };
