@@ -79,7 +79,6 @@ export const getUserFile = async (req, res) => {
 			return res.status(400).json({ message: "File content not found" });
 		}
 		const fileData = (({ userId, ...safe }) => safe)(file);
-		console.log(fileData);
 		res.status(200).json({
 			...fileData,
 			fileContent: fileContent.toString("base64"),

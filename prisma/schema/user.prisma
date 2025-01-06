@@ -46,6 +46,9 @@ model User {
   sentMessages           Message[]                @relation("SentMessages")
   receivedMessages       Message[]                @relation("ReceivedMessages")
   user_file              User_File[]
+  followingUsers         UserFollowsUser[] @relation("UserFollows")
+  followedByUsers        UserFollowsUser[] @relation("UserFollowed")
+  followingCompanies     UserFollowsCompany[]
 }
 
 model Expertise {
@@ -137,3 +140,4 @@ model User_File {
 
   @@unique([fileName, userId])
 }
+

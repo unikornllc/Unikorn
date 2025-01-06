@@ -1,5 +1,3 @@
-// components/Settings/PersonalInfo.jsx
-
 import React, { useState } from "react";
 import axios from "axios";
 
@@ -11,12 +9,13 @@ const PersonalInfo = ({ user }) => {
 	});
 
 	const handleSave = async () => {
-		try {
-			await axios.put(`/api/users/${user.id}`, formData);
-			setEditing(false);
-		} catch (error) {
-			console.error("Error updating personal info:", error);
-		}
+		// try {
+		// 	await axios.put(`/api/users/${user.id}`, formData);
+		// 	setEditing(false);
+		// } catch (error) {
+		// 	console.error("Error updating personal info:", error);
+		// }
+		setEditing(false);
 	};
 
 	return (

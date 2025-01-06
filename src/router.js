@@ -49,6 +49,8 @@ import {
 	followUser,
 	isFollowingUser,
 	unfollowUser,
+	getFollowers,
+	getFollowing,
 } from "./controllers/user.js";
 
 import {
@@ -164,6 +166,10 @@ router.put("/updateUser", updateUser);
 router.put("/followUser", followUser);
 router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
+
+//get followers and following returns an array of usernames
+router.get("/getFollowers", getFollowers);
+router.get("/getFollowing", getFollowing);
 
 //Certifications_Courses
 router.post("/createCertificationsCourses", createCertificationsCourses);

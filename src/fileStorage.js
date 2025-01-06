@@ -18,7 +18,12 @@ const fileStorage = {
 			fs.mkdirSync(directory, { recursive: true });
 		}
 
-		const [type, subtype] = file.mimetype.split("/");
+		let [type, subtype] = file.mimetype.split("/");
+
+		if (subtype == "plain") {
+			subtype = "txt";
+		}
+
 		const filePath = path.join(directory, fileName + "." + subtype);
 		await fs.promises.writeFile(filePath, file.buffer);
 

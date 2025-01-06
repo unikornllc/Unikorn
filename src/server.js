@@ -3,6 +3,9 @@ import bodyParser from "body-parser";
 import router from "./router.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import passport from "passport";
+import session from "express-session";
+import configurePassport from "./passport.js";
 import { protect } from "./controllers/auth.js";
 import {
 	createUser,
@@ -19,9 +22,11 @@ import {
 } from "./middlewares/signup.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { ensureAuth, ensureGuest } from "./middlewares/auth.js";
+import { createJWT } from "./controllers/auth.js";
 
 const app = express();
-
+configurePassport(passport);
 // const csrfProtection = csrf();
 
 // // initialize session
@@ -56,6 +61,16 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(
+  session({
+    secret: "keyboard cat",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.get("/", (req, res, next) => {
 	setTimeout(() => {
 		next(new Error("hello"));
@@ -82,6 +97,43 @@ const cookieOptions = {
 // 	}),
 // );
 
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: `${process.env.FRONTEND}/`,
+  }),
+  (req, res) => {
+    const account = req.user;
+
+    // Create a JWT token
+    const token = createJWT({
+      id: account.id,
+      role: "user",
+    });
+
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res.redirect(`${process.env.FRONTEND}/userHome`);
+  }
+);
+app.get("/auth/logout", function (req, res, next) {
+  req.logout(function (err) {
+    if (err) {
+      console.error("Error during logout:", err);
+      return next(err);
+    }
+    res.redirect(`${process.env.FRONTEND}/signin`);
+  });
+});
+
 app.post("/createUser", checkEmail, checkUsername, confirmPassword, createUser);
 app.post(
 	"/createCompany",
@@ -96,6 +148,7 @@ app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
 app.use(protect, router);
+//app.use(router);
 
 server.listen(3002, () => {
 	console.log("Server is running on port 3002");

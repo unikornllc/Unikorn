@@ -31,6 +31,23 @@ export default async function UserProfile({ params }) {
 			},
 		);
 		const isCurrentUser = res.data.isCurrentUser;
+		const user = res.data.user;
+		if (!isCurrentUser) {
+			try {
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/isFollowing`, {
+						params: { username: user.username },
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						user.isFollowing = response.data.isFollowing;
+					});
+			} catch (err) {
+				console.error(err);
+			}
+		}
 		return (
 			<div>
 				{isCurrentUser ? (

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Header from "../../_components/_user_profile/Header";
 import About from "../../_components/_user_profile/About";
 import Experience from "../../_components/_user_profile/Experience";
@@ -11,20 +11,53 @@ import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
 
 export default function EditableUserProfile({ user, editable = false }) {
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(user.isFollowing);
+	const [availableSlots, setAvailableSlots] = useState([]);
+	const [selectedSlot, setSelectedSlot] = useState("");
+	const [newSlots, setNewSlots] = useState("");
 
-	useEffect(() => {
-		console.log(editable);
-	}, []);
+	const handleFollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
+				{
+					username: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(true);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
 
-	// if (!user && !loading)
-	// 	return (
-	// 		<div className="bg-gray-100 min-h-screen py-8">
-	// 			<div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-	// 				<p className="text-center p-4">User not found.</p>
-	// 			</div>
-	// 		</div>
-	// 	);
+	const handleUnfollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
+				{
+					username: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(false);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	if (!user)
 		return (
@@ -45,6 +78,34 @@ export default function EditableUserProfile({ user, editable = false }) {
 					unikornVerified: false,
 				}}
 			/>
+			<div className="flex justify-center space-x-4 my-4">
+				{isFollowing ? (
+					<button
+						onClick={handleUnfollow}
+						className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+						disabled={loading}
+					>
+						unfollow
+					</button>
+				) : (
+					<button
+						onClick={handleFollow}
+						className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+						disabled={loading}
+					>
+						follow
+					</button>
+				)}
+
+				<a
+					href={"user.calendly_link"}
+					target="_blank"
+					className="bg-gray-200 text-gray-800 px-4 py-2 rounded shadow"
+					rel="noopener noreferrer"
+				>
+					View Full Calendly
+				</a>
+			</div>
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
 					<About
