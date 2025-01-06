@@ -46,13 +46,9 @@ model User {
   sentMessages           Message[]                @relation("SentMessages")
   receivedMessages       Message[]                @relation("ReceivedMessages")
   user_file              User_File[]
-  following              String[]
-    // Users that this user follows
-  followingUsers    UserFollowsUser[] @relation("UserFollows")
-
-  // Users that follow this user
-  followedByUsers   UserFollowsUser[] @relation("UserFollowed")
-    followingCompanies    UserFollowsCompany[]
+  followingUsers         UserFollowsUser[] @relation("UserFollows")
+  followedByUsers        UserFollowsUser[] @relation("UserFollowed")
+  followingCompanies     UserFollowsCompany[]
 }
 
 model Expertise {
