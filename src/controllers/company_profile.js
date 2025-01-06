@@ -302,3 +302,20 @@ export const unfollowCompany = async (req, res) => {
 		res.status(400).json({ message: "Error unfollowing company" });
 	}
 };
+
+export const getFollowingCompanies = async (req, res) => {
+	try {
+		const followingCompanies = await prisma.userFollowsCompany.findMany({
+			where: {
+				userId: req.decodedUser.id,
+			},
+			select: {
+				company: true,
+			},
+		});
+		res.status(200).json(followingCompanies.map((c) => c.company.username));
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching following companies" });
+	}
+};

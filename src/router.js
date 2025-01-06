@@ -81,6 +81,7 @@ import {
 	followCompany,
 	unfollowCompany,
 	isFollowingCompany,
+	getFollowingCompanies,
 } from "./controllers/company_profile.js";
 
 import {
@@ -202,6 +203,10 @@ router.put("/updateCompanyProfile", updateCompanyProfile);
 router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
+
+//get all companies that the user is following
+//returns an array of usernames
+router.get("/getFollowingCompanies", getFollowingCompanies);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);
