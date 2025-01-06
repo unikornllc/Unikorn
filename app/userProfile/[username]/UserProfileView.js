@@ -30,7 +30,6 @@ export default function EditableUserProfile({ user, editable = false }) {
 				},
 			);
 			setIsFollowing(true);
-			console.log(follow.data);
 		} catch (err) {
 			console.error(err);
 		} finally {
@@ -51,7 +50,6 @@ export default function EditableUserProfile({ user, editable = false }) {
 				},
 			);
 			setIsFollowing(false);
-			console.log(follow.data);
 		} catch (err) {
 			console.error(err);
 		} finally {
