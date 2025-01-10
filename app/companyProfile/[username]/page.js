@@ -14,7 +14,7 @@ export default async function CompanyProfile({ params }) {
 		key_employees: true,
 		product_information: true,
 		financials: true,
-		activites: true,
+		activities: true,
 	};
 
 	try {
@@ -27,6 +27,7 @@ export default async function CompanyProfile({ params }) {
 				},
 			},
 		);
+		console.log(res.data.company);
 		const isCurrentCompany = res.data.isCurrentCompany;
 		return (
 			<div>

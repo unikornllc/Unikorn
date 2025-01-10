@@ -26,9 +26,9 @@ model Company_Profile {
   key_employees       Key_Employees[]
   product_information Product_Information[]
   financials          Financial?
-  activites           Activity[]
+  activities          Activity[]
   company_file        Company_File[]
-    followers             UserFollowsCompany[]
+  followers           UserFollowsCompany[]
 }
 
 model Founder {

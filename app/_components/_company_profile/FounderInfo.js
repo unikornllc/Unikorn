@@ -14,44 +14,37 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
-	// Start editing an existing founder
 	const startEditing = (index) => {
 		setEditingIndex(index);
 		setTempFounder({ ...localFounders[index] });
 	};
 
-	// Cancel editing or adding
 	const cancelEditing = () => {
 		setEditingIndex(null);
 		setTempFounder({ name: "", role: "", crunch_base_link: "" });
 		setIsAdding(false);
 	};
 
-	// Save changes to an existing founder
 	const saveFounder = () => {
 		const updatedFounders = [...localFounders];
 		updatedFounders[editingIndex] = tempFounder;
 		setLocalFounders(updatedFounders);
 		setEditingIndex(null);
 		setTempFounder({ name: "", role: "", crunch_base_link: "" });
-		// Call onUpdate to update the backend and parent state
 		onUpdate("founders", updatedFounders);
 	};
 
-	// Delete a founder
 	const handleDelete = (index) => {
 		const updatedFounders = localFounders.filter((_, i) => i !== index);
 		setLocalFounders(updatedFounders);
 		onUpdate("founders", updatedFounders);
 	};
 
-	// Start adding a new founder
 	const handleAddClick = () => {
 		setIsAdding(true);
 		setTempFounder({ name: "", role: "", crunch_base_link: "" });
 	};
 
-	// Save the new founder
 	const handleAddSubmit = () => {
 		const updatedFounders = [...localFounders, tempFounder];
 		setLocalFounders(updatedFounders);
@@ -60,7 +53,6 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 		onUpdate("founders", updatedFounders);
 	};
 
-	// Handle input changes for both editing and adding
 	const handleChange = (field, value) => {
 		setTempFounder((prev) => ({ ...prev, [field]: value }));
 	};
@@ -110,7 +102,12 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 								/>
 							) : (
 								<a
-									href={founder.crunch_base_link}
+									href={
+										founder.crunch_base_link?.startsWith("http://") ||
+										founder.crunch_base_link?.startsWith("https://")
+											? founder.crunch_base_link
+											: `https://${founder.crunch_base_link}`
+									}
 									className="flex-grow mr-2 text-blue-500 underline"
 									target="_blank"
 									rel="noopener noreferrer"
