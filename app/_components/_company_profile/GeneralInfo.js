@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
+import ExternalLink from "../ExternalLink";
 
 const Company_Type = {
 	Profit: "Profit",
@@ -123,19 +124,13 @@ const GeneralInfo = ({ company, onUpdate }) => {
 										"-"
 									)
 								) : field.name === "website" ? (
-									<a
-										href={
-											company[field.name]?.startsWith("http://") ||
-											company[field.name]?.startsWith("https://")
-												? company[field.name]
-												: `https://${company[field.name]}`
-										}
-										className="text-blue-500 underline"
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										{company[field.name]}
-									</a>
+									company[field.name] ? (
+										<ExternalLink href={company[field.name]}>
+											{company[field.name]}
+										</ExternalLink>
+									) : (
+										"-"
+									)
 								) : (
 									company[field.name] || "-"
 								)}

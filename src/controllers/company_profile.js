@@ -100,24 +100,29 @@ const isPlainObject = (obj) => {
 	return Object.getPrototypeOf(obj) === Object.prototype;
 };
 
-const removeCompanyIds = (obj) => {
-	if (Array.isArray(obj)) {
-		return obj.map(removeCompanyIds);
-	} else if (obj !== null && typeof obj === "object") {
-		if (!isPlainObject(obj)) {
-			return obj;
+function removeKeys(data, keysToRemove = ["id"]) {
+	if (Array.isArray(data)) {
+		return data.map((item) => removeKeys(item, keysToRemove));
+	} else if (data !== null && typeof data === "object") {
+		// Check if the object is a Date instance and return it directly
+		if (data instanceof Date) {
+			return data;
 		}
-		const newObj = {};
-		for (const key in obj) {
-			if (key !== "userId") {
-				newObj[key] = removeCompanyIds(obj[key]);
+
+		const result = {};
+		for (const key in data) {
+			if (
+				!keysToRemove.includes(key) &&
+				Object.prototype.hasOwnProperty.call(data, key)
+			) {
+				result[key] = removeKeys(data[key], keysToRemove);
 			}
 		}
-		return newObj;
+		return result;
 	} else {
-		return obj;
+		return data;
 	}
-};
+}
 
 export const getOneCompanyProfile = async (req, res) => {
 	try {
@@ -158,7 +163,15 @@ export const getOneCompanyProfile = async (req, res) => {
 			delete safeCompany.email;
 		}
 
-		const cleanedCompany = removeCompanyIds(safeCompany);
+		const cleanedCompany = removeKeys(safeCompany, [
+			"id",
+			"password",
+			"verified",
+			"companyId",
+			"emailVerify,",
+		]);
+
+		//console.log(cleanedCompany);
 
 		res.status(200).json({
 			isCurrentCompany,

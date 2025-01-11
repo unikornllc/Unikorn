@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
 import EditIcon from "@/app/_icons/EditIcon.jsx";
 import SaveIcon from "@/app/_icons/SaveIcon.jsx";
+import ExternalLink from "../ExternalLink";
 
 const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [localFounders, setLocalFounders] = useState(founders);
@@ -13,6 +16,10 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 		crunch_base_link: "",
 	});
 	const [isAdding, setIsAdding] = useState(false);
+
+	useEffect(() => {
+		setLocalFounders(founders);
+	}, [founders]);
 
 	const startEditing = (index) => {
 		setEditingIndex(index);
@@ -100,20 +107,20 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 									}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
-							) : (
-								<a
+							) : founder.crunch_base_link ? (
+								<ExternalLink
 									href={
-										founder.crunch_base_link?.startsWith("http://") ||
-										founder.crunch_base_link?.startsWith("https://")
+										founder.crunch_base_link.startsWith("http://") ||
+										founder.crunch_base_link.startsWith("https://")
 											? founder.crunch_base_link
 											: `https://${founder.crunch_base_link}`
 									}
 									className="flex-grow mr-2 text-blue-500 underline"
-									target="_blank"
-									rel="noopener noreferrer"
 								>
-									{founder.crunch_base_link || "-"}
-								</a>
+									{founder.crunch_base_link}
+								</ExternalLink>
+							) : (
+								<span className="flex-grow mr-2">-</span>
 							)}
 						</div>
 						<div className="flex justify-end">

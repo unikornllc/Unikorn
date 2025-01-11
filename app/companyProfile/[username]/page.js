@@ -27,7 +27,6 @@ export default async function CompanyProfile({ params }) {
 				},
 			},
 		);
-		console.log(res.data.company);
 		const isCurrentCompany = res.data.isCurrentCompany;
 		return (
 			<div>
