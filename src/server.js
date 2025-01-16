@@ -62,11 +62,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
-  session({
-    secret: "keyboard cat",
-    resave: false,
-    saveUninitialized: false,
-  })
+	session({
+		secret: "keyboard cat",
+		resave: false,
+		saveUninitialized: false,
+	}),
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -98,40 +98,41 @@ const cookieOptions = {
 // );
 
 app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+	"/auth/google",
+	passport.authenticate("google", { scope: ["profile", "email"] }),
 );
+
 app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND}/`,
-  }),
-  (req, res) => {
-    const account = req.user;
+	"/auth/google/callback",
+	passport.authenticate("google", {
+		failureRedirect: `${process.env.FRONTEND}/`,
+	}),
+	(req, res) => {
+		const account = req.user;
 
-    // Create a JWT token
-    const token = createJWT({
-      id: account.id,
-      role: "user",
-    });
+		// Create a JWT token
+		const token = createJWT({
+			id: account.id,
+			role: "user",
+		});
 
-    res.cookie("token", token, {
-      httpOnly: false,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    res.redirect(`${process.env.FRONTEND}/userHome`);
-  }
+		res.cookie("token", token, {
+			httpOnly: false,
+			secure: false,
+			sameSite: "Lax",
+			maxAge: 24 * 60 * 60 * 1000,
+		});
+		res.redirect(`${process.env.FRONTEND}/userHome`);
+	},
 );
 app.get("/auth/logout", function (req, res, next) {
-  req.logout(function (err) {
-    if (err) {
-      console.error("Error during logout:", err);
-      return next(err);
-    }
-    res.redirect(`${process.env.FRONTEND}/signin`);
-  });
+	req.logout(function (err) {
+		if (err) {
+			console.error("Error during logout:", err);
+			return next(err);
+		}
+		res.redirect(`${process.env.FRONTEND}/signin`);
+	});
 });
 
 app.post("/createUser", checkEmail, checkUsername, confirmPassword, createUser);

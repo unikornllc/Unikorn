@@ -294,8 +294,7 @@ export const suggestUsername = async (req, res) => {
 		if (!email || !name) {
 			return res.status(400).json({ message: "Email and name are required." });
 		}
-		const usernameSuggestions = suggestUsernamePassport(email, name);
-
+		const usernameSuggestions = await suggestUsernamePassport(email, name);
 		res.status(200).json({ username: usernameSuggestions });
 	} catch (e) {
 		console.error(e);
@@ -432,7 +431,7 @@ export async function suggestUsernamePassport(email, name) {
 	}
 	while (usernameSuggestions.length < 3) {
 		const randomUsername = generateUsername("", 2, 0);
-		console.log(randomUsername);
+		//console.log(randomUsername);
 		let trimmedRandomUsername = randomUsername
 			.toLowerCase()
 			.replace(/[^a-z0-9]/g, "")
@@ -607,7 +606,7 @@ export const getFollowers = async (req, res) => {
 			},
 			select: { follower: true },
 		});
-		console.log(followers.map((f) => f.follower.username));
+		//console.log(followers.map((f) => f.follower.username));
 		res.status(200).json(followers.map((f) => f.follower.username));
 	} catch (e) {
 		console.error(e);
