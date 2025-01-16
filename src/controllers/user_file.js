@@ -7,23 +7,9 @@ export const uploadUserFile = async (req, res) => {
 			return res.status(400).json({ message: "No file uploaded" });
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { username: req.body.username },
-		});
-
-		if (!user) {
-			return res.status(400).json({ message: "User not found" });
-		}
-
-		if (user.id != req.decodedUser.id) {
-			return res
-				.status(401)
-				.json({ message: "Unauthorized to edit user data." });
-		}
-
 		const savedPath = await fileStorage.saveFile(
 			"user",
-			user.id,
+			req.decodedUser.id,
 			req.body.fileName,
 			req.file,
 		);
@@ -33,17 +19,38 @@ export const uploadUserFile = async (req, res) => {
 		// 	subtype = "txt";
 		// }
 
-		const file = await prisma.user_File.create({
-			data: {
+		// const file = await prisma.user_File.create({
+		// 	data: {
+		// 		fileName: req.body.fileName,
+		// 		filePath: savedPath,
+		// 		fileType: req.file.mimetype,
+		// 		user: { connect: { id: req.decodedUser.id } },
+		// 	},
+		// });
+
+		const file = await prisma.user_File.upsert({
+			where: {
+				fileName_userId: {
+					fileName: req.body.fileName,
+					userId: req.decodedUser.id,
+				},
+			},
+			create: {
 				fileName: req.body.fileName,
 				filePath: savedPath,
 				fileType: req.file.mimetype,
-				user: { connect: { id: user.id } },
+				user: {
+					connect: { id: req.decodedUser.id },
+				},
+			},
+			update: {
+				filePath: savedPath,
+				fileType: req.file.mimetype,
 			},
 		});
 
 		res.status(200).json({
-			file: (({ userId, ...safe }) => safe)(file),
+			file: (({ userId, filePath, ...safe }) => safe)(file),
 		});
 	} catch (error) {
 		console.error(error);
@@ -78,7 +85,7 @@ export const getUserFile = async (req, res) => {
 		if (!fileContent) {
 			return res.status(400).json({ message: "File content not found" });
 		}
-		const fileData = (({ userId, ...safe }) => safe)(file);
+		const fileData = (({ userId, filePath, ...safe }) => safe)(file);
 		res.status(200).json({
 			...fileData,
 			fileContent: fileContent.toString("base64"),
@@ -103,7 +110,7 @@ export const getAllUserFile = async (req, res) => {
 			return res.status(400).json({ message: "User not found" });
 		}
 		res.status(200).json({
-			file: user.user_file.map(({ userId, ...rest }) => rest),
+			file: user.user_file.map(({ userId, filePath, ...rest }) => rest),
 		});
 	} catch (error) {
 		res.status(400).json({ message: "Error getting user files" });
@@ -130,7 +137,7 @@ export const deleteUserFile = async (req, res) => {
 		await fileStorage.deleteFile(deleted.filePath);
 
 		res.status(200).json({
-			deleted: (({ userId, ...safe }) => safe)(deleted),
+			deleted: (({ userId, filePath, ...safe }) => safe)(deleted),
 		});
 	} catch (error) {
 		console.error(error);
