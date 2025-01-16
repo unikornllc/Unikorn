@@ -25,7 +25,6 @@ const Advisors = ({ advisors = [], onUpdate }) => {
 		setLocalAdvisors(updatedAdvisors);
 		setEditingIndex(null);
 		setTempValue("");
-		// Update the backend and parent state
 		onUpdate("advisors", updatedAdvisors);
 	};
 

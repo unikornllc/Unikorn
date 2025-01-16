@@ -100,24 +100,29 @@ const isPlainObject = (obj) => {
 	return Object.getPrototypeOf(obj) === Object.prototype;
 };
 
-const removeCompanyIds = (obj) => {
-	if (Array.isArray(obj)) {
-		return obj.map(removeCompanyIds);
-	} else if (obj !== null && typeof obj === "object") {
-		if (!isPlainObject(obj)) {
-			return obj;
+function removeKeys(data, keysToRemove = ["id"]) {
+	if (Array.isArray(data)) {
+		return data.map((item) => removeKeys(item, keysToRemove));
+	} else if (data !== null && typeof data === "object") {
+		// Check if the object is a Date instance and return it directly
+		if (data instanceof Date) {
+			return data;
 		}
-		const newObj = {};
-		for (const key in obj) {
-			if (key !== "userId") {
-				newObj[key] = removeCompanyIds(obj[key]);
+
+		const result = {};
+		for (const key in data) {
+			if (
+				!keysToRemove.includes(key) &&
+				Object.prototype.hasOwnProperty.call(data, key)
+			) {
+				result[key] = removeKeys(data[key], keysToRemove);
 			}
 		}
-		return newObj;
+		return result;
 	} else {
-		return obj;
+		return data;
 	}
-};
+}
 
 export const getOneCompanyProfile = async (req, res) => {
 	try {
@@ -158,7 +163,15 @@ export const getOneCompanyProfile = async (req, res) => {
 			delete safeCompany.email;
 		}
 
-		const cleanedCompany = removeCompanyIds(safeCompany);
+		const cleanedCompany = removeKeys(safeCompany, [
+			"id",
+			"password",
+			"verified",
+			"companyId",
+			"emailVerify,",
+		]);
+
+		//console.log(cleanedCompany);
 
 		res.status(200).json({
 			isCurrentCompany,
@@ -174,11 +187,13 @@ export const updateCompanyProfile = async (req, res) => {
 	try {
 		const id = req.decodedUser.id;
 		const { fieldName, fieldValue } = req.body;
+
 		if (!id) {
 			return res
 				.status(400)
 				.json({ message: "Username is required to update the profile." });
 		}
+
 		const allowedFields = [
 			"name",
 			"email",
@@ -191,6 +206,7 @@ export const updateCompanyProfile = async (req, res) => {
 			"industry",
 			"type",
 			"board_members",
+			"advisors",
 			"activities",
 			"founders",
 			"key_employees",
@@ -209,20 +225,84 @@ export const updateCompanyProfile = async (req, res) => {
 			return res.status(404).json({ error: "Company not found" });
 		}
 
-		const updateData = {};
-		updateData[fieldName] = fieldValue;
+		let updateData = {};
+
+		if (fieldName === "founders") {
+			updateData = {
+				founders: {
+					upsert: fieldValue.map((founder) => ({
+						where: { id: founder.id || "" },
+						create: {
+							name: founder.name,
+							role: founder.role,
+							crunch_base_link: founder.crunch_base_link,
+						},
+						update: {
+							name: founder.name,
+							role: founder.role,
+							crunch_base_link: founder.crunch_base_link,
+						},
+					})),
+				},
+			};
+		} else if (fieldName === "activities") {
+			updateData = {
+				activities: {
+					upsert: fieldValue.map((activity) => ({
+						where: { id: activity.id || "" },
+						create: {
+							title: activity.title,
+							description: activity.description,
+						},
+						update: {
+							title: activity.title,
+							description: activity.description,
+						},
+					})),
+				},
+			};
+		} else if (fieldName === "key_employees") {
+			updateData = {
+				key_employees: {
+					upsert: fieldValue.map((key_employee) => ({
+						where: { id: key_employee.id || "" },
+						create: {
+							name: key_employee.name,
+							role: key_employee.role,
+						},
+						update: {
+							name: key_employee.name,
+							role: key_employee.role,
+						},
+					})),
+				},
+			};
+		} else if (fieldName === "product_information") {
+			updateData = {
+				product_information: {
+					upsert: fieldValue.map((product_information) => ({
+						where: { id: product_information.id || "" },
+						create: {
+							product: product_information.product,
+							market: product_information.market,
+							partnerships: product_information.partnerships,
+						},
+						update: {
+							product: product_information.product,
+							market: product_information.market,
+							partnerships: product_information.partnerships,
+						},
+					})),
+				},
+			};
+		} else {
+			updateData[fieldName] = fieldValue;
+		}
 
 		const updatedCompany = await prisma.company_Profile.update({
 			where: { id },
 			data: updateData,
 		});
-
-		// Optionally, fetch the updated company data with associations if needed
-		// const updatedCompany = await Company.findOne({
-		// 	where: { id: company.id },
-		// 	// Include any associations if necessary
-		// include: [{ model: Founder }, { model: BoardMember }, ...],
-		//});
 
 		res.json({ company: updatedCompany });
 	} catch (error) {

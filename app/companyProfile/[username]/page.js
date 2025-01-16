@@ -14,7 +14,7 @@ export default async function CompanyProfile({ params }) {
 		key_employees: true,
 		product_information: true,
 		financials: true,
-		activites: true,
+		activities: true,
 	};
 
 	try {

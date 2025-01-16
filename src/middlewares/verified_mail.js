@@ -32,7 +32,6 @@ export const verifiedUser = async (req, res, next) => {
 			: null;
 
 		if (company && company.emailVerify) {
-			console.log("hena");
 			next();
 		}
 		// If neither user nor company is found
