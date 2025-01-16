@@ -27,15 +27,17 @@ const fileStorage = {
 		const filePath = path.join(directory, fileName + "." + subtype);
 		await fs.promises.writeFile(filePath, file.buffer);
 
-		return filePath;
+		return path.relative(UPLOADS_DIR, filePath);
 	},
 
-	getFile: async (filePath) => {
+	getFile: async (relativeFilePath) => {
+		const filePath = path.join(UPLOADS_DIR, relativeFilePath);
 		const fileContent = await fs.promises.readFile(filePath);
 		return fileContent;
 	},
 
-	deleteFile: async (filePath) => {
+	deleteFile: async (relativeFilePath) => {
+		const filePath = path.join(UPLOADS_DIR, relativeFilePath);
 		if (fs.existsSync(filePath)) {
 			await fs.promises.unlink(filePath);
 		}
