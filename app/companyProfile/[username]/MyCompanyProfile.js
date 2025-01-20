@@ -8,6 +8,7 @@ import ProductInformation from "@/app/_components/_company_profile/ProductInform
 import Activity from "@/app/_components/_company_profile/Activity";
 import CompanyFiles from "@/app/_components/_company_profile/CompanyFiles";
 import Advisors from "@/app/_components/_company_profile/Advisors";
+import KeyEmployees from "@/app/_components/_company_profile/KeyEmployees";
 
 const MyCompanyProfile = ({ company }) => {
 	const [companyData, setCompanyData] = useState(company);
@@ -48,6 +49,10 @@ const MyCompanyProfile = ({ company }) => {
 				onUpdate={handleUpdate}
 			/>
 			<Activity activities={companyData.activities} onUpdate={handleUpdate} />
+			<KeyEmployees
+				employees={companyData.key_employees}
+				onUpdate={handleUpdate}
+			/>
 			<CompanyFiles files={companyData.company_file} onUpdate={handleUpdate} />
 		</div>
 	);
