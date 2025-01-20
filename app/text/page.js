@@ -6,94 +6,59 @@ import SelectUsername from "../_components/SelectUsername";
 import Chat from "../_components/Chat";
 
 export default function Home() {
-	const [usernameAlreadySelected, setUsernameAlreadySelected] = useState(false);
-	// useEffect(() => {
-	// 	const sessionID = localStorage.getItem("sessionID");
+  const [sessionID, setSessionID] = useState("");
+  const [usernameAlreadySelected, setUsernameAlreadySelected] = useState(false);
+  const [r, setR] = useState(false);
 
-	// 	if (sessionID) {
-	// 		setUsernameAlreadySelected(true);
-	// 		socket.auth = { sessionID };
-	// 		socket.connect();
-	// 	}
+  useEffect(() => {
+    setR(localStorage.getItem("sessionID"));
+  }, []);
 
-	// 	socket.on("session", ({ sessionID, userID }) => {
-	// 		socket.auth = { sessionID };
-	// 		localStorage.setItem("sessionID", sessionID);
-	// 		socket.userID = userID;
-	// 	});
+  useEffect(() => {
+    const storedSessionID = localStorage.getItem("sessionID");
 
-	socket.on("connect_error", (err) => {
-		if (err.message === "invalid username") {
-			setUsernameAlreadySelected(false);
-		}
-	});
-	// 	return () => {
-	// 		socket.off("connect_error");
-	// 	};
-	// }, []);
+    if (storedSessionID) {
+      setSessionID(storedSessionID);
+      setUsernameAlreadySelected(true);
+      socket.auth = { sessionID: storedSessionID };
+      socket.connect();
+    }
 
-	const handleUsernameSelection = (username) => {
-		setUsernameAlreadySelected(true);
-		socket.auth = { username };
-		socket.connect();
-	};
+    const handleSession = ({ sessionID, userID }) => {
+      socket.auth = { sessionID };
+      localStorage.setItem("sessionID", sessionID);
+      setSessionID(sessionID);
+      socket.userID = userID;
+    };
 
-	return (
-		<div id="app">
-			{!usernameAlreadySelected ? (
-				<SelectUsername onSelect={handleUsernameSelection} />
-			) : (
-				<Chat />
-			)}
-		</div>
-	);
+    const handleConnectError = (err) => {
+      if (err.message === "invalid username") {
+        setUsernameAlreadySelected(false);
+      }
+    };
+
+    socket.on("session", handleSession);
+    socket.on("connect_error", handleConnectError);
+
+    return () => {
+      socket.off("session", handleSession);
+      socket.off("connect_error", handleConnectError);
+    };
+  }, []);
+
+  const handleUsernameSelection = (username) => {
+    setUsernameAlreadySelected(true);
+    socket.auth = { username };
+    socket.connect();
+  };
+
+  return (
+    <div id="app">
+      {!(r || usernameAlreadySelected) ? (
+        <SelectUsername onSelect={handleUsernameSelection} />
+      ) : (
+        <Chat />
+      )}
+    </div>
+  );
 }
-
-// function Text() {
-// 	const [room, setroom] = useState("");
-// 	const [msg, setmsg] = useState("");
-// 	const sendMessage = () => {
-// 		socket.emit("sendMessage", { message: msg }, room);
-// 	};
-// 	useEffect(() => {
-// 		try {
-// 			socket.on("receive_message", (data) => {
-// 				console.log(data.message);
-// 			});
-// 		} catch (error) {
-// 			console.log(error);
-// 		}
-// 	}, []);
-
-// 	const ConnectRoom = () => {
-// 		socket.emit(
-// 			"joinRoom",
-// 			{ senderId: "user1", receiverId: "user2" },
-// 			(response) => {
-// 				console.log(response.status);
-// 				alert(response.msg);
-// 			},
-// 		);
-// 	};
-// 	return (
-// 		<div className="App">
-// 			<div className="typeMessage">
-// 				<input
-// 					type="text"
-// 					placeholder="WriteYour Message"
-// 					value={msg}
-// 					onChange={(e) => setmsg(e.target.value)}
-// 				/>
-// 				<button onClick={sendMessage}>Send</button>
-// 				<input
-// 					type="text"
-// 					placeholder="Room"
-// 					onChange={(e) => setroom(e.target.value)}
-// 				/>
-// 				<button onClick={ConnectRoom}>Connect Room</button>
-// 			</div>
-// 		</div>
-// 	);
-// }
-
-// export default Text;
