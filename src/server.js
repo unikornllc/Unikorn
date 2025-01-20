@@ -32,6 +32,7 @@ const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
 
 const randomId = () => crypto.randomBytes(64).toString("hex");
+
 const app = express();
 configurePassport(passport);
 // const csrfProtection = csrf();
@@ -155,7 +156,9 @@ app.post("/signIn", verifiedUser, signIn);
 app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
+
 app.use(protect, router);
+
 //app.use(router);
 
 server.listen(3002, () => {

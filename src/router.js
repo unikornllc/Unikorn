@@ -130,6 +130,15 @@ import {
 	deleteUserFile,
 } from "./controllers/user_file.js";
 
+import {
+	authorizeCalendly,
+	eventTypeCalendly,
+	createEventTypeCalendly,
+	getSchedulingLinkCalendly,
+	callbackCalendly,
+	disconnectCalendly,
+} from "./calendly.js";
+
 import { verifiedUser } from "./middlewares/verified_mail.js";
 
 const router = Router();
@@ -244,9 +253,17 @@ router.get("/getAllActivity", getAllActivity);
 router.get("/getOneActivity", getOneActivity);
 router.delete("/deleteActivity", deleteOneActivity);
 
+//user_file
 router.post("/uploadUserFile", upload.single("file"), uploadUserFile);
 router.get("/getUserFile", getUserFile);
 router.get("/getAllUserFile", getAllUserFile);
 router.delete("/deleteUserFile", deleteUserFile);
+
+//calendly_integration
+router.get("/calendly/auth", authorizeCalendly);
+router.get("/calendly/eventType", eventTypeCalendly);
+router.post("/calendly/createEventType", createEventTypeCalendly);
+router.get("/calendly/auth/callback", callbackCalendly);
+router.delete("/calendly/disconnect", disconnectCalendly);
 
 export default router;
