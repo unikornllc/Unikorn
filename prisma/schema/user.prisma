@@ -26,6 +26,8 @@ enum Social_Media_Platforms {
   Meetup
 }
 
+
+
 model User {
   id                     String                   @id @default(uuid())
   name                   String
@@ -46,9 +48,10 @@ model User {
   sentMessages           Message[]                @relation("SentMessages")
   receivedMessages       Message[]                @relation("ReceivedMessages")
   user_file              User_File[]
-  followingUsers         UserFollowsUser[] @relation("UserFollows")
-  followedByUsers        UserFollowsUser[] @relation("UserFollowed")
+  followingUsers         UserFollowsUser[]        @relation("UserFollows")
+  followedByUsers        UserFollowsUser[]        @relation("UserFollowed")
   followingCompanies     UserFollowsCompany[]
+  calendly_integration    Calendly_Integration?
 }
 
 model Expertise {

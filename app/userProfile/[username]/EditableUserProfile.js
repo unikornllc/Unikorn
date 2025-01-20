@@ -10,6 +10,7 @@ import Sidebar from "../../_components/_user_profile/Sidebar";
 import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
 import SettingsPage from "@/app/_components/_settings/Settings";
+import CalendlyWidget from "@/app/_components/_calendly/CalendlyWidget";
 
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
@@ -56,9 +57,9 @@ export default function EditableUserProfile({ user, editable = false }) {
 		}
 	};
 
-	useEffect(() => {
-		console.log(editable);
-	}, []);
+	// useEffect(() => {
+	// 	console.log(editable);
+	// }, []);
 
 	if (!user)
 		return (
@@ -68,15 +69,17 @@ export default function EditableUserProfile({ user, editable = false }) {
 				</div>
 			</div>
 		);
+
 	return (
 		<div className="bg-secondary min-h-screen">
 			<Header
-				username={user.username}
-				userData={{
+				user={{
+					username: user.username,
 					email: user.email,
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
+					calendlyIntegration: user.calendly_integration,
 				}}
 				editable
 			/>

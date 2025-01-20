@@ -18,6 +18,7 @@ export default async function UserProfile({ params }) {
 		certifications_courses: true,
 		language: true,
 		social_media: true,
+		calendly_integration: true,
 	};
 
 	try {

@@ -13,8 +13,8 @@ import SettingsOverlay from "../_settings/Settings";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
-const Header = ({ username, userData, editable }) => {
-	const { name, title, unikornVerified } = userData;
+const Header = ({ user, editable }) => {
+	const { username, name, title, unikornVerified } = user;
 	const [userFile, setUserFile] = useState(null);
 	const [isEditing, setIsEditing] = useState(false);
 	const [selectedImage, setSelectedImage] = useState(null);
@@ -355,10 +355,7 @@ const Header = ({ username, userData, editable }) => {
 				</Modal>
 			)}
 			{editable && isSettingsOpen && (
-				<SettingsOverlay
-					onClose={() => setIsSettingsOpen(false)}
-					user={userData}
-				/>
+				<SettingsOverlay onClose={() => setIsSettingsOpen(false)} user={user} />
 			)}
 		</div>
 	);

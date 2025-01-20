@@ -257,12 +257,23 @@ export const getOneUser = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
 	try {
+		const { include } = req.query;
 		const user = await prisma.user.findUnique({
 			where: {
-				id: req.cookies.userId,
+				id: req.decodedUser.id,
 			},
+			...(include
+				? {
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
+				: {}),
 		});
-		const { verified, password, email, ...safeUser } = user;
+		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
 		res.status(200).json({ user: safeUser });
 	} catch (e) {
 		console.error(e);
@@ -277,7 +288,7 @@ export const isCurrentUser = async (req, res) => {
 				username: req.query.username,
 			},
 		});
-		if (req.cookies.userId && user.id && req.cookies.userId == user.id) {
+		if (req.decodedUser.id && user.id && req.decodedUser.id == user.id) {
 			isCurrentUser = true;
 		}
 		res.status(200).json({ user, isCurrentUser });

@@ -1,131 +1,301 @@
-// import axios from "axios";
-// import crypto from "crypto";
+import axios from "axios";
+import prisma from "./db.js";
 
-// export const calendlyAuthorizeEmail = async (req, res) => {
-// 	try {
-// 		const userEmail = await prisma.user.findUnique({
-// 			where: {
-// 				id: req.body.userId,
-// 			},
-// 			select: {
-// 				email: true,
-// 			},
-// 		});
-// 		if (!userEmail) {
-// 			return res.status(400).json({ message: "User not found" });
-// 		}
-// 		const authUrl = `https://auth.calendly.com/oauth/authorize?client_id=${process.env.CLIENT_ID}&response_type=code&redirect_uri=${process.env.REDIRECT_URI}`;
-// 		req.session.email = userEmail;
-// 		res.redirect(authUrl);
-// 	} catch (e) {
-// 		console.error(e);
-// 		res.status(400).json({ message: "Error in calendlyAuthorizeEmail" });
-// 	}
-// };
+export const authorizeCalendly = async (req, res) => {
+	try {
+		const clientId = process.env.CALENDLY_CLIENT_ID;
+		const redirectUri = process.env.CALENDLY_REDIRECT_URI;
+		const scope = "default";
 
-// app.get("/authorize", calendlyAuthorizeEmail);
+		const params = new URLSearchParams({
+			client_id: clientId,
+			response_type: "code",
+			redirect_uri: redirectUri,
+			scope: scope,
+		});
 
-// app.get("/callback", async (req, res) => {
-// 	const code = req.query.code;
-// 	const email = req.session.email;
+		const calendlyAuthUrl = `https://auth.calendly.com/oauth/authorize?${params.toString()}`;
+		res.status(200).json({ redirectUrl: calendlyAuthUrl });
+		// res.cookie("calendly_oauth_user", req.decodedUser.id, {
+		// 	httpOnly: true,
+		// 	secure: process.env.NODE_ENV === "production",
+		// 	sameSite: "strict",
+		// 	maxAge: 10 * 60 * 1000,
+		// });
 
-// 	if (!code || !email) {
-// 		return res.status(400).json({ error: "Invalid request" });
-// 	}
+		// res.redirect(
+		// 	`https://auth.calendly.com/oauth/authorize?${params.toString()}`,
+		// );
+	} catch (error) {
+		console.error("Error authorizing Calendly:", error.message);
+		res.status(400).json({ message: "Server error" });
+	}
+};
 
-// 	try {
-// 		const response = await axios.post(`${process.env.BASE_CALENDLY_API_URL}/oauth/token`, {
-// 			grant_type: "authorization_code",
-// 			client_id: process.env.CLIENT_ID,
-// 			client_secret: process.env.CLIENT_SECRET,
-// 			redirect_uri: process.env.REDIRECT_URI,
-// 			code: code,
-// 		});
+export const callbackCalendly = async (req, res) => {
+	const code = req.query.code;
+	console.log(req.cookies);
+	if (!code) {
+		return res.status(400).send("Authorization code not provided");
+	}
 
-// 		const tokens = response.data;
-// 		users[email].calendlyAccessToken = tokens.access_token;
-// 		users[email].calendlyRefreshToken = tokens.refresh_token;
+	try {
+		const tokenResponse = await axios.post(
+			"https://auth.calendly.com/oauth/token",
+			{
+				grant_type: "authorization_code",
+				code,
+				client_id: process.env.CALENDLY_CLIENT_ID,
+				client_secret: process.env.CALENDLY_CLIENT_SECRET,
+				redirect_uri: process.env.CALENDLY_REDIRECT_URI,
+			},
+			{ headers: { "Content-Type": "application/json" } },
+		);
 
-// 		const userInfo = await axios.get(`${process.env.BASE_CALENDLY_API_URL}/users/me`, {
-// 			headers: { Authorization: `Bearer ${tokens.access_token}` },
-// 		});
+		const { access_token, refresh_token, expires_in, scope, token_type } =
+			tokenResponse.data;
 
-// 		users[email].calendlyLink = userInfo.data.resource.scheduling_url;
-// 		res.json({ message: "Authorization successful!" });
-// 	} catch (error) {
-// 		res.status(500).json({ error: "Failed to exchange code for tokens" });
-// 	}
-// });
+		const userResponse = await axios.get("https://api.calendly.com/users/me", {
+			headers: {
+				Authorization: `Bearer ${access_token}`,
+			},
+		});
 
-// app.post("/set_schedule", (req, res) => {
-// 	const { email, availableSlots } = req.body;
+		const calendlyUserURI = userResponse.data.resource.uri;
+		console.log(userResponse.data.resource);
+		const calendlyOrgURI = userResponse.data.resource.current_organization;
 
-// 	if (!users[email] || !users[email].calendlyAccessToken) {
-// 		return res.status(403).json({ error: "User not authorized" });
-// 	}
+		await prisma.calendly_Integration.upsert({
+			where: { userId: req.decodedUser.id },
+			update: {
+				accessToken: access_token,
+				refreshToken: refresh_token,
+				tokenType: token_type,
+				expiresAt: new Date(Date.now() + expires_in * 1000),
+				scope,
+				calendlyUserURI,
+				calendlyOrgURI,
+			},
+			create: {
+				userId: req.decodedUser.id,
+				accessToken: access_token,
+				refreshToken: refresh_token,
+				tokenType: token_type,
+				expiresAt: new Date(Date.now() + expires_in * 1000),
+				scope,
+				calendlyUserURI,
+				calendlyOrgURI,
+			},
+		});
 
-// 	users[email].availableSlots = availableSlots;
-// 	res.json({ message: "Schedule set successfully!" });
-// });
+		res.redirect(process.env.FRONTEND + "/userProfile");
+	} catch (error) {
+		console.error(
+			"Error during OAuth callback:",
+			error.response?.data || error.message,
+		);
+		res.status(400).send("Error during OAuth callback");
+	}
+};
 
-// app.get("/view_schedule/:email", (req, res) => {
-// 	const email = req.params.email;
-// 	if (!users[email]) {
-// 		return res.status(404).json({ error: "User not found" });
-// 	}
+export const disconnectCalendly = async (req, res) => {
+	try {
+		const integration = await prisma.calendly_Integration.findUnique({
+			where: { userId: req.decodedUser.id },
+		});
 
-// 	const availableSlots = users[email].availableSlots || [];
-// 	res.json({ available_slots: availableSlots });
-// });
+		if (!integration) {
+			return res
+				.status(404)
+				.json({ message: "Calendly integration not found." });
+		}
 
-// app.post("/reserve_slot", (req, res) => {
-// 	const { requester_email, target_email, slot } = req.body;
+		if (integration.accessToken) {
+			try {
+				await axios.post(
+					"https://auth.calendly.com/oauth/revoke",
+					{
+						token: integration.accessToken,
+						client_id: process.env.CALENDLY_CLIENT_ID,
+						client_secret: process.env.CALENDLY_CLIENT_SECRET,
+					},
+					{ headers: { "Content-Type": "application/json" } },
+				);
+			} catch (revokeError) {
+				console.warn(
+					"Access token revocation failed:",
+					revokeError.response?.data || revokeError.message,
+				);
+			}
+		}
 
-// 	if (
-// 		!users[target_email] ||
-// 		!users[target_email].availableSlots.includes(slot)
-// 	) {
-// 		return res
-// 			.status(404)
-// 			.json({ error: "Target user not found or unavailable" });
-// 	}
+		if (integration.refreshToken) {
+			try {
+				await axios.post(
+					"https://auth.calendly.com/oauth/revoke",
+					{
+						token: integration.refreshToken,
+						client_id: process.env.CALENDLY_CLIENT_ID,
+						client_secret: process.env.CALENDLY_CLIENT_SECRET,
+					},
+					{ headers: { "Content-Type": "application/json" } },
+				);
+			} catch (revokeError) {
+				console.warn(
+					"Refresh token revocation failed:",
+					revokeError.response?.data || revokeError.message,
+				);
+			}
+		}
 
-// 	users[target_email].availableSlots = users[
-// 		target_email
-// 	].availableSlots.filter((s) => s !== slot);
+		await prisma.calendly_Integration.delete({
+			where: { userId: req.decodedUser.id },
+		});
 
-// 	const notification = {
-// 		message: "Meeting slot reserved",
-// 		requester: requester_email,
-// 		target: target_email,
-// 		slot: slot,
-// 	};
+		res
+			.status(200)
+			.json({ message: "Calendly account disconnected successfully." });
+	} catch (error) {
+		console.error(
+			"Error disconnecting Calendly:",
+			error.response?.data || error.message,
+		);
+		res.status(400).json({ message: "Error disconnecting Calendly." });
+	}
+};
 
-// 	res.json({
-// 		message: "Slot reserved successfully!",
-// 		notification: notification,
-// 	});
-// });
+export const eventTypeCalendly = async (req, res) => {
+	try {
+		const data = await calendlyRequest(req.decodedUser.id, {
+			method: "GET",
+			url: "https://api.calendly.com/event_types",
+		});
 
-// app.post("/webhook", (req, res) => {
-// 	const signature = req.headers["calendly-webhook-signature"];
-// 	const payload = req.body;
+		res.status(200).json(data);
+	} catch (error) {
+		res.status(400).json({ message: "Error fetching event types" });
+	}
+};
 
-// 	const verifySignature = (payload, signature, webhookSigningKey) => {
-// 		const computedSignature = crypto
-// 			.createHmac("sha256", webhookSigningKey)
-// 			.update(JSON.stringify(payload))
-// 			.digest("hex");
-// 		return crypto.timingSafeEqual(
-// 			Buffer.from(computedSignature),
-// 			Buffer.from(signature),
-// 		);
-// 	};
+export const createEventTypeCalendly = async (req, res) => {
+	const { name, description, duration, ...otherData } = req.body;
+	try {
+		const data = await calendlyRequest(req.decodedUser.id, {
+			method: "POST",
+			url: "https://api.calendly.com/event_types",
+			data: {
+				name,
+				description,
+				duration,
+				...otherData,
+			},
+		});
 
-// 	if (!verifySignature(payload, signature, process.env.WEBHOOK_SIGNING_KEY)) {
-// 		return res.status(403).json({ error: "Invalid webhook signature" });
-// 	}
+		res.status(200).json(data);
+	} catch (error) {
+		res.status(400).json({ message: "Error creating event type" });
+	}
+};
+export const getSchedulingLinkCalendly = async (req, res) => {
+	let visitor = req.decodedUser;
+	const { username } = req.query;
 
-// 	console.log("Received webhook event:", payload);
-// 	res.json({ message: "Webhook received successfully" });
-// });
+	try {
+		const profileUser = await prisma.user.findUnique({
+			where: { username },
+			include: { calendly_integration: true },
+		});
+
+		if (!profileUser || !profileUser.calendly_integration) {
+			return res
+				.status(404)
+				.json({ message: "User or Calendly integration not found" });
+		}
+
+		const data = await calendlyRequest(profileUser.id, {
+			method: "GET",
+			url: "https://api.calendly.com/event_types",
+		});
+
+		const eventType = data.collection[0];
+		const schedulingUrl = eventType?.scheduling_url || null;
+
+		res.status(200).json({ schedulingUrl });
+	} catch (error) {
+		res.status(400).json({ message: "Error fetching scheduling link" });
+	}
+};
+export async function calendlyRequest(userId, options) {
+	let integration = await prisma.calendly_Integration.findUnique({
+		where: { userId },
+	});
+
+	if (!integration) {
+		throw new Error("Calendly integration not found");
+	}
+
+	if (integration.expiresAt <= new Date()) {
+		integration = await refreshAccessToken(userId, integration.refreshToken);
+	}
+
+	const headers = {
+		Authorization: `Bearer ${integration.accessToken}`,
+		"Content-Type": "application/json",
+	};
+
+	try {
+		const response = await axios({
+			...options,
+			headers: {
+				...headers,
+				...options.headers,
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error("Calendly API error:", error.response?.data || error.message);
+		throw error;
+	}
+}
+
+async function refreshAccessToken(userId, refreshToken) {
+	try {
+		const tokenResponse = await axios.post(
+			"https://auth.calendly.com/oauth/token",
+			{
+				grant_type: "refresh_token",
+				refresh_token: refreshToken,
+				client_id: process.env.CALENDLY_CLIENT_ID,
+				client_secret: process.env.CALENDLY_CLIENT_SECRET,
+			},
+			{ headers: { "Content-Type": "application/json" } },
+		);
+
+		const {
+			access_token,
+			refresh_token: newRefreshToken,
+			expires_in,
+			scope,
+			token_type,
+		} = tokenResponse.data;
+
+		const updatedIntegration = await prisma.calendly_Integration.update({
+			where: { userId },
+			data: {
+				accessToken: access_token,
+				refreshToken: newRefreshToken,
+				tokenType: token_type,
+				expiresAt: new Date(Date.now() + expires_in * 1000),
+				scope,
+			},
+		});
+
+		return updatedIntegration;
+	} catch (error) {
+		console.error(
+			"Error refreshing Calendly access token:",
+			error.response?.data || error.message,
+		);
+		throw error;
+	}
+}

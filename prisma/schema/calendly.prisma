@@ -1,0 +1,33 @@
+
+enum VisibilityOption {
+  PUBLIC
+  PRO_USERS
+  INVESTORS
+  ENTREPRENEURS
+  CUSTOM
+}
+
+enum UserRole {
+  INVESTOR
+  ENTREPRENEUR
+  USER
+}
+
+model Calendly_Integration {
+  id                    String           @id @default(uuid())
+  userId                String           @unique
+  user                  User             @relation(fields: [userId], references: [id])
+  calendlyVisibility    VisibilityOption @default(PUBLIC)
+  allowedIndustries     String[]
+  minYearsOfOperation   Int?
+  allowedRoles          UserRole[]
+  accessToken           String
+  refreshToken          String
+  tokenType             String
+  expiresAt             DateTime
+  scope                 String
+  calendlyUserURI       String
+  calendlyOrgURI        String
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}

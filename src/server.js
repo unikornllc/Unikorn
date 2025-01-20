@@ -25,6 +25,8 @@ import { Server } from "socket.io";
 import { ensureAuth, ensureGuest } from "./middlewares/auth.js";
 import { createJWT } from "./controllers/auth.js";
 
+import { callbackCalendly } from "./calendly.js";
+
 const app = express();
 configurePassport(passport);
 // const csrfProtection = csrf();
@@ -148,7 +150,9 @@ app.post("/signIn", verifiedUser, signIn);
 app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
+
 app.use(protect, router);
+
 //app.use(router);
 
 server.listen(3002, () => {
