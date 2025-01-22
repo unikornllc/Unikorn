@@ -1,5 +1,5 @@
 import axios from "axios";
-import prisma from "./db.js";
+import prisma from "../db.js";
 
 export const authorizeCalendly = async (req, res) => {
 	try {
@@ -12,6 +12,7 @@ export const authorizeCalendly = async (req, res) => {
 			response_type: "code",
 			redirect_uri: redirectUri,
 			scope: scope,
+			prompt: "consent",
 		});
 
 		const calendlyAuthUrl = `https://auth.calendly.com/oauth/authorize?${params.toString()}`;
@@ -34,7 +35,7 @@ export const authorizeCalendly = async (req, res) => {
 
 export const callbackCalendly = async (req, res) => {
 	const code = req.query.code;
-	console.log(req.cookies);
+	// console.log(req.cookies);
 	if (!code) {
 		return res.status(400).send("Authorization code not provided");
 	}
@@ -51,7 +52,6 @@ export const callbackCalendly = async (req, res) => {
 			},
 			{ headers: { "Content-Type": "application/json" } },
 		);
-
 		const { access_token, refresh_token, expires_in, scope, token_type } =
 			tokenResponse.data;
 
@@ -60,9 +60,10 @@ export const callbackCalendly = async (req, res) => {
 				Authorization: `Bearer ${access_token}`,
 			},
 		});
+		console.log(userResponse);
 
 		const calendlyUserURI = userResponse.data.resource.uri;
-		console.log(userResponse.data.resource);
+		// console.log(userResponse.data.resource);
 		const calendlyOrgURI = userResponse.data.resource.current_organization;
 
 		await prisma.calendly_Integration.upsert({
@@ -118,6 +119,7 @@ export const disconnectCalendly = async (req, res) => {
 						token: integration.accessToken,
 						client_id: process.env.CALENDLY_CLIENT_ID,
 						client_secret: process.env.CALENDLY_CLIENT_SECRET,
+						user: integration.calendlyUserURI,
 					},
 					{ headers: { "Content-Type": "application/json" } },
 				);
@@ -137,6 +139,7 @@ export const disconnectCalendly = async (req, res) => {
 						token: integration.refreshToken,
 						client_id: process.env.CALENDLY_CLIENT_ID,
 						client_secret: process.env.CALENDLY_CLIENT_SECRET,
+						user: integration.calendlyUserURI,
 					},
 					{ headers: { "Content-Type": "application/json" } },
 				);
@@ -163,16 +166,62 @@ export const disconnectCalendly = async (req, res) => {
 		res.status(400).json({ message: "Error disconnecting Calendly." });
 	}
 };
-
+export const updateCalendlySettings = async (req, res) => {
+	const { visibility, allowedIndustries, minYearsOfOperation, allowedRoles } =
+		req.body;
+	try {
+		await prisma.calendly_Integration.update({
+			where: { userId: req.decodedUser.id },
+			data: {
+				calendlyVisibility: visibility,
+				allowedIndustries,
+				minYearsOfOperation,
+				allowedRoles,
+			},
+		});
+		res.status(200);
+	} catch (error) {
+		console.error(
+			"Error updating Calendly integration settings:",
+			error.response?.data || error.message,
+		);
+		res
+			.status(400)
+			.json({ message: "Error updating Calendly integration settings" });
+	}
+};
 export const eventTypeCalendly = async (req, res) => {
 	try {
-		const data = await calendlyRequest(req.decodedUser.id, {
-			method: "GET",
-			url: "https://api.calendly.com/event_types",
-		});
+		let id = req.decodedUser.id;
+		if (req.query.username) {
+			const user = await prisma.user.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: { id: true },
+			});
+			id = user.id;
+		}
 
-		res.status(200).json(data);
+		const data = await calendlyRequest(
+			id,
+			{
+				method: "GET",
+				url: "https://api.calendly.com/event_types",
+			},
+			true,
+		);
+
+		const { collection: allEventTypes, pagination } = data;
+
+		const eventTypes = allEventTypes.filter(
+			(eventType) =>
+				eventType.active && eventType.name.toLowerCase().includes("unikorn"),
+		);
+
+		res.status(200).json({ eventTypes, pagination });
 	} catch (error) {
+		console.error("Error fetching event types:", error);
 		res.status(400).json({ message: "Error fetching event types" });
 	}
 };
@@ -180,22 +229,27 @@ export const eventTypeCalendly = async (req, res) => {
 export const createEventTypeCalendly = async (req, res) => {
 	const { name, description, duration, ...otherData } = req.body;
 	try {
-		const data = await calendlyRequest(req.decodedUser.id, {
-			method: "POST",
-			url: "https://api.calendly.com/event_types",
-			data: {
-				name,
-				description,
-				duration,
-				...otherData,
+		const data = await calendlyRequest(
+			req.decodedUser.id,
+			{
+				method: "POST",
+				url: "https://api.calendly.com/event_types",
+				data: {
+					name,
+					description,
+					duration,
+					...otherData,
+				},
 			},
-		});
+			true,
+		);
 
 		res.status(200).json(data);
 	} catch (error) {
 		res.status(400).json({ message: "Error creating event type" });
 	}
 };
+
 export const getSchedulingLinkCalendly = async (req, res) => {
 	let visitor = req.decodedUser;
 	const { username } = req.query;
@@ -214,7 +268,7 @@ export const getSchedulingLinkCalendly = async (req, res) => {
 
 		const data = await calendlyRequest(profileUser.id, {
 			method: "GET",
-			url: "https://api.calendly.com/event_types",
+			url: `https://api.calendly.com/event_types`,
 		});
 
 		const eventType = data.collection[0];
@@ -225,7 +279,8 @@ export const getSchedulingLinkCalendly = async (req, res) => {
 		res.status(400).json({ message: "Error fetching scheduling link" });
 	}
 };
-export async function calendlyRequest(userId, options) {
+
+export async function calendlyRequest(userId, options, addUserLink = false) {
 	let integration = await prisma.calendly_Integration.findUnique({
 		where: { userId },
 	});
@@ -242,6 +297,12 @@ export async function calendlyRequest(userId, options) {
 		Authorization: `Bearer ${integration.accessToken}`,
 		"Content-Type": "application/json",
 	};
+	if (addUserLink) {
+		const params = new URLSearchParams({
+			user: integration.calendlyUserURI,
+		});
+		options.url += `?${params.toString()}`;
+	}
 
 	try {
 		const response = await axios({

@@ -25,7 +25,7 @@ import { Server } from "socket.io";
 import { ensureAuth, ensureGuest } from "./middlewares/auth.js";
 import { createJWT } from "./controllers/auth.js";
 
-import { callbackCalendly } from "./calendly.js";
+import { callbackCalendly } from "./controllers/calendly.js";
 
 const app = express();
 configurePassport(passport);
