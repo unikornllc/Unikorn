@@ -28,10 +28,12 @@ import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
 
+
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
 
 const randomId = () => crypto.randomBytes(64).toString("hex");
+
 
 const app = express();
 configurePassport(passport);

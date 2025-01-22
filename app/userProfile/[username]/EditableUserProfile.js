@@ -11,6 +11,7 @@ import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
 import SettingsPage from "@/app/_components/_settings/Settings";
 import CalendlyWidget from "@/app/_components/_calendly/CalendlyWidget";
+import CalendlyEventTypes from "@/app/_components/_calendly/CalendlyEventTypes";
 
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
@@ -86,6 +87,9 @@ export default function EditableUserProfile({ user, editable = false }) {
 
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
+					{user.calendly_integration && (
+						<CalendlyEventTypes></CalendlyEventTypes>
+					)}
 					<About
 						username={user.username}
 						aboutList={{

@@ -137,7 +137,8 @@ import {
 	getSchedulingLinkCalendly,
 	callbackCalendly,
 	disconnectCalendly,
-} from "./calendly.js";
+	updateCalendlySettings,
+} from "./controllers/calendly.js";
 
 import { verifiedUser } from "./middlewares/verified_mail.js";
 
@@ -265,5 +266,6 @@ router.get("/calendly/eventType", eventTypeCalendly);
 router.post("/calendly/createEventType", createEventTypeCalendly);
 router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
+router.put("/calendly/settings", updateCalendlySettings);
 
 export default router;

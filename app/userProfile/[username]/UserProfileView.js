@@ -9,6 +9,7 @@ import Certifications from "../../_components/_user_profile/Certifications";
 import Sidebar from "../../_components/_user_profile/Sidebar";
 import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
+import CalendlySchedule from "@/app/_components/_calendly/CalendlySchedule";
 
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(false);
@@ -69,8 +70,8 @@ export default function EditableUserProfile({ user, editable = false }) {
 	return (
 		<div className="bg-secondary min-h-screen">
 			<Header
-				username={user.username}
-				userData={{
+				user={{
+					username: user.username,
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
@@ -106,6 +107,14 @@ export default function EditableUserProfile({ user, editable = false }) {
 			</div>
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
+					{user.calendly_integration && (
+						<div className="bg-white p-6 rounded-lg shadow mb-6 relative">
+							<h3 className="text-2xl font-semibold text-textPrimary mb-4">
+								User's Schedules
+							</h3>
+							<CalendlySchedule username={user.username}></CalendlySchedule>
+						</div>
+					)}
 					<About
 						username={user.username}
 						aboutList={{

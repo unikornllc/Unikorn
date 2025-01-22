@@ -10,7 +10,7 @@ const CalendlySettings = ({ user }) => {
 		calendlyIntegration.allowedIndustries || [],
 	);
 	const [minYears, setMinYears] = useState(
-		calendlyIntegration.minYearsOfOperation || "",
+		calendlyIntegration.minYearsOfOperation || 0,
 	);
 	const [allowedRoles, setAllowedRoles] = useState(
 		calendlyIntegration.allowedRoles || [],
@@ -18,12 +18,18 @@ const CalendlySettings = ({ user }) => {
 
 	const handleSave = async () => {
 		try {
-			await axios.put("/api/users/calendly-settings", {
-				visibility,
-				allowedIndustries,
-				minYearsOfOperation: minYears,
-				allowedRoles,
-			});
+			await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/calendly/settings`,
+				{
+					visibility,
+					allowedIndustries,
+					minYearsOfOperation: minYears,
+					allowedRoles,
+				},
+				{
+					withCredentials: true,
+				},
+			);
 		} catch (error) {
 			console.error("Error updating Calendly settings:", error);
 		}
