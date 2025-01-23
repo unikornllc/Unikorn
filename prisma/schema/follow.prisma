@@ -4,24 +4,24 @@ model UserFollowsUser {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower    User     @relation("UserFollows", fields: [followerId], references: [id])
-  following   User     @relation("UserFollowed", fields: [followingId], references: [id])
+  follower  User @relation("UserFollows", fields: [followerId], references: [id])
+  following User @relation("UserFollowed", fields: [followingId], references: [id])
 
+  @@unique([followerId, followingId])
   @@index([followerId], name: "follower_idx")
   @@index([followingId], name: "following_idx")
-  @@unique([followerId, followingId])
 }
 
 model UserFollowsCompany {
-  id          String  @id @default(uuid())
-  userId      String
-  companyId   String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
 
-  user        User            @relation(fields: [userId], references: [id])
-  company     Company_Profile @relation(fields: [companyId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+  company Company_Profile @relation(fields: [companyId], references: [id])
 
+  @@unique([userId, companyId])
   @@index([userId], name: "user_idx")
   @@index([companyId], name: "company_idx")
-  @@unique([userId, companyId])
 }

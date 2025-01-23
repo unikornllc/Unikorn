@@ -1,0 +1,28 @@
+enum Role {
+  User
+  Company
+}
+
+model RefreshTokenValid {
+  sid       String   @id
+  profileId String
+  expire    DateTime
+  role      Role
+}
+
+model TokenBlacklist {
+  token     String   @id
+  profileId String
+  expire    DateTime
+}
+
+model LoginDevices {
+  id        String           @id @default(uuid())
+  ip        String
+  browser   String
+  os        String
+  userId    String?
+  companyId String?
+  user      User?            @relation(fields: [userId], references: [id])
+  company   Company_Profile? @relation(fields: [companyId], references: [id])
+}

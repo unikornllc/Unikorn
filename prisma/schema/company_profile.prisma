@@ -29,6 +29,7 @@ model Company_Profile {
   activities          Activity[]
   company_file        Company_File[]
   followers           UserFollowsCompany[]
+  logindevices        LoginDevices[]
 }
 
 model Founder {
