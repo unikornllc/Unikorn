@@ -1,5 +1,6 @@
 import prisma from "../db.js";
-import { hashPassword } from "./auth.js";
+import { hashPassword } from "../auth.js";
+import { UAParser } from "ua-parser-js";
 
 export const createCompany = async (req, res) => {
 	try {
@@ -24,6 +25,21 @@ export const createCompany = async (req, res) => {
 				founders: companyData.founders || [],
 			},
 		});
+		const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+		const userAgent = req.get("User-Agent");
+		const parser = new UAParser(userAgent);
+		const result = parser.getResult();
+		const browser = result.browser.name;
+		const os = result.os.name;
+		await prisma.loginDevices.create({
+			data: {
+				linkedTo: newCompany.id,
+				ip: ip,
+				browser: browser,
+				os: os,
+			},
+		});
+
 		res.status(200).json({
 			message: "Company created successfully",
 			company: newCompany,

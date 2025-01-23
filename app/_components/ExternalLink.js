@@ -1,4 +1,3 @@
-// app/components/ExternalLink.js
 "use client"; // Indicates this is a Client Component
 
 import Link from "next/link";

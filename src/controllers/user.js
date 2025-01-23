@@ -1,9 +1,10 @@
 import prisma from "../db.js";
 import NodeMailer from "nodemailer";
 import jwt from "jsonwebtoken";
-import { comparePasswords } from "./auth.js";
-import { hashPassword } from "./auth.js";
-import { createJWT } from "./auth.js";
+import { UAParser } from "ua-parser-js";
+import { comparePasswords } from "../auth.js";
+import { hashPassword } from "../auth.js";
+import { createJWT } from "../auth.js";
 import { generateUsername } from "unique-username-generator";
 
 export const createUser = async (req, res) => {
@@ -24,6 +25,21 @@ export const createUser = async (req, res) => {
 		const email = userData.email;
 		const token = jwt.sign({ email }, process.env.JWT_SECRET, {
 			expiresIn: "1h",
+		});
+
+		const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+		const userAgent = req.get("User-Agent");
+		const parser = new UAParser(userAgent);
+		const result = parser.getResult();
+		const browser = result.browser.name;
+		const os = result.os.name;
+		await prisma.loginDevices.create({
+			data: {
+				linkedTo: newUser.id,
+				ip: ip,
+				browser: browser,
+				os: os,
+			},
 		});
 
 		res.cookie("token", token, {
