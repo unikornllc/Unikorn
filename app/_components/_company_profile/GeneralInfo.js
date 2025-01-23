@@ -56,11 +56,11 @@ const GeneralInfo = ({ company, onUpdate }) => {
 			>
 				{company.hunter ? (
 					<label className="block font-medium w-1/3">
-						Compny tier is <strong>Hunter</strong>.
+						Company tier is <strong>Hunter</strong>.
 					</label>
 				) : (
 					<label className="block font-medium w-1/3">
-						Compny tier is <strong>Holder</strong>.
+						Company tier is <strong>Holder</strong>.
 					</label>
 				)}
 				{[
