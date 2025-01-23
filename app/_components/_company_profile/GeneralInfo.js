@@ -54,6 +54,15 @@ const GeneralInfo = ({ company, onUpdate }) => {
 				className="grid grid-cols-1 gap-4 sm:grid-cols-2"
 				onSubmit={(e) => e.preventDefault()} // Prevent form default submission
 			>
+				{company.hunter ? (
+					<label className="block font-medium w-1/3">
+						Compny tier is <strong>Hunter</strong>.
+					</label>
+				) : (
+					<label className="block font-medium w-1/3">
+						Compny tier is <strong>Holder</strong>.
+					</label>
+				)}
 				{[
 					{ label: "Name", name: "name", type: "text" },
 					{ label: "Email", name: "email", type: "email" },

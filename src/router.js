@@ -51,6 +51,8 @@ import {
 	unfollowUser,
 	getFollowers,
 	getFollowing,
+	getTier,
+	updateTier,
 } from "./controllers/user.js";
 
 import {
@@ -82,6 +84,7 @@ import {
 	unfollowCompany,
 	isFollowingCompany,
 	getFollowingCompanies,
+	getCompanyTier,
 } from "./controllers/company_profile.js";
 
 import {
@@ -180,6 +183,8 @@ router.put("/updateUser", updateUser);
 router.put("/followUser", followUser);
 router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
+router.get("/getTier", getTier);
+router.put("/updateTier", updateTier);
 
 //get followers and following returns an array of usernames
 router.get("/getFollowers", getFollowers);
@@ -213,6 +218,7 @@ router.put("/updateCompanyProfile", updateCompanyProfile);
 router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
+router.get("/getCompanyTier", getCompanyTier);
 
 //get all companies that the user is following
 //returns an array of usernames

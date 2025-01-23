@@ -45,6 +45,18 @@ export default async function UserProfile({ params }) {
 					.then((response) => {
 						user.isFollowing = response.data.isFollowing;
 					});
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/getTier`, {
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						user.tier = response.data.tier;
+						if (user.tier == "Standard") {
+							user.calendly_integration = null;
+						}
+					});
 			} catch (err) {
 				console.error(err);
 			}
