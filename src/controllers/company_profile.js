@@ -399,3 +399,20 @@ export const getFollowingCompanies = async (req, res) => {
 		res.status(400).json({ message: "Error fetching following companies" });
 	}
 };
+
+export const getCompanyTier = async (req, res) => {
+	try {
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				id: req.decodedUser.id,
+			},
+			select: {
+				hunter: true,
+			},
+		});
+		res.status(200).json({ tier: company.hunter });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching company tier" });
+	}
+};

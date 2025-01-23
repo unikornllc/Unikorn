@@ -8,6 +8,7 @@ export default function ViewCompanyProfile({ company }) {
 	const [availableSlots, setAvailableSlots] = useState([]);
 	const [selectedSlot, setSelectedSlot] = useState("");
 	const [newSlots, setNewSlots] = useState("");
+	const isHunter = company.tier;
 
 	const handleSetSchedule = async () => {
 		try {
@@ -132,6 +133,17 @@ export default function ViewCompanyProfile({ company }) {
 								>
 									follow
 								</button>
+							)}
+
+							{company.hunter && (
+								<a href={`/userChat`}>
+									<button
+										className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+										disabled={loading}
+									>
+										chat
+									</button>
+								</a>
 							)}
 
 							<a

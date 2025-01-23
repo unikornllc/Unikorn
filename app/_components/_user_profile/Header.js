@@ -194,6 +194,17 @@ const Header = ({ user, editable }) => {
 					</div>
 				</div>
 			</div>
+			{editable && (
+				<p
+					className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-lg transition duration-300 ${
+						user.tier === "Standard"
+							? "bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100"
+							: "bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-white"
+					}`}
+				>
+					{user.tier}
+				</p>
+			)}
 			<div className="pt-24 pb-6 text-center">
 				<h2 className="text-xl text-gray-600">{title}</h2>
 				<h1 className="text-3xl font-bold">

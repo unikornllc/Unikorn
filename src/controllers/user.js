@@ -624,3 +624,37 @@ export const getFollowers = async (req, res) => {
 		res.status(400).json({ message: "Error fetching followers" });
 	}
 };
+
+export const getTier = async (req, res) => {
+	try {
+		const tier = await prisma.user.findUnique({
+			where: {
+				id: req.decodedUser.id,
+			},
+			select: {
+				tier: true,
+			},
+		});
+		res.status(200).json(tier);
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching tier" });
+	}
+};
+
+export const updateTier = async (req, res) => {
+	try {
+		const updatedTier = await prisma.user.update({
+			where: {
+				id: req.decodedUser.id,
+			},
+			data: {
+				tier: req.body.tier,
+			},
+		});
+		res.status(200).json({ message: "Tier updated successfully" });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error updating tier" });
+	}
+};

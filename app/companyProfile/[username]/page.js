@@ -41,6 +41,16 @@ export default async function CompanyProfile({ params }) {
 					.then((response) => {
 						company.isFollowing = response.data.isFollowing;
 					});
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/getCompanyTier`, {
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						console.log("response", response.data.tier);
+						company.hunter = response.data.tier;
+					});
 			} catch (err) {
 				console.error(err);
 			}

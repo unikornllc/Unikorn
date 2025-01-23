@@ -17,6 +17,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 	const [availableSlots, setAvailableSlots] = useState([]);
 	const [selectedSlot, setSelectedSlot] = useState("");
 	const [newSlots, setNewSlots] = useState("");
+	const isPro = user.tier;
 
 	const handleFollow = async () => {
 		try {
@@ -72,6 +73,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 			<Header
 				user={{
 					username: user.username,
+					tier: user.tier,
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
@@ -94,6 +96,17 @@ export default function EditableUserProfile({ user, editable = false }) {
 					>
 						follow
 					</button>
+				)}
+
+				{isPro == "Pro" && (
+					<a href={`/userChat`}>
+						<button
+							className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+							disabled={loading}
+						>
+							chat
+						</button>
+					</a>
 				)}
 
 				<a

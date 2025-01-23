@@ -194,13 +194,23 @@ export const eventTypeCalendly = async (req, res) => {
 	try {
 		let id = req.decodedUser.id;
 		if (req.query.username) {
-			const user = await prisma.user.findUnique({
+			const me = await prisma.user.findUnique({
 				where: {
-					username: req.query.username,
+					id: req.decodedUser.id,
 				},
-				select: { id: true },
+				select: { tier: true },
 			});
-			id = user.id;
+			if (me.tier === "Pro") {
+				const user = await prisma.user.findUnique({
+					where: {
+						username: req.query.username,
+					},
+					select: { id: true },
+				});
+				id = user.id;
+			} else {
+				return res.status(200).json({ message: "Unauthorized" });
+			}
 		}
 
 		const data = await calendlyRequest(
