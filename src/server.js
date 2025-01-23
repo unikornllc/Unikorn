@@ -22,11 +22,13 @@ import {
 } from "./middlewares/signup.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { ensureAuth, ensureGuest } from "./middlewares/auth.js";
 import { createJWT } from "./controllers/auth.js";
 import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
+import docusign from "docusign-esign";
+import fs from "fs";
+import path from "path";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -141,6 +143,193 @@ app.get("/auth/logout", function (req, res, next) {
     res.redirect(`${process.env.FRONTEND}/signin`);
   });
 });
+
+function makeRecipientViewRequest(name, email) {
+  let viewRequest = new docusign.RecipientViewRequest();
+
+  viewRequest.returnUrl = `${process.env.FRONTEND}/userHome`;
+  viewRequest.authenticationMethod = "none";
+
+  // Recipient information must match embedded recipient info
+  // we used to create the envelope.
+  viewRequest.email = email;
+  viewRequest.userName = name;
+  viewRequest.clientUserId = 1000;
+
+  return viewRequest;
+}
+
+function makeEnvelope(name, email, company) {
+  const env = new docusign.EnvelopeDefinition();
+  env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
+
+  const text = docusign.Text.constructFromObject({
+    tabLabel: "company_name",
+    value: company,
+  });
+
+  // Pull together the existing and new tabs in a Tabs object:
+  const tabs = docusign.Tabs.constructFromObject({
+    textTabs: [text],
+  });
+
+  const signer1 = docusign.TemplateRole.constructFromObject({
+    email: email,
+    name: name,
+    tabs: tabs,
+    clientUserId: 1000,
+    roleName: "Applicant",
+  });
+  // signer1.emailNotification = new docusign.RecipientEmailNotification();
+  // signer1.emailNotification.emailSubject = "Please sign this document";
+  // signer1.emailNotification.emailBody = "Please sign the attached document.";
+  // signer1.emailNotification.supportLanguage = "en";
+  env.templateRoles = [signer1];
+  env.status = "sent";
+
+  return env;
+}
+
+function getEnvelopeApi(req) {
+  const dsApiClient = new docusign.ApiClient();
+  dsApiClient.setBasePath(process.env.BASE_PATH_DOCUSIGN);
+  dsApiClient.addDefaultHeader(
+    "Authorization",
+    "Bearer " + req.session.access_token
+  );
+  return new docusign.EnvelopesApi(dsApiClient);
+}
+
+async function checkDocuSignToken(req) {
+  if (req.session.access_token && Date.now() < req.session.expires_at) {
+    console.log("re-using access_token ");
+  } else {
+    console.log("generating a new access token");
+    const dsApiClient = new docusign.ApiClient();
+    dsApiClient.setBasePath(process.env.BASE_PATH_DOCUSIGN);
+    const results = await dsApiClient.requestJWTUserToken(
+      process.env.INTEGRATION_KEY,
+      process.env.USER_ID_DOCUSIGN,
+      "openid, signature",
+      fs.readFileSync(path.join("./src", "private.key")),
+      3600
+    );
+    req.session.access_token = results.body.access_token;
+    req.session.expires_at = Date.now() + (results.body.expires_in - 60) * 1000;
+  }
+}
+app.post("/docusign", async (req, res) => {
+  try {
+    await checkDocuSignToken(req);
+    const eventNotification = new docusign.EventNotification();
+    eventNotification.url = "https://6711-102-40-1-245.ngrok-free.app/webhook";
+    eventNotification.loggingEnabled = "true";
+    eventNotification.requireAcknowledgment = "true";
+    eventNotification.envelopeEvents = [
+      // { envelopeEventStatusCode: "sent" },
+      // { envelopeEventStatusCode: "delivered" },
+      { envelopeEventStatusCode: "completed" },
+      // { envelopeEventStatusCode: "declined" },
+      //{ envelopeEventStatusCode: "voided" },
+    ];
+    eventNotification.recipientEvents = [
+      //{ recipientEventStatusCode: "Sent" },
+      //{ recipientEventStatusCode: "Delivered" },
+      { recipientEventStatusCode: "Completed" },
+      //{ recipientEventStatusCode: "Declined" },
+      //{ recipientEventStatusCode: "AutoResponded" },
+    ];
+
+    const envelopesApi = getEnvelopeApi(req);
+    const envelope = makeEnvelope(
+      req.body.name,
+      req.body.email,
+      req.body.company
+    );
+
+    const results = await envelopesApi.createEnvelope(
+      process.env.ACCOUNT_ID_DOCUSIGN,
+      {
+        envelopeDefinition: envelope,
+      }
+    );
+    console.log("envelope results", results);
+    const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
+    const recipientViewRequest = await envelopesApi.createRecipientView(
+      process.env.ACCOUNT_ID_DOCUSIGN,
+      results.envelopeId,
+      { recipientViewRequest: viewRequest }
+    );
+
+    res.status(200).json({ redirectUrl: recipientViewRequest.url });
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error generating access token" });
+  }
+});
+
+app.post("/webhook", async (req, res) => {
+  res.sendStatus(200);
+  await checkDocuSignToken(req);
+  console.log("im him");
+  // Handle the notification data
+  const notification = req.body;
+
+  // For debugging purposes, you can log the notification
+  console.log("Received webhook notification:", JSON.stringify(notification));
+
+  // Check for envelope status
+  const envelopeStatus = notification.event;
+
+  if (notification && envelopeStatus === "envelope-completed") {
+    const envelopeId = notification.data.envelopeId;
+    console.log(
+      `Envelope ${envelopeId} has been completed. Downloading the signed document...`
+    );
+    downloadSignedDocument(envelopeId, req);
+  }
+});
+
+// Function to download the signed document from the completed envelope
+async function downloadSignedDocument(envelopeId, req) {
+  if (!envelopeId) {
+    console.error("Envelope ID is required to download the signed document.");
+    return;
+  }
+
+  const envelopesApi = getEnvelopeApi(req);
+
+  try {
+    // List documents in the envelope
+    const results = await envelopesApi.listDocuments(
+      process.env.ACCOUNT_ID_DOCUSIGN,
+      envelopeId
+    );
+    const documents = results.envelopeDocuments;
+
+    for (const doc of documents) {
+      // Skip the certificate of completion if you don't need it
+      if (doc.documentId === "certificate") {
+        continue;
+      }
+
+      // Get the document
+      const document = await envelopesApi.getDocument(
+        process.env.ACCOUNT_ID_DOCUSIGN,
+        envelopeId,
+        doc.documentId,
+        null
+      );
+
+      // Save the document
+      const filePath = path.resolve("./src/documents", `signed_${doc.name}`);
+      fs.writeFileSync(filePath, document, { encoding: "binary" });
+      console.log(`Document ${doc.name} saved at ${filePath}`);
+    }
+  } catch (error) {
+    console.error("Error downloading signed document:", error);
+  }
+}
 
 app.post("/createUser", checkEmail, checkUsername, confirmPassword, createUser);
 app.post(
@@ -259,5 +448,4 @@ io.on("connection", async (socket) => {
     }
   });
 });
-
 export default app;
