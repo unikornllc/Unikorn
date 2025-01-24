@@ -58,7 +58,17 @@ export default async function UserProfile({ params }) {
 						}
 					});
 			} catch (err) {
-				console.error(err);
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/getCompanyTier`, {
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						response.data.tier
+							? (user.tier = "Pro")
+							: ((user.tier = "Standard"), (user.calendly_integration = null));
+					});
 			}
 		}
 		return (
@@ -71,12 +81,12 @@ export default async function UserProfile({ params }) {
 			</div>
 		);
 	} catch (error) {
-		if (error.response && error.response.status === 401) {
-			console.error("Unauthorized or Bad Request:", error.response.status);
-			redirect("/signin");
-		} else {
-			console.error("Error fetching user data:", error.message);
-			// redirect("/404");
-		}
+		// if (error.response && error.response.status === 401) {
+		// 	console.error("Unauthorized or Bad Request:", error.response.status);
+		// 	redirect("/signin");
+		// } else {
+		// 	console.error("Error fetching user data:", error.message);
+		// 	// redirect("/404");
+		// }
 	}
 }
