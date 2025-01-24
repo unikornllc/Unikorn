@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PopupButton } from "react-calendly";
 
-const CalendlySchedule = (username = null) => {
+const CalendlySchedule = ({ username }) => {
 	const [eventTypes, setEventTypes] = useState(null);
 
 	const fetchEventTypes = async () => {
@@ -17,7 +17,7 @@ const CalendlySchedule = (username = null) => {
 			console.log("Event Types:", response.data);
 			setEventTypes(response.data.eventTypes || []);
 		} catch (error) {
-			console.error("Error fetching event types:", error);
+			setEventTypes([]);
 		}
 	};
 

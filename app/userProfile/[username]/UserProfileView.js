@@ -73,7 +73,6 @@ export default function EditableUserProfile({ user, editable = false }) {
 			<Header
 				user={{
 					username: user.username,
-					tier: user.tier,
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
