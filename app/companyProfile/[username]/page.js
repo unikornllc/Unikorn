@@ -52,7 +52,17 @@ export default async function CompanyProfile({ params }) {
 						company.hunter = response.data.tier;
 					});
 			} catch (err) {
-				console.error(err);
+				await axios
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/getTier`, {
+						headers: {
+							cookie: cookie || "",
+						},
+					})
+					.then((response) => {
+						response.data.tier == "Standard"
+							? (company.hunter = false)
+							: (company.hunter = true);
+					});
 			}
 		}
 		return (
