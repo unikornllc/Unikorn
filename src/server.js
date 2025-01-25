@@ -29,13 +29,12 @@ import InMemoryMessageStore from "./messageStore.js";
 import docusign from "docusign-esign";
 import fs from "fs";
 import path from "path";
-
+import prisma from "./db.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
 
 const randomId = () => crypto.randomBytes(64).toString("hex");
-
 
 const app = express();
 configurePassport(passport);
@@ -148,13 +147,11 @@ app.get("/auth/logout", function (req, res, next) {
 });
 
 function makeRecipientViewRequest(name, email) {
-  let viewRequest = new docusign.RecipientViewRequest();
+  const viewRequest = new docusign.RecipientViewRequest();
 
   viewRequest.returnUrl = `${process.env.FRONTEND}/userHome`;
   viewRequest.authenticationMethod = "none";
 
-  // Recipient information must match embedded recipient info
-  // we used to create the envelope.
   viewRequest.email = email;
   viewRequest.userName = name;
   viewRequest.clientUserId = 1000;
@@ -162,18 +159,40 @@ function makeRecipientViewRequest(name, email) {
   return viewRequest;
 }
 
-function makeEnvelope(name, email, company) {
+function makeEnvelope(name, email, company, data) {
   const env = new docusign.EnvelopeDefinition();
   env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
 
-  const text = docusign.Text.constructFromObject({
-    tabLabel: "company_name",
+  const companyText = docusign.Text.constructFromObject({
+    tabLabel: "company_name", // Matches the template field
     value: company,
+  });
+
+  const dateText = docusign.Text.constructFromObject({
+    tabLabel: "date",
+    value: data.date,
+  });
+
+  const locationText = docusign.Text.constructFromObject({
+    tabLabel: "location",
+    value: data.location,
+  });
+
+  // Create custom number tabs for price and equity
+  const priceNumber = docusign.Text.constructFromObject({
+    tabLabel: "price",
+    value: data.price.toString(),
+  });
+
+  const equityNumber = docusign.Text.constructFromObject({
+    tabLabel: "equity",
+    value: data.equity.toString(),
   });
 
   // Pull together the existing and new tabs in a Tabs object:
   const tabs = docusign.Tabs.constructFromObject({
-    textTabs: [text],
+    textTabs: [companyText, dateText, locationText],
+    numberTabs: [priceNumber, equityNumber],
   });
 
   const signer1 = docusign.TemplateRole.constructFromObject({
@@ -183,10 +202,6 @@ function makeEnvelope(name, email, company) {
     clientUserId: 1000,
     roleName: "Applicant",
   });
-  // signer1.emailNotification = new docusign.RecipientEmailNotification();
-  // signer1.emailNotification.emailSubject = "Please sign this document";
-  // signer1.emailNotification.emailBody = "Please sign the attached document.";
-  // signer1.emailNotification.supportLanguage = "en";
   env.templateRoles = [signer1];
   env.status = "sent";
 
@@ -225,29 +240,34 @@ app.post("/docusign", async (req, res) => {
   try {
     await checkDocuSignToken(req);
     const eventNotification = new docusign.EventNotification();
-    eventNotification.url = "https://6711-102-40-1-245.ngrok-free.app/webhook";
+    eventNotification.url = "https://6b66-156-213-12-6.ngrok-free.app/webhook";
     eventNotification.loggingEnabled = "true";
     eventNotification.requireAcknowledgment = "true";
+    eventNotification.format = "json";
     eventNotification.envelopeEvents = [
       // { envelopeEventStatusCode: "sent" },
       // { envelopeEventStatusCode: "delivered" },
       { envelopeEventStatusCode: "completed" },
-      // { envelopeEventStatusCode: "declined" },
+      { envelopeEventStatusCode: "declined" },
       //{ envelopeEventStatusCode: "voided" },
     ];
     eventNotification.recipientEvents = [
       //{ recipientEventStatusCode: "Sent" },
       //{ recipientEventStatusCode: "Delivered" },
       { recipientEventStatusCode: "Completed" },
-      //{ recipientEventStatusCode: "Declined" },
+      { recipientEventStatusCode: "Declined" },
       //{ recipientEventStatusCode: "AutoResponded" },
     ];
 
+    const company = await prisma.company_Profile.findUnique({
+      where: { username: req.body.username },
+    });
     const envelopesApi = getEnvelopeApi(req);
     const envelope = makeEnvelope(
       req.body.name,
       req.body.email,
-      req.body.company
+      req.body.company,
+      req.body.data
     );
 
     const results = await envelopesApi.createEnvelope(
@@ -256,6 +276,18 @@ app.post("/docusign", async (req, res) => {
         envelopeDefinition: envelope,
       }
     );
+
+    await prisma.raising_Funds.create({
+      data: {
+        equityPercentage: req.body.data.equity,
+        fundingAmount: req.body.data.price,
+        date: new Date(req.body.data.date),
+        location: req.body.data.location,
+        status: "Pending", // Track status
+        envelopeId: results.envelopeId, // Add envelopeId for tracking
+        company: { connect: { id: company.id } }, // Connect using companyId
+      },
+    });
     console.log("envelope results", results);
     const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
     const recipientViewRequest = await envelopesApi.createRecipientView(
@@ -274,22 +306,32 @@ app.post("/docusign", async (req, res) => {
 app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
   await checkDocuSignToken(req);
-  console.log("im him");
   // Handle the notification data
   const notification = req.body;
-
   // For debugging purposes, you can log the notification
+
   console.log("Received webhook notification:", JSON.stringify(notification));
 
   // Check for envelope status
   const envelopeStatus = notification.event;
-
+  const envelopeId = notification.data.envelopeId;
   if (notification && envelopeStatus === "envelope-completed") {
-    const envelopeId = notification.data.envelopeId;
+    await prisma.raising_Funds.updateMany({
+      where: { envelopeId },
+      data: { status: "Completed" },
+    });
     console.log(
       `Envelope ${envelopeId} has been completed. Downloading the signed document...`
     );
     downloadSignedDocument(envelopeId, req);
+  } else if (envelopeStatus === "envelope-declined") {
+    // Delete the record
+    await prisma.raising_Funds.deleteMany({
+      where: { envelopeId },
+    });
+    console.log(
+      `Raising_Funds record for envelope ${envelopeId} deleted due to decline.`
+    );
   }
 });
 
