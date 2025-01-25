@@ -30,6 +30,19 @@ model Company_Profile {
   company_file        Company_File[]
   followers           UserFollowsCompany[]
   logindevices        LoginDevices[]
+  raising_Funds       Raising_Funds[]
+}
+
+model Raising_Funds {
+  id               String          @id @default(uuid())
+  equityPercentage Float
+  fundingAmount    Int
+  date             DateTime
+  location         String
+  status           String
+  envelopeId       String       @unique 
+  company          Company_Profile @relation(fields: [companyId], references: [id])
+  companyId        String
 }
 
 model Founder {
