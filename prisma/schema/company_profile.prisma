@@ -4,6 +4,12 @@ enum Company_Type {
   Private
   Public
 }
+enum Contract_Status{
+  Pending
+  Active
+  Completed
+  Failed
+}
 
 model Company_Profile {
   id                  String                @id @default(uuid())
@@ -34,15 +40,30 @@ model Company_Profile {
 }
 
 model Raising_Funds {
-  id               String          @id @default(uuid())
-  equityPercentage Float
-  fundingAmount    Int
-  date             DateTime
-  location         String
-  status           String
-  envelopeId       String       @unique 
-  company          Company_Profile @relation(fields: [companyId], references: [id])
-  companyId        String
+  id                  String          @id @default(uuid())
+  equityPercentage    Float
+  fundingAmount       Float
+  remainingPortions   Int  @default(10)
+  totalPortions       Int  @default(10)
+  date                DateTime
+  status              Contract_Status @default(Pending)
+  envelopeId          String          @unique 
+  company             Company_Profile @relation(fields: [companyId], references: [id])
+  companyId           String
+  fundraiser          Fundraiser[]
+}
+
+model Fundraiser{
+  id                String          @id @default(uuid())
+  user              User            @relation(fields: [userId], references: [id])
+  userId            String
+  raising_funds     Raising_Funds   @relation(fields: [raisingFundsId], references: [id])
+  raisingFundsId    String
+  equityPercentage  Float
+  fundingAmount     Float
+  date              DateTime
+  status            Contract_Status @default(Pending)
+  envelopeId        String          @unique
 }
 
 model Founder {
@@ -65,7 +86,7 @@ model Key_Employees {
 model Funding_Round {
   id             String    @id @default(uuid())
   type           String
-  funding_amount Int
+  funding_amount Float
   round_date     DateTime
   lead_investors String[]
   financial      Financial @relation(fields: [financialId], references: [id])
@@ -74,9 +95,9 @@ model Funding_Round {
 
 model Financial {
   id                   String          @id @default(uuid())
-  valuation            Int
+  valuation            Float
   investors            String[]
-  total_funding_amount Int
+  total_funding_amount Float
   funding_rounds       Funding_Round[]
   company              Company_Profile @relation(fields: [companyId], references: [id])
   companyId            String          @unique
