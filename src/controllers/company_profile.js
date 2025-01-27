@@ -402,17 +402,7 @@ export const getFollowingCompanies = async (req, res) => {
 
 export const getCompanyTier = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
-			where: {
-				id: req.decodedUser.id,
-			},
-			select: {
-				tier: true,
-			},
-		});
-		if (company) {
-			res.status(200).json({ tier: company.tier });
-		} else {
+		if (req.decodedUser.role == "user") {
 			const user = await prisma.user.findUnique({
 				where: {
 					id: req.decodedUser.id,
@@ -422,6 +412,16 @@ export const getCompanyTier = async (req, res) => {
 				},
 			});
 			res.status(200).json({ tier: user.tier });
+		} else {
+			const company = await prisma.company_Profile.findUnique({
+				where: {
+					id: req.decodedUser.id,
+				},
+				select: {
+					tier: true,
+				},
+			});
+			res.status(200).json({ tier: company.tier });
 		}
 	} catch (e) {
 		console.error(e);

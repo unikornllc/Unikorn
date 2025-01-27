@@ -627,15 +627,15 @@ export const getFollowers = async (req, res) => {
 
 export const getTier = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				id: req.decodedUser.id,
-			},
-			select: {
-				tier: true,
-			},
-		});
-		if (user) {
+		if (req.decodedUser.role === "user") {
+			const user = await prisma.user.findUnique({
+				where: {
+					id: req.decodedUser.id,
+				},
+				select: {
+					tier: true,
+				},
+			});
 			res.status(200).json({ tier: user.tier });
 		} else {
 			const company = await prisma.company_Profile.findUnique({
