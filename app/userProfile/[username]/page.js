@@ -53,22 +53,12 @@ export default async function UserProfile({ params }) {
 					})
 					.then((response) => {
 						user.tier = response.data.tier;
-						if (user.tier == "Standard") {
+						if (user.tier == "Standard" || user.tier == "Holder") {
 							user.calendly_integration = null;
 						}
 					});
 			} catch (err) {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getCompanyTier`, {
-						headers: {
-							cookie: cookie || "",
-						},
-					})
-					.then((response) => {
-						response.data.tier
-							? (user.tier = "Pro")
-							: ((user.tier = "Standard"), (user.calendly_integration = null));
-					});
+				console.error("Error fetching user data:", err);
 			}
 		}
 		return (
