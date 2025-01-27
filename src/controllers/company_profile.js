@@ -407,10 +407,22 @@ export const getCompanyTier = async (req, res) => {
 				id: req.decodedUser.id,
 			},
 			select: {
-				hunter: true,
+				tier: true,
 			},
 		});
-		res.status(200).json({ tier: company.hunter });
+		if (company) {
+			res.status(200).json({ tier: company.tier });
+		} else {
+			const user = await prisma.user.findUnique({
+				where: {
+					id: req.decodedUser.id,
+				},
+				select: {
+					tier: true,
+				},
+			});
+			res.status(200).json({ tier: user.tier });
+		}
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching company tier" });
