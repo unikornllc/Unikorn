@@ -22,83 +22,91 @@ const PasswordResetAccessCookie = {
 };
 
 export const generateBasicAccess = async (req, res, next) => {
-	const refresh = req.cookies["SID"];
-	if (!refresh) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	const session = await prisma.refreshTokenValid.findUnique({
-		SID: refresh,
-	});
-	if (!session) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	if (Date.now() > session.expire) {
-		await prisma.refreshTokenValid.delete({ SID: ssid });
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	const user = await prisma.user.findUnique({ id: session.profileId });
-	const company = await prisma.company_File.findUnique({
-		id: session.profileId,
-	});
-	if (!user && !company) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	let permission;
-	if (user) {
-		permission = user.tier == "Standard" ? "Standard" : "Pro";
-	} else {
-		permission = company.hunter ? "Hunter" : "Holder";
-	}
-	const token = jwt.sign(
-		{
+	try {
+		const refresh = req.cookies["SID"];
+		if (!refresh) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		const session = await prisma.refreshTokenValid.findUnique({
+			SID: refresh,
+		});
+		if (!session) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		if (Date.now() > session.expire) {
+			await prisma.refreshTokenValid.delete({ SID: ssid });
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		const user = await prisma.user.findUnique({ id: session.profileId });
+		const company = await prisma.company_File.findUnique({
 			id: session.profileId,
-			role: session.role,
-			permissions: permission,
-			authLevel: "Password",
-		},
-		process.env.JWT_SECRET,
-		{
-			expiresIn: "1d",
-		},
-	);
-	res.cookie("BSID", token, BasicAccessCookie);
-	next();
+		});
+		if (!user && !company) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		let permission;
+		if (user) {
+			permission = user.tier == "Standard" ? "Standard" : "Pro";
+		} else {
+			permission = company.hunter ? "Hunter" : "Holder";
+		}
+		const token = jwt.sign(
+			{
+				id: session.profileId,
+				role: session.role,
+				permissions: permission,
+				authLevel: "Password",
+			},
+			process.env.JWT_SECRET,
+			{
+				expiresIn: "1d",
+			},
+		);
+		res.cookie("BSID", token, BasicAccessCookie);
+		return next();
+	} catch (error) {
+		return res.status(500).json({ message: "Server Error" });
+	}
 };
 
 export const generatePasswordResetToken = async (req, res, next) => {
-	const refresh = req.cookies["SID"];
-	if (!refresh) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	const session = await prisma.refreshTokenValid.findUnique({
-		SID: refresh,
-	});
-	if (!session) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	if (Date.now() > session.expire) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	const user = await prisma.user.findUnique({ id: session.profileId });
-	const company = await prisma.company_File.findUnique({
-		id: session.profileId,
-	});
-	if (!user && !company) {
-		res.status(401).json({ message: "Session Expired, Please login" });
-	}
-	const permission = "Password";
-	const token = jwt.sign(
-		{
+	try {
+		const refresh = req.cookies["SID"];
+		if (!refresh) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		const session = await prisma.refreshTokenValid.findUnique({
+			SID: refresh,
+		});
+		if (!session) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		if (Date.now() > session.expire) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		const user = await prisma.user.findUnique({ id: session.profileId });
+		const company = await prisma.company_Profile.findUnique({
 			id: session.profileId,
-			role: session.role,
-			permissions: permission,
-			authLevel: "Password",
-		},
-		process.env.JWT_SECRET,
-		{
-			expiresIn: "15m",
-		},
-	);
-	res.cookie("PSID", token, PasswordResetAccessCookie);
-	next();
+		});
+		if (!user && !company) {
+			return res.status(401).json({ message: "Session Expired, Please login" });
+		}
+		const permission = "Password";
+		const token = jwt.sign(
+			{
+				id: session.profileId,
+				role: session.role,
+				permissions: permission,
+				authLevel: "Password",
+			},
+			process.env.JWT_SECRET,
+			{
+				expiresIn: "15m",
+			},
+		);
+		res.cookie("PSID", token, PasswordResetAccessCookie);
+		return next();
+	} catch (error) {
+		return res.status(500).json({ message: "Server Error" });
+	}
 };
