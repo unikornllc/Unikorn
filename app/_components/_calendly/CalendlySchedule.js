@@ -18,7 +18,7 @@ const CalendlySchedule = ({ username }) => {
 			console.log("Event Types:", response.data);
 			setEventTypes(response.data.eventTypes || []);
 		} catch (error) {
-			console.error(error);
+			console.error("Error fetching event types:", error);
 			setEventTypes([]);
 		}
 	};

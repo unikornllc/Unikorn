@@ -135,7 +135,7 @@ export default function ViewCompanyProfile({ company }) {
 								</button>
 							)}
 
-							{company.hunter && (
+							{(company.tier == "Hunter" || company.tier == "Pro") && (
 								<a href={`/userChat`}>
 									<button
 										className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
