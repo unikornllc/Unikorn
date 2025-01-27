@@ -193,6 +193,7 @@ export const updateCalendlySettings = async (req, res) => {
 export const eventTypeCalendly = async (req, res) => {
 	try {
 		let id = req.decodedUser.id;
+		console.log(req.query.username);
 		if (req.query.username) {
 			const me = await prisma.user.findUnique({
 				where: {
