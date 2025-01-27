@@ -7,10 +7,11 @@ const CalendlySchedule = ({ username }) => {
 
 	const fetchEventTypes = async () => {
 		try {
+			console.log(username);
 			const response = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/calendly/eventType`,
 				{
-					params: username,
+					params: { username },
 					withCredentials: true,
 				},
 			);
@@ -23,8 +24,9 @@ const CalendlySchedule = ({ username }) => {
 	};
 
 	useEffect(() => {
+		console.log("Here");
 		fetchEventTypes();
-	}, []);
+	}, [username]);
 
 	return (
 		<div className="container mx-auto mt-8 px-4">
