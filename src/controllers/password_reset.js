@@ -62,5 +62,7 @@ export const resetasync = async (req, res) => {
 	user.resetPasswordExpires = undefined;
 	await user.save();
 
+	// 3. Optionally, send a confirmation email
+
 	res.status(200).send("Your password has been updated.");
 };
