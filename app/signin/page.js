@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect } from "react";
-import SignIn from "../_components/_signin/SignIn";
+import SignIn from "../_components/_signin/SignIn.js";
 import { useRouter } from "next/navigation";
 
 export default function UserProfile() {

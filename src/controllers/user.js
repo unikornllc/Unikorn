@@ -1,9 +1,9 @@
 import prisma from "../db.js";
 import NodeMailer from "nodemailer";
 import jwt from "jsonwebtoken";
-import { comparePasswords } from "./auth.js";
-import { hashPassword } from "./auth.js";
-import { createJWT } from "./auth.js";
+import { comparePasswords } from "../auth.js";
+import { hashPassword } from "../auth.js";
+import { createJWT } from "../auth.js";
 import { generateUsername } from "unique-username-generator";
 
 export const createUser = async (req, res) => {

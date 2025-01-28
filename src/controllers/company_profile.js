@@ -1,5 +1,5 @@
 import prisma from "../db.js";
-import { hashPassword } from "./auth.js";
+import { hashPassword } from "../auth.js";
 
 export const createCompany = async (req, res) => {
 	try {
@@ -127,7 +127,7 @@ function removeKeys(data, keysToRemove = ["id"]) {
 export const getOneCompanyProfile = async (req, res) => {
 	try {
 		const { username, include } = req.query;
-		
+
 		if (!username) {
 			return res
 				.status(400)
