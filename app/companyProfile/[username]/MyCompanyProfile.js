@@ -17,7 +17,6 @@ const MyCompanyProfile = ({ company }) => {
     equityPercentage: "",
     fundingAmount: "",
     date: "",
-    location: companyData.hqlocation,
   });
   const handleUpdate = async (fieldName, fieldValue) => {
     try {
@@ -39,9 +38,8 @@ const MyCompanyProfile = ({ company }) => {
 
   const handleRaiseFunds = async () => {
     try {
-      const { equityPercentage, fundingAmount, date, location } =
-        fundingDetails;
-      if (!equityPercentage || !fundingAmount || !date || !location) {
+      const { equityPercentage, fundingAmount, date } = fundingDetails;
+      if (!equityPercentage || !fundingAmount || !date) {
         alert("Please fill in all fields.");
         return;
       }
@@ -57,7 +55,6 @@ const MyCompanyProfile = ({ company }) => {
             equity: parseFloat(equityPercentage),
             price: parseInt(fundingAmount),
             date,
-            location,
           },
         },
         {

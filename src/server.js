@@ -160,52 +160,46 @@ function makeRecipientViewRequest(name, email) {
 }
 
 function makeEnvelope(name, email, company, data) {
-	const env = new docusign.EnvelopeDefinition();
-	env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
+  const env = new docusign.EnvelopeDefinition();
+  env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
 
-	const companyText = docusign.Text.constructFromObject({
-		tabLabel: "company_name", // Matches the template field
-		value: company,
-	});
+  const companyText = docusign.Text.constructFromObject({
+    tabLabel: "company_name", // Matches the template field
+    value: company,
+  });
 
-	const dateText = docusign.Text.constructFromObject({
-		tabLabel: "date",
-		value: data.date,
-	});
+  const dateText = docusign.Text.constructFromObject({
+    tabLabel: "date",
+    value: data.date,
+  });
+  // Create custom number tabs for price and equity
+  const priceNumber = docusign.Text.constructFromObject({
+    tabLabel: "price",
+    value: data.price.toString(),
+  });
 
-	const locationText = docusign.Text.constructFromObject({
-		tabLabel: "location",
-		value: data.location,
-	});
+  const equityNumber = docusign.Text.constructFromObject({
+    tabLabel: "equity",
+    value: data.equity.toString(),
+  });
 
-	// Create custom number tabs for price and equity
-	const priceNumber = docusign.Text.constructFromObject({
-		tabLabel: "price",
-		value: data.price.toString(),
-	});
+  // Pull together the existing and new tabs in a Tabs object:
+  const tabs = docusign.Tabs.constructFromObject({
+    textTabs: [companyText, dateText],
+    numberTabs: [priceNumber, equityNumber],
+  });
 
-	const equityNumber = docusign.Text.constructFromObject({
-		tabLabel: "equity",
-		value: data.equity.toString(),
-	});
+  const signer1 = docusign.TemplateRole.constructFromObject({
+    email: email,
+    name: name,
+    tabs: tabs,
+    clientUserId: 1000,
+    roleName: "Applicant",
+  });
+  env.templateRoles = [signer1];
+  env.status = "sent";
 
-	// Pull together the existing and new tabs in a Tabs object:
-	const tabs = docusign.Tabs.constructFromObject({
-		textTabs: [companyText, dateText, locationText],
-		numberTabs: [priceNumber, equityNumber],
-	});
-
-	const signer1 = docusign.TemplateRole.constructFromObject({
-		email: email,
-		name: name,
-		tabs: tabs,
-		clientUserId: 1000,
-		roleName: "Applicant",
-	});
-	env.templateRoles = [signer1];
-	env.status = "sent";
-
-	return env;
+  return env;
 }
 
 function getEnvelopeApi(req) {
@@ -237,69 +231,69 @@ async function checkDocuSignToken(req) {
 	}
 }
 app.post("/docusign", async (req, res) => {
-	try {
-		await checkDocuSignToken(req);
-		const eventNotification = new docusign.EventNotification();
-		eventNotification.url = "https://6b66-156-213-12-6.ngrok-free.app/webhook";
-		eventNotification.loggingEnabled = "true";
-		eventNotification.requireAcknowledgment = "true";
-		eventNotification.format = "json";
-		eventNotification.envelopeEvents = [
-			// { envelopeEventStatusCode: "sent" },
-			// { envelopeEventStatusCode: "delivered" },
-			{ envelopeEventStatusCode: "completed" },
-			{ envelopeEventStatusCode: "declined" },
-			//{ envelopeEventStatusCode: "voided" },
-		];
-		eventNotification.recipientEvents = [
-			//{ recipientEventStatusCode: "Sent" },
-			//{ recipientEventStatusCode: "Delivered" },
-			{ recipientEventStatusCode: "Completed" },
-			{ recipientEventStatusCode: "Declined" },
-			//{ recipientEventStatusCode: "AutoResponded" },
-		];
+  try {
+    await checkDocuSignToken(req);
+    const eventNotification = new docusign.EventNotification();
+    eventNotification.url = "https://6106-156-213-12-6.ngrok-free.app/webhook";
+    eventNotification.loggingEnabled = "true";
+    eventNotification.requireAcknowledgment = "true";
+    eventNotification.format = "json";
+    eventNotification.envelopeEvents = [
+      // { envelopeEventStatusCode: "sent" },
+      // { envelopeEventStatusCode: "delivered" },
+      { envelopeEventStatusCode: "completed" },
+      { envelopeEventStatusCode: "declined" },
+      //{ envelopeEventStatusCode: "voided" },
+    ];
+    eventNotification.recipientEvents = [
+      //{ recipientEventStatusCode: "Sent" },
+      //{ recipientEventStatusCode: "Delivered" },
+      { recipientEventStatusCode: "Completed" },
+      { recipientEventStatusCode: "Declined" },
+      //{ recipientEventStatusCode: "AutoResponded" },
+    ];
 
-		const company = await prisma.company_Profile.findUnique({
-			where: { username: req.body.username },
-		});
-		const envelopesApi = getEnvelopeApi(req);
-		const envelope = makeEnvelope(
-			req.body.name,
-			req.body.email,
-			req.body.company,
-			req.body.data,
-		);
+    const company = await prisma.company_Profile.findUnique({
+      where: { username: req.body.username },
+    });
+    const envelopesApi = getEnvelopeApi(req);
+    const envelope = makeEnvelope(
+      req.body.name,
+      req.body.email,
+      req.body.company,
+      req.body.data
+    );
 
-		const results = await envelopesApi.createEnvelope(
-			process.env.ACCOUNT_ID_DOCUSIGN,
-			{
-				envelopeDefinition: envelope,
-			},
-		);
+    const results = await envelopesApi.createEnvelope(
+      process.env.ACCOUNT_ID_DOCUSIGN,
+      {
+        envelopeDefinition: envelope,
+      }
+    );
 
-		await prisma.raising_Funds.create({
-			data: {
-				equityPercentage: req.body.data.equity,
-				fundingAmount: req.body.data.price,
-				date: new Date(req.body.data.date),
-				status: "Pending", // Track status
-				envelopeId: results.envelopeId, // Add envelopeId for tracking
-				company: { connect: { id: company.id } }, // Connect using companyId
-			},
-		});
-		console.log("envelope results", results);
-		const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
-		const recipientViewRequest = await envelopesApi.createRecipientView(
-			process.env.ACCOUNT_ID_DOCUSIGN,
-			results.envelopeId,
-			{ recipientViewRequest: viewRequest },
-		);
+    await prisma.raising_Funds.create({
+      data: {
+        equityPercentage: req.body.data.equity,
+        fundingAmount: req.body.data.price,
+        date: new Date(req.body.data.date),
+        status: "Pending",
+        envelopeId: results.envelopeId, // Add envelopeId for tracking
+        company: { connect: { id: company.id } }, // Connect using companyId
+      },
+    });
+    console.log("envelope results", results);
+    const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
+    const recipientViewRequest = await envelopesApi.createRecipientView(
+      process.env.ACCOUNT_ID_DOCUSIGN,
+      results.envelopeId,
+      { recipientViewRequest: viewRequest }
+    );
 
-		res.status(200).json({ redirectUrl: recipientViewRequest.url });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error generating access token" });
-	}
+    res.status(200).json({ redirectUrl: recipientViewRequest.url });
+  } catch (e) {
+    console.error(e);
+    res.status(400).json({ message: "Error generating access token" });
+  }
 });
 
 app.post("/webhook", async (req, res) => {
