@@ -172,12 +172,6 @@ function makeEnvelope(name, email, company, data) {
     tabLabel: "date",
     value: data.date,
   });
-
-  const locationText = docusign.Text.constructFromObject({
-    tabLabel: "location",
-    value: data.location,
-  });
-
   // Create custom number tabs for price and equity
   const priceNumber = docusign.Text.constructFromObject({
     tabLabel: "price",
@@ -191,7 +185,7 @@ function makeEnvelope(name, email, company, data) {
 
   // Pull together the existing and new tabs in a Tabs object:
   const tabs = docusign.Tabs.constructFromObject({
-    textTabs: [companyText, dateText, locationText],
+    textTabs: [companyText, dateText],
     numberTabs: [priceNumber, equityNumber],
   });
 
@@ -240,7 +234,7 @@ app.post("/docusign", async (req, res) => {
   try {
     await checkDocuSignToken(req);
     const eventNotification = new docusign.EventNotification();
-    eventNotification.url = "https://6b66-156-213-12-6.ngrok-free.app/webhook";
+    eventNotification.url = "https://6106-156-213-12-6.ngrok-free.app/webhook";
     eventNotification.loggingEnabled = "true";
     eventNotification.requireAcknowledgment = "true";
     eventNotification.format = "json";
@@ -282,8 +276,7 @@ app.post("/docusign", async (req, res) => {
         equityPercentage: req.body.data.equity,
         fundingAmount: req.body.data.price,
         date: new Date(req.body.data.date),
-        location: req.body.data.location,
-        status: "Pending", // Track status
+        status: "Pending",
         envelopeId: results.envelopeId, // Add envelopeId for tracking
         company: { connect: { id: company.id } }, // Connect using companyId
       },
