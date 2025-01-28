@@ -127,7 +127,7 @@ function removeKeys(data, keysToRemove = ["id"]) {
 export const getOneCompanyProfile = async (req, res) => {
 	try {
 		const { username, include } = req.query;
-
+		
 		if (!username) {
 			return res
 				.status(400)
