@@ -57,7 +57,8 @@ model User {
   calendly_integration   Calendly_Integration?
   tier                   Tier                     @default(Standard)
   logindevices           LoginDevices[]
-  fundraiser             Fundraiser[]
+  fundraiser             Fundraiser[]             @relation("UserInvestments")
+  investmentOffers       InvestmentOffer[]        @relation("UserOffers")
 }
 
 model Expertise {

@@ -5,12 +5,7 @@ enum Company_Type {
   Public
 }
 
-enum Contract_Status{
-  Pending
-  Active
-  Completed
-  Failed
-}
+
 
 enum companyTier {
   Hunter
@@ -42,34 +37,10 @@ model Company_Profile {
   followers           UserFollowsCompany[]
   logindevices        LoginDevices[]
   raising_Funds       Raising_Funds[]
+  fundraiser          Fundraiser[]       @relation("CompanyInvestments")
+  investmentOffers    InvestmentOffer[]   @relation("CompanyOffers")
 }
 
-model Raising_Funds {
-  id                  String          @id @default(uuid())
-  equityPercentage    Float
-  fundingAmount       Float
-  remainingPortions   Int  @default(10)
-  totalPortions       Int  @default(10)
-  date                DateTime
-  status              Contract_Status @default(Pending)
-  envelopeId          String          @unique 
-  company             Company_Profile @relation(fields: [companyId], references: [id])
-  companyId           String
-  fundraiser          Fundraiser[]
-}
-
-model Fundraiser{
-  id                String          @id @default(uuid())
-  user              User            @relation(fields: [userId], references: [id])
-  userId            String
-  raising_funds     Raising_Funds   @relation(fields: [raisingFundsId], references: [id])
-  raisingFundsId    String
-  equityPercentage  Float
-  fundingAmount     Float
-  date              DateTime
-  status            Contract_Status @default(Pending)
-  envelopeId        String          @unique
-}
 
 model Founder {
   id               String          @id @default(uuid())
@@ -88,25 +59,6 @@ model Key_Employees {
   companyId String
 }
 
-model Funding_Round {
-  id             String    @id @default(uuid())
-  type           String
-  funding_amount Float
-  round_date     DateTime
-  lead_investors String[]
-  financial      Financial @relation(fields: [financialId], references: [id])
-  financialId    String
-}
-
-model Financial {
-  id                   String          @id @default(uuid())
-  valuation            Float
-  investors            String[]
-  total_funding_amount Float
-  funding_rounds       Funding_Round[]
-  company              Company_Profile @relation(fields: [companyId], references: [id])
-  companyId            String          @unique
-}
 
 model Product_Information {
   id           String          @id @default(uuid())
