@@ -4,6 +4,7 @@ enum Company_Type {
   Private
   Public
 }
+
 enum Contract_Status{
   Pending
   Active
@@ -11,6 +12,10 @@ enum Contract_Status{
   Failed
 }
 
+enum companyTier {
+  Hunter
+  Holder
+}
 model Company_Profile {
   id                  String                @id @default(uuid())
   name                String
@@ -25,7 +30,7 @@ model Company_Profile {
   industry            String
   emailVerify         Boolean               @default(false)
   verified            Boolean               @default(false)
-  hunter              Boolean               @default(false)
+  tier                companyTier                  @default(Holder)
   board_members       String[]
   advisors            String[]
   founders            Founder[]

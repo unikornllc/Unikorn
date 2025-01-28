@@ -48,21 +48,10 @@ export default async function CompanyProfile({ params }) {
 						},
 					})
 					.then((response) => {
-						console.log("response", response.data.tier);
-						company.hunter = response.data.tier;
+						company.tier = response.data.tier;
 					});
 			} catch (err) {
-				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getTier`, {
-						headers: {
-							cookie: cookie || "",
-						},
-					})
-					.then((response) => {
-						response.data.tier == "Standard"
-							? (company.hunter = false)
-							: (company.hunter = true);
-					});
+				console.error(err);
 			}
 		}
 		return (

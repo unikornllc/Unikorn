@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { FundingComponent } from "@/app/_components/_funding/FundingComponent";
 
 export default function ViewCompanyProfile({ company }) {
 	const [loading, setLoading] = useState(false);
@@ -114,7 +115,6 @@ export default function ViewCompanyProfile({ company }) {
 						<p className="text-gray-600">{company.industry}</p>
 						<p className="text-gray-600">{company.hqlocation}</p>
 					</div>
-
 					<div>
 						<div className="flex justify-center space-x-4 my-4">
 							{isFollowing ? (
@@ -135,7 +135,7 @@ export default function ViewCompanyProfile({ company }) {
 								</button>
 							)}
 
-							{company.hunter && (
+							{(company.tier == "Hunter" || company.tier == "Pro") && (
 								<a href={`/userChat`}>
 									<button
 										className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -145,17 +145,9 @@ export default function ViewCompanyProfile({ company }) {
 									</button>
 								</a>
 							)}
-
-							<a
-								href={"user.calendly_link"}
-								target="_blank"
-								className="bg-gray-200 text-gray-800 px-4 py-2 rounded shadow"
-								rel="noopener noreferrer"
-							>
-								View Full Calendly
-							</a>
 						</div>
 					</div>
+					<FundingComponent companyUsername={company.username} />
 
 					<div className="p-4">
 						<h2 className="text-xl font-bold mb-4">Available Slots</h2>

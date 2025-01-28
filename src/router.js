@@ -144,6 +144,7 @@ import {
 } from "./controllers/calendly.js";
 
 import { verifiedUser } from "./middlewares/verified_mail.js";
+import { getActiveRaisingFund } from "./controllers/raising_funds.js";
 
 const router = Router();
 
@@ -273,5 +274,7 @@ router.post("/calendly/createEventType", createEventTypeCalendly);
 router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
+
+router.get("/raisingFunds/active", getActiveRaisingFund);
 
 export default router;
