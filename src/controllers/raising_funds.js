@@ -474,11 +474,8 @@ export const cancelInvestmentOffer = async (req, res) => {
 			return res.status(400).json({ message: "Cannot cancel this offer" });
 		}
 
-		await prisma.investmentOffer.update({
+		await prisma.investmentOffer.delete({
 			where: { id: offerId },
-			data: {
-				status: "Cancelled",
-			},
 		});
 
 		res

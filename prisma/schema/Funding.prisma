@@ -7,7 +7,6 @@ enum OfferStatus {
   Pending
   Accepted
   Rejected
-  Cancelled
 }
 
 enum Contract_Status {
