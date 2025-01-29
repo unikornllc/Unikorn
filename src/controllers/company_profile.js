@@ -402,7 +402,7 @@ export const getFollowingCompanies = async (req, res) => {
 
 export const getCompanyTier = async (req, res) => {
 	try {
-		if (req.decodedUser.role == "user") {
+		if (req.decodedUser.role == "User") {
 			const user = await prisma.user.findUnique({
 				where: {
 					id: req.decodedUser.id,

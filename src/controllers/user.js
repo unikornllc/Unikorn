@@ -144,7 +144,7 @@ export const signIn = async (req, res) => {
 		// Create JWT token
 		const token = createJWT({
 			id: account.id,
-			role: user ? "user" : "company",
+			role: user ? "User" : "Company",
 		});
 
 		// Set cookies
@@ -627,7 +627,7 @@ export const getFollowers = async (req, res) => {
 
 export const getTier = async (req, res) => {
 	try {
-		if (req.decodedUser.role === "user") {
+		if (req.decodedUser.role === "User") {
 			const user = await prisma.user.findUnique({
 				where: {
 					id: req.decodedUser.id,

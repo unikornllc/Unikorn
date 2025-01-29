@@ -144,7 +144,18 @@ import {
 } from "./controllers/calendly.js";
 
 import { verifiedUser } from "./middlewares/verified_mail.js";
-import { getActiveRaisingFund } from "./controllers/raising_funds.js";
+import {
+	getCompanyActiveRaisingFund,
+	getActiveRaisingFunds,
+	investAtFixedPrice,
+	makeInvestmentOffer,
+	getMyInvestments,
+	getMyInvestmentOffers,
+	getFundingInvestmentOffers,
+	acceptInvestmentOffer,
+	rejectInvestmentOffer,
+	cancelInvestmentOffer,
+} from "./controllers/raising_funds.js";
 
 const router = Router();
 
@@ -275,6 +286,16 @@ router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
-router.get("/raisingFunds/active", getActiveRaisingFund);
+router.get("/raisingFunds/active", getActiveRaisingFunds);
+router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
+router.get("/raisingFunds/offers", getFundingInvestmentOffers);
+router.post("/raisingFunds/offer/accept", acceptInvestmentOffer);
+router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
+
+router.post("/investments/fixedPrice", investAtFixedPrice);
+router.post("/investments/negotiatePrice", makeInvestmentOffer);
+router.get("/investments/my", getMyInvestments);
+router.get("/investments/offers", getMyInvestmentOffers);
+router.post("/investments/offer/cancel", cancelInvestmentOffer);
 
 export default router;

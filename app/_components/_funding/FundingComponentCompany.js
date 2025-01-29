@@ -41,7 +41,7 @@ export function FundingComponentCompany({ companyUsername }) {
 	const fetchActiveFunding = async () => {
 		try {
 			await axios
-				.get(`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/active`, {
+				.get(`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/active`, {
 					params: { username: companyUsername },
 					withCredentials: true,
 				})
