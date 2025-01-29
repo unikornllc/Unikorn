@@ -116,20 +116,26 @@ export const investAtFixedPrice = async (req, res) => {
 		await prisma.$transaction(async (prisma) => {
 			const fundraiserData = {
 				investorType,
-				raisingFundsId,
+				raisingFunds: {
+					connect: { id: raisingFundsId },
+				},
 				equityPercentage,
 				fundingAmount,
 				portions,
 				pricePerPortion: fundraising.pricePerPortion,
 				date: new Date(),
 				status: "Pending",
-				envelopeId: null,
+				envelopeId: "",
 			};
 
 			if (investorType == "User") {
-				fundraiserData.investorUserId = investorId;
+				fundraiserData.investorUser = {
+					connect: { id: investorId },
+				};
 			} else if (investorType == "Company") {
-				fundraiserData.investorCompanyId = investorId;
+				fundraiserData.investorCompany = {
+					connect: { id: investorId },
+				};
 			}
 
 			await prisma.fundraiser.create({ data: fundraiserData });
@@ -189,7 +195,9 @@ export const makeInvestmentOffer = async (req, res) => {
 
 		const offerData = {
 			investorType,
-			raisingFundsId,
+			raisingFunds: {
+				connect: { id: raisingFundsId },
+			},
 			portions,
 			offeredPricePerPortion,
 			totalOfferedPrice,
@@ -198,9 +206,13 @@ export const makeInvestmentOffer = async (req, res) => {
 		};
 
 		if (investorType == "User") {
-			offerData.investorUserId = investorId;
+			offerData.investorUser = {
+				connect: { id: investorId },
+			};
 		} else if (investorType == "Company") {
-			offerData.investorCompanyId = investorId;
+			offerData.investorCompany = {
+				connect: { id: investorId },
+			};
 		}
 
 		await prisma.investmentOffer.create({ data: offerData });
@@ -362,8 +374,12 @@ export const acceptInvestmentOffer = async (req, res) => {
 
 			const fundraiserData = {
 				investorType: offer.investorType,
-				raisingFundsId: offer.raisingFundsId,
-				investmentOfferId: offer.id,
+				raisingFunds: {
+					connect: { id: offer.raisingFundsId },
+				},
+				investmentOffer: {
+					connect: { id: offer.id },
+				},
 				equityPercentage:
 					(offer.raisingFunds.equityPercentage /
 						offer.raisingFunds.totalPortions) *
@@ -373,15 +389,18 @@ export const acceptInvestmentOffer = async (req, res) => {
 				pricePerPortion: offer.offeredPricePerPortion,
 				date: new Date(),
 				status: "Active",
-				envelopeId: null,
+				envelopeId: "",
 			};
 
-			if (offer.investorType == "User") {
-				fundraiserData.investorUserId = offer.investorUserId;
-			} else if (offer.investorType == "Company") {
-				fundraiserData.investorCompanyId = offer.investorCompanyId;
+			if (investorType == "User") {
+				fundraiserData.investorUser = {
+					connect: { id: investorId },
+				};
+			} else if (investorType == "Company") {
+				fundraiserData.investorCompany = {
+					connect: { id: investorId },
+				};
 			}
-
 			await prisma.fundraiser.create({ data: fundraiserData });
 
 			await prisma.raising_Funds.update({
