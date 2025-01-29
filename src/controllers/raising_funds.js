@@ -1,72 +1,492 @@
 import prisma from "../db.js";
 
-export const getActiveRaisingFund = async (req, res) => {
+export const getActiveRaisingFunds = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
+		const fundraisings = await prisma.raising_Funds.findMany({
+			where: { status: "Active" },
+			include: {
+				company: true,
+			},
+		});
+		if (!fundraisings) {
+			res.status(200).json({ message: "No active fundraising found" });
+		}
+		fundraisings.forEach((fundraising) => {
+			const remainingAmount =
+				fundraising.remainingPortions *
+				(fundraising.fundingAmount / fundraising.totalPortions);
+			const fundedAmount = fundraising.fundingAmount - remainingAmount;
+			const fundedPercentage = (fundedAmount / fundraising.fundingAmount) * 100;
+			const remainingEquity =
+				fundraising.remainingPortions *
+				(fundraising.equityPercentage / fundraising.totalPortions);
+			fundraising.remainingAmount = remainingAmount;
+			fundraising.remainingEquity = remainingEquity;
+			fundraising.fundedAmount = fundedAmount;
+			fundraising.fundedPercentage = fundedPercentage;
+		});
+		res.status(200).json(fundraisings);
+	} catch (e) {
+		res.status(400).json({ message: "Failed to retrieve" });
+	}
+};
+
+export const getCompanyActiveRaisingFund = async (req, res) => {
+	try {
+		const fundraising = await prisma.raising_Funds.findFirst({
+			where: { status: "Active", company: { username: req.query.username } },
+			include: {
+				company: true,
+			},
+		});
+		if (!fundraising) {
+			res.status(200).json({ message: "No active fundraising found" });
+		}
+		const remainingAmount =
+			fundraising.remainingPortions *
+			(fundraising.fundingAmount / fundraising.totalPortions);
+		const fundedAmount = fundraising.fundingAmount - remainingAmount;
+		const fundedPercentage = (fundedAmount / fundraising.fundingAmount) * 100;
+		const remainingEquity =
+			fundraising.remainingPortions *
+			(fundraising.equityPercentage / fundraising.totalPortions);
+
+		res.status(200).json({
+			raisingFundsId: fundraising.id,
+			companyUsername: fundraising.company.username,
+			companyName: fundraising.company.name,
+			totalAmount: fundraising.fundingAmount,
+			totalEquity: fundraising.equityPercentage,
+			remainingAmount: remainingAmount,
+			remainingEquity: remainingEquity,
+			remainingPortions: fundraising.remainingPortions,
+			pricePerPortion: fundraising.pricePerPortion,
+			portions: fundraising.totalPortions,
+			portionAmount: fundraising.fundingAmount / fundraising.totalPortions,
+			portionEquity: fundraising.equityPercentage / fundraising.totalPortions,
+			fundedAmount: fundedAmount,
+			fundedPercentage: fundedPercentage,
+			totalPortions: fundraising.totalPortions,
+		});
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Failed to retrieve" });
+	}
+};
+
+export const investAtFixedPrice = async (req, res) => {
+	const { raisingFundsId, portions, walletBalance } = req.body;
+	const investorType = req.decodedUser.role;
+	const investorId = req.decodedUser.id;
+
+	if (!raisingFundsId || !portions || !walletBalance) {
+		return res.status(400).json({ message: "Missing required fields" });
+	}
+
+	try {
+		const fundraising = await prisma.raising_Funds.findUnique({
+			where: { id: raisingFundsId },
+		});
+
+		if (!fundraising) {
+			return res
+				.status(404)
+				.json({ message: "Fundraising campaign not found" });
+		}
+
+		if (fundraising.status !== "Active") {
+			return res
+				.status(400)
+				.json({ message: "Fundraising campaign is not active" });
+		}
+
+		if (portions > fundraising.remainingPortions) {
+			return res.status(400).json({ message: "Not enough portions available" });
+		}
+
+		const fundingAmount = fundraising.pricePerPortion * portions;
+
+		if (fundingAmount > walletBalance) {
+			return res.status(400).json({ message: "Insufficient funds" });
+		}
+
+		const equityPercentage =
+			(fundraising.equityPercentage / fundraising.totalPortions) * portions;
+
+		await prisma.$transaction(async (prisma) => {
+			const fundraiserData = {
+				investorType,
+				raisingFundsId,
+				equityPercentage,
+				fundingAmount,
+				portions,
+				pricePerPortion: fundraising.pricePerPortion,
+				date: new Date(),
+				status: "Pending",
+				envelopeId: null,
+			};
+
+			if (investorType == "User") {
+				fundraiserData.investorUserId = investorId;
+			} else if (investorType == "Company") {
+				fundraiserData.investorCompanyId = investorId;
+			}
+
+			await prisma.fundraiser.create({ data: fundraiserData });
+
+			await prisma.raising_Funds.update({
+				where: { id: raisingFundsId },
+				data: {
+					remainingPortions: fundraising.remainingPortions - portions,
+				},
+			});
+		});
+
+		res.status(200).json({ message: "Investment successful" });
+	} catch (error) {
+		console.error("Error making investment:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const makeInvestmentOffer = async (req, res) => {
+	const { raisingFundsId, portions, offeredPricePerPortion, walletBalance } =
+		req.body;
+	const investorType = req.decodedUser.role;
+
+	const investorId = req.decodedUser.id;
+	console.log(investorType);
+	if (!raisingFundsId || !portions || !offeredPricePerPortion) {
+		return res.status(400).json({ message: "Missing required fields" });
+	}
+
+	try {
+		const fundraising = await prisma.raising_Funds.findUnique({
+			where: { id: raisingFundsId },
+		});
+
+		if (!fundraising) {
+			return res
+				.status(400)
+				.json({ message: "Fundraising campaign not found" });
+		}
+
+		if (fundraising.status !== "Active") {
+			return res
+				.status(400)
+				.json({ message: "Fundraising campaign is not active" });
+		}
+
+		if (portions > fundraising.remainingPortions) {
+			return res.status(400).json({ message: "Not enough portions available" });
+		}
+
+		const totalOfferedPrice = offeredPricePerPortion * portions;
+
+		if (totalOfferedPrice > walletBalance) {
+			return res.status(400).json({ message: "Insufficient funds" });
+		}
+
+		const offerData = {
+			investorType,
+			raisingFundsId,
+			portions,
+			offeredPricePerPortion,
+			totalOfferedPrice,
+			date: new Date(),
+			status: "Pending",
+		};
+
+		if (investorType == "User") {
+			offerData.investorUserId = investorId;
+		} else if (investorType == "Company") {
+			offerData.investorCompanyId = investorId;
+		}
+
+		await prisma.investmentOffer.create({ data: offerData });
+
+		res.status(200).json({ message: "Investment offer submitted" });
+	} catch (error) {
+		console.error("Error making investment offer:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const getMyInvestments = async (req, res) => {
+	const investorType = req.decodedUser.role;
+	const investorId = req.decodedUser.id;
+
+	try {
+		const investments = await prisma.fundraiser.findMany({
 			where: {
-				username: req.query.username,
+				investorType,
+				...(investorType == "User"
+					? { investorUserId: investorId }
+					: { investorCompanyId: investorId }),
 			},
 			include: {
-				raising_Funds: {
-					where: {
-						status: "Active",
+				raisingFunds: {
+					include: {
+						company: true,
 					},
 				},
 			},
 		});
-		console.log(company);
-		const remainingAmount =
-			company.raising_Funds[0].remainingPortions *
-			(company.raising_Funds[0].fundingAmount /
-				company.raising_Funds[0].totalPortions);
-		const fundedAmount =
-			company.raising_Funds[0].fundingAmount - remainingAmount;
-		const fundedPercentage =
-			(fundedAmount / company.raising_Funds[0].fundingAmount) * 100;
-		const remainingEquity =
-			company.raising_Funds[0].remainingPortions *
-			(company.raising_Funds[0].equityPercentage /
-				company.raising_Funds[0].totalPortions);
 
-		res.status(200).json({
-			companyUsername: company.username,
-			companyName: company.name,
-			totalAmount: company.raising_Funds[0].fundingAmount,
-			totalEquity: company.raising_Funds[0].equityPercentage,
-			remainingAmount: remainingAmount,
-			remainingEquity: remainingEquity,
-			remainingPortions: company.raising_Funds[0].remainingPortions,
-
-			portions: company.raising_Funds[0].totalPortions,
-			portionAmount:
-				company.raising_Funds[0].fundingAmount /
-				company.raising_Funds[0].totalPortions,
-			portionEquity:
-				company.raising_Funds[0].equityPercentage /
-				company.raising_Funds[0].totalPortions,
-			fundedAmount: fundedAmount,
-			fundedPercentage: fundedPercentage,
-			totalPortions: company.raising_Funds[0].totalPortions,
-		});
-	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		res.json(investments);
+	} catch (error) {
+		console.error("Error fetching investments:", error);
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
-export const getFundraiserData = async (req, res) => {
+// export const getMyFundraiserData = async (req, res) => {
+// 	try {
+// 		if (req.decodedUser.role == "User") {
+// 			const user = await prisma.user.findUnique({
+// 				where: {
+// 					id: req.decodedUser.id,
+// 				},
+// 				include: {
+// 					fundraiser: true,
+// 				},
+// 			});
+// 			res.status(200).json({ fundraiser: user.fundraiser });
+// 		} else {
+// 			const company = await prisma.company_Profile.findUnique({
+// 				where: {
+// 					username: req.decodedUser.id,
+// 				},
+// 				include: {
+// 					fundraiser: true,
+// 				},
+// 			});
+// 			res.status(200).json({ fundraiser: company.fundraiser });
+// 		}
+// 	} catch (e) {
+// 		res.status(400).send("Failed to retrieve");
+// 	}
+// };
+
+export const getMyInvestmentOffers = async (req, res) => {
+	const investorType = req.decodedUser.role;
+	const investorId = req.decodedUser.id;
+
 	try {
-		const user = await prisma.user.findUnique({
+		const offers = await prisma.investmentOffer.findMany({
 			where: {
-				id: req.decodedUser.id,
+				investorType,
+				...(investorType == "User"
+					? { investorUserId: investorId }
+					: { investorCompanyId: investorId }),
 			},
 			include: {
-				Fundraisers: true,
+				raisingFunds: {
+					include: {
+						company: true,
+					},
+				},
 			},
 		});
 
-		res.status(200).json({ Fundraisers: user.Fundraisers });
-	} catch (e) {
-		res.status(400).send("Failed to retrieve");
+		res.status(200).json(offers);
+	} catch (error) {
+		console.error("Error fetching investment offers:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const getFundingInvestmentOffers = async (req, res) => {
+	if (req.decodedUser.role != "Company") {
+		return res
+			.status(401)
+			.json({ message: "Only companies can view investment offers" });
+	}
+
+	try {
+		const offers = await prisma.investmentOffer.findMany({
+			where: {
+				raisingFunds: {
+					companyId: req.decodedUser.id,
+				},
+			},
+			include: {
+				raisingFunds: true,
+				investorUser: true,
+				investorCompany: true,
+			},
+		});
+
+		res.status(200).json(offers);
+	} catch (error) {
+		console.error("Error fetching investment offers:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+export const acceptInvestmentOffer = async (req, res) => {
+	if (req.decodedUser.role != "Company") {
+		return res
+			.status(401)
+			.json({ message: "Only companies can view investment offers" });
+	}
+
+	const { offerId } = req.body;
+
+	try {
+		const offer = await prisma.investmentOffer.findUnique({
+			where: { id: offerId },
+			include: { raisingFunds: true },
+		});
+
+		if (!offer) {
+			return res.status(404).json({ message: "Offer not found" });
+		}
+
+		if (offer.raisingFunds.companyId != req.decodedUser.id) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (offer.status != "Pending") {
+			return res.status(400).json({ message: "Cannot accept this offer" });
+		}
+
+		if (offer.portions > offer.raisingFunds.remainingPortions) {
+			return res.status(400).json({ message: "Not enough portions available" });
+		}
+
+		await prisma.$transaction(async (prisma) => {
+			await prisma.investmentOffer.update({
+				where: { id: offerId },
+				data: { status: "Accepted" },
+			});
+
+			const fundraiserData = {
+				investorType: offer.investorType,
+				raisingFundsId: offer.raisingFundsId,
+				investmentOfferId: offer.id,
+				equityPercentage:
+					(offer.raisingFunds.equityPercentage /
+						offer.raisingFunds.totalPortions) *
+					offer.portions,
+				fundingAmount: offer.totalOfferedPrice,
+				portions: offer.portions,
+				pricePerPortion: offer.offeredPricePerPortion,
+				date: new Date(),
+				status: "Active",
+				envelopeId: null,
+			};
+
+			if (offer.investorType == "User") {
+				fundraiserData.investorUserId = offer.investorUserId;
+			} else if (offer.investorType == "Company") {
+				fundraiserData.investorCompanyId = offer.investorCompanyId;
+			}
+
+			await prisma.fundraiser.create({ data: fundraiserData });
+
+			await prisma.raising_Funds.update({
+				where: { id: offer.raisingFundsId },
+				data: {
+					remainingPortions:
+						offer.raisingFunds.remainingPortions - offer.portions,
+					fundingAmount:
+						offer.raisingFunds.fundingAmount -
+						(offer.raisingFunds.pricePerPortion * offer.portions -
+							offer.totalOfferedPrice),
+				},
+			});
+		});
+
+		res.status(200).json({ message: "Offer accepted and investment recorded" });
+	} catch (error) {
+		console.error("Error accepting investment offer:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const rejectInvestmentOffer = async (req, res) => {
+	if (req.decodedUser.role != "Company") {
+		return res
+			.status(401)
+			.json({ message: "Only companies can view investment offers" });
+	}
+
+	const { offerId } = req.body;
+
+	try {
+		const offer = await prisma.investmentOffer.findUnique({
+			where: { id: offerId },
+			include: { raisingFunds: true },
+		});
+
+		if (!offer) {
+			return res.status(404).json({ message: "Offer not found" });
+		}
+
+		if (offer.raisingFunds.companyId != req.decodedUser.id) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (offer.status != "Pending") {
+			return res.status(400).json({ message: "Cannot reject this offer" });
+		}
+
+		await prisma.investmentOffer.update({
+			where: { id: offerId },
+			data: { status: "Rejected" },
+		});
+
+		res.status(200).json({ message: "Offer rejected" });
+	} catch (error) {
+		console.error("Error rejecting investment offer:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const cancelInvestmentOffer = async (req, res) => {
+	const { offerId } = req.body;
+
+	const investorType = req.decodedUser.role;
+	const investorId = req.decodedUser.id;
+
+	try {
+		const offer = await prisma.investmentOffer.findUnique({
+			where: { id: offerId },
+		});
+
+		if (!offer) {
+			return res.status(404).json({ message: "Investment offer not found" });
+		}
+
+		if (offer.investorType != investorType) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (investorType == "User" && offer.investorUserId != investorId) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (investorType == "Company" && offer.investorCompanyId != investorId) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (offer.status != "Pending") {
+			return res.status(400).json({ message: "Cannot cancel this offer" });
+		}
+
+		await prisma.investmentOffer.update({
+			where: { id: offerId },
+			data: {
+				status: "Cancelled",
+			},
+		});
+
+		res
+			.status(200)
+			.json({ message: "Investment offer cancelled successfully" });
+	} catch (error) {
+		console.error("Error cancelling investment offer:", error);
+		res.status(400).json({ message: "Internal server error" });
 	}
 };
 

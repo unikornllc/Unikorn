@@ -121,7 +121,7 @@ app.get(
 		// Create a JWT token
 		const token = createJWT({
 			id: account.id,
-			role: "user",
+			role: "User",
 		});
 
 		res.cookie("token", token, {
