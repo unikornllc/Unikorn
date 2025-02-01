@@ -26,3 +26,10 @@ model LoginDevices {
   user      User?            @relation(fields: [userId], references: [id])
   company   Company_Profile? @relation(fields: [companyId], references: [id])
 }
+
+model BlacklistedPasswordToken {
+  id        Int      @id @default(autoincrement())
+  jti       String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

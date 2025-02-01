@@ -1,21 +1,24 @@
-// pages/reset-password.js
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
+import axios from "axios";
 
 export default function ResetPassword() {
-	const router = useRouter();
-	const { token } = router.query;
+	const searchParams = useSearchParams();
+	const token = searchParams.get("token");
 
 	const [password, setPassword] = useState("");
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		const res = await fetch("/reset-password", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ token, password }),
-		});
+		const res = await axios.post(
+			`${process.env.NEXT_PUBLIC_SERVER}/reset-password`,
+			{ token, password },
+			{
+				withCredentials: true,
+			},
+		);
 	};
 
 	return (

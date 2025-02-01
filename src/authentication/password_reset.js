@@ -1,8 +1,28 @@
 import NodeMailer from "nodemailer";
 import prisma from "../db.js";
-import { hashPassword } from "./auth.js";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { hashPassword } from "../authentication/auth.js";
 
-const sendPasswordResetEmail = async (email, token) => {
+function generateResetToken(userId) {
+	const jti = crypto.randomBytes(16).toString("hex");
+	const token = jwt.sign({ sub: userId }, process.env.JWT_SECRET, {
+		expiresIn: "1h",
+		jwtid: jti,
+	});
+	return { token, jti };
+}
+
+const sendPasswordResetEmail = async (email) => {
+	const user = await prisma.user.findUnique({ where: { email } });
+	const company = !user
+		? await prisma.company_Profile.findUnique({ where: { email } })
+		: null;
+	const account = user || company;
+	if (!account) {
+		return;
+	}
+	const { token } = generateResetToken(account.id);
 	const resetLink = `${process.env.FRONTEND}/reset-password?token=${token}`;
 	const transporter = NodeMailer.createTransport({
 		service: "gmail",
@@ -21,46 +41,79 @@ const sendPasswordResetEmail = async (email, token) => {
 
 export const resetPasswordRequest = async (req, res) => {
 	const { email } = req.body;
-
-	const user = await prisma.user.findOne({ where: { email } });
-	if (!user) {
-		return res
-			.status(200)
-			.send(
-				"If that email address is in our database, we will send you an email to reset your password.",
-			);
-	}
-	const token = generateResetToken();
-	user.resetPasswordToken = token;
-	user.resetPasswordExpires = Date.now() + 3600000;
-	await user.save();
-	await sendPasswordResetEmail(user.email, token);
-
 	res
 		.status(200)
 		.send(
-			"If that email address is in our database, we will send you an email to reset your password.",
+			"If that email address exists, you will receive a password reset email.",
 		);
+
+	const user = await prisma.user.findUnique({ where: { email } });
+	const company = !user
+		? await prisma.company_Profile.findUnique({ where: { email } })
+		: null;
+	const account = user || company;
+	if (!account) {
+		return;
+	}
+	await sendPasswordResetEmail(email);
 };
 
-export const resetasync = async (req, res) => {
+export const resetPassword = async (req, res) => {
 	const { token, password } = req.body;
+	console.log(token);
+	console.log(password);
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		const { sub: userId, jti } = decoded;
 
-	const user = await prisma.user.findOne({
-		resetPasswordToken: token,
-		resetPasswordExpires: { $gt: Date.now() },
-	});
+		const jtiHash = crypto.createHash("sha256").update(jti).digest("hex");
 
-	if (!user) {
-		return res
-			.status(400)
-			.send("Password reset token is invalid or has expired.");
+		const blacklistedToken = await prisma.blacklistedPasswordToken.findUnique({
+			where: { jti: jtiHash },
+		});
+
+		if (blacklistedToken) {
+			return res.status(400).send("Token has been invalidated.");
+		}
+
+		const hashedPassword = await hashPassword(password);
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+		});
+
+		if (user) {
+			await prisma.user.update({
+				where: { id: userId },
+				data: { password: hashedPassword },
+			});
+		} else {
+			const company = await prisma.company_Profile.findUnique({
+				where: { id: userId },
+			});
+
+			if (company) {
+				await prisma.company_Profile.update({
+					where: { id: userId },
+					data: { password: hashedPassword },
+				});
+			} else {
+				throw new Error("User or Company not found");
+			}
+		}
+
+		await prisma.blacklistedPasswordToken.create({
+			data: {
+				jti: jtiHash,
+				expiresAt: new Date(decoded.exp * 1000),
+			},
+		});
+
+		res.status(200).send("Your password has been updated.");
+	} catch (error) {
+		if (error.name === "TokenExpiredError") {
+			res.status(400).send("Token has expired.");
+		} else {
+			res.status(400).send("Invalid token.");
+		}
 	}
-
-	user.password = await hashPassword(password);
-	user.resetPasswordToken = undefined;
-	user.resetPasswordExpires = undefined;
-	await user.save();
-
-	res.status(200).send("Your password has been updated.");
 };

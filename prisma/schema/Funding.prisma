@@ -52,7 +52,7 @@ model Fundraiser {
   pricePerPortion    Float
   date               DateTime
   status             Contract_Status @default(Pending)
-  envelopeId         String          @unique
+  envelopeId         String
 }
 
 model InvestmentOffer {

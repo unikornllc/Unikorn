@@ -57,47 +57,47 @@ const PasswordResetAccessCookie = {
 // 	}
 // };
 
-export const generatePasswordResetToken = async (req, res, next) => {
-	try {
-		const refresh = req.cookies["SID"];
-		if (!refresh) {
-			return res.status(401).json({ message: "Session Expired, Please login" });
-		}
-		const session = await prisma.refreshTokenValid.findUnique({
-			SID: refresh,
-		});
-		if (!session) {
-			return res.status(401).json({ message: "Session Expired, Please login" });
-		}
-		if (Date.now() > session.expire) {
-			return res.status(401).json({ message: "Session Expired, Please login" });
-		}
-		const user = await prisma.user.findUnique({ id: session.profileId });
-		const company = await prisma.company_Profile.findUnique({
-			id: session.profileId,
-		});
-		if (!user && !company) {
-			return res.status(401).json({ message: "Session Expired, Please login" });
-		}
-		const permission = "Password";
-		const token = jwt.sign(
-			{
-				id: session.profileId,
-				role: session.role,
-				permissions: permission,
-				authLevel: "Password",
-			},
-			process.env.JWT_SECRET,
-			{
-				expiresIn: "15m",
-			},
-		);
-		res.cookie("PSID", token, PasswordResetAccessCookie);
-		return next();
-	} catch (error) {
-		return res.status(500).json({ message: "Server Error" });
-	}
-};
+// export const generatePasswordResetToken = async (req, res, next) => {
+// 	try {
+// 		const refresh = req.cookies["SID"];
+// 		if (!refresh) {
+// 			return res.status(401).json({ message: "Session Expired, Please login" });
+// 		}
+// 		const session = await prisma.refreshTokenValid.findUnique({
+// 			SID: refresh,
+// 		});
+// 		if (!session) {
+// 			return res.status(401).json({ message: "Session Expired, Please login" });
+// 		}
+// 		if (Date.now() > session.expire) {
+// 			return res.status(401).json({ message: "Session Expired, Please login" });
+// 		}
+// 		const user = await prisma.user.findUnique({ id: session.profileId });
+// 		const company = await prisma.company_Profile.findUnique({
+// 			id: session.profileId,
+// 		});
+// 		if (!user && !company) {
+// 			return res.status(401).json({ message: "Session Expired, Please login" });
+// 		}
+// 		const permission = "Password";
+// 		const token = jwt.sign(
+// 			{
+// 				id: session.profileId,
+// 				role: session.role,
+// 				permissions: permission,
+// 				authLevel: "Password",
+// 			},
+// 			process.env.JWT_SECRET,
+// 			{
+// 				expiresIn: "15m",
+// 			},
+// 		);
+// 		res.cookie("PSID", token, PasswordResetAccessCookie);
+// 		return next();
+// 	} catch (error) {
+// 		return res.status(500).json({ message: "Server Error" });
+// 	}
+// };
 
 export const generateAccessTokenIfNeeded = (req, res, next) => {
 	console.log(
@@ -143,6 +143,78 @@ export const generateAccessTokenIfNeeded = (req, res, next) => {
 		return next();
 	} catch (error) {
 		console.error("Error in generateAccessTokenIfNeeded:", error);
+		return res.status(500).json({ message: "Server Error" });
+	}
+};
+
+export const verifyRefreshTokenAndGenerateAccessToken = async (
+	req,
+	res,
+	next,
+) => {
+	try {
+		if (req.user) {
+			return next();
+		}
+
+		const ssid = req.cookies["SID"];
+		if (!ssid) {
+			return res.status(401).json({ message: "Authentication required." });
+		}
+
+		const session = await prisma.refreshTokenValid.findUnique({
+			where: { sid: ssid },
+		});
+
+		if (!session) {
+			return res.status(401).json({ message: "Authentication required." });
+		}
+
+		if (Date.now() > new Date(session.expire).getTime()) {
+			await prisma.refreshTokenValid.delete({ where: { sid: ssid } });
+			return res.status(401).json({ message: "Authentication required." });
+		}
+
+		const profileId = session.profileId;
+		let account;
+
+		const user = await prisma.user.findUnique({ where: { id: profileId } });
+		if (user) {
+			account = { ...user, role: "User" };
+		} else {
+			const company = await prisma.company_Profile.findUnique({
+				where: { id: profileId },
+			});
+			if (company) {
+				account = { ...company, role: "Company" };
+			} else {
+				return res.status(401).json({ message: "Authentication required." });
+			}
+		}
+
+		const token = jwt.sign(
+			{
+				id: account.id,
+				role: account.role,
+				permissions: account.tier,
+			},
+			process.env.JWT_SECRET,
+			{
+				expiresIn: "1d",
+			},
+		);
+
+		res.cookie("BSID", token, basicAccessCookieOptions);
+
+		req.user = {
+			id: account.id,
+			role: account.role,
+			permissions: account.tier,
+		};
+
+		return next();
+	} catch (error) {
+		console.error("Error in verifyRefreshTokenAndGenerateAccessToken:", error);
 		return res.status(500).json({ message: "Server Error" });
 	}
 };

@@ -149,13 +149,21 @@ import {
 	verifyRefreshToken,
 	verifyCredentialsIfNoRefreshToken,
 	verifyAccessToken,
+	verifyAccessTokenRoute,
 } from "./authentication/auth.js";
 import { handleNewDevice } from "./authentication/logindevice.js";
 import { generateRefreshTokenIfNeeded } from "./authentication/refreshtoken.js";
-import { generateAccessTokenIfNeeded } from "./authentication/access.js";
+import {
+	generateAccessTokenIfNeeded,
+	verifyRefreshTokenAndGenerateAccessToken,
+} from "./authentication/access.js";
+import {
+	resetPassword,
+	resetPasswordRequest,
+} from "./authentication/password_reset.js";
 
 app.post(
-	"/test",
+	"/signin",
 	verifyRefreshToken,
 	handleNewDevice,
 	verifyCredentialsIfNoRefreshToken,
@@ -166,6 +174,16 @@ app.post(
 		res.status(200).json({ message: "Login Successful" });
 	},
 );
+
+app.use(
+	"/api",
+	verifyAccessTokenRoute,
+	verifyRefreshTokenAndGenerateAccessToken,
+	router,
+);
+
+app.post("/password-reset-request", resetPasswordRequest);
+app.post("/reset-password", resetPassword);
 
 app.get("/verifyUser", verifyUser);
 app.post("/signIn", verifiedUser, signIn);

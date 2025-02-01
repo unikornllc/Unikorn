@@ -242,3 +242,20 @@ export const verifyAccessToken = (req, res, next) => {
 		return next();
 	}
 };
+
+export const verifyAccessTokenRoute = (req, res, next) => {
+	try {
+		const bsid = req.cookies["BSID"];
+		if (!bsid) {
+			return next();
+		}
+
+		const decoded = jwt.verify(bsid, process.env.JWT_SECRET);
+
+		req.decodedUser = decoded;
+
+		return next();
+	} catch (error) {
+		return next();
+	}
+};
