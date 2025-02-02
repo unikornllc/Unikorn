@@ -155,6 +155,7 @@ import {
 	acceptInvestmentOffer,
 	rejectInvestmentOffer,
 	cancelInvestmentOffer,
+	cancelInvestment,
 } from "./controllers/raising_funds.js";
 
 const router = Router();
@@ -286,6 +287,7 @@ router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
+//raising_funds and investments offers
 router.get("/raisingFunds/active", getActiveRaisingFunds);
 router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
 router.get("/raisingFunds/offers", getFundingInvestmentOffers);
@@ -295,6 +297,7 @@ router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
 router.post("/investments/fixedPrice", investAtFixedPrice);
 router.post("/investments/negotiatePrice", makeInvestmentOffer);
 router.get("/investments/my", getMyInvestments);
+router.post("/investments/cancel", cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
 router.post("/investments/offer/cancel", cancelInvestmentOffer);
 
