@@ -12,17 +12,18 @@ export const getActiveRaisingFunds = async (req, res) => {
 			res.status(200).json({ message: "No active fundraising found" });
 		}
 		fundraisings.forEach((fundraising) => {
-			const remainingAmount =
+			const fundedPortions =
+				fundraising.totalPortions - fundraising.remainingPortions;
+			const fundedPercentage = (
+				(fundedPortions / fundraising.totalPortions) *
+				100
+			).toFixed(1);
+			const remainingEquity = (
 				fundraising.remainingPortions *
-				(fundraising.fundingAmount / fundraising.totalPortions);
-			const fundedAmount = fundraising.fundingAmount - remainingAmount;
-			const fundedPercentage = (fundedAmount / fundraising.fundingAmount) * 100;
-			const remainingEquity =
-				fundraising.remainingPortions *
-				(fundraising.equityPercentage / fundraising.totalPortions);
-			fundraising.remainingAmount = remainingAmount;
+				(fundraising.equityPercentage / fundraising.totalPortions)
+			).toFixed(1);
 			fundraising.remainingEquity = remainingEquity;
-			fundraising.fundedAmount = fundedAmount;
+			fundraising.fundedPortions = fundedPortions;
 			fundraising.fundedPercentage = fundedPercentage;
 		});
 		res.status(200).json(fundraisings);
@@ -33,8 +34,17 @@ export const getActiveRaisingFunds = async (req, res) => {
 
 export const getCompanyActiveRaisingFund = async (req, res) => {
 	try {
+		let param;
+		if (req.query.username) {
+			param = { username: req.query.username };
+		} else {
+			if (req.decodedUser.role != "Company") {
+				return res.status(401).json({ message: "Unauthorized action" });
+			}
+			param = { id: req.decodedUser.id };
+		}
 		const fundraising = await prisma.raising_Funds.findFirst({
-			where: { status: "Active", company: { username: req.query.username } },
+			where: { status: "Active", company: param },
 			include: {
 				company: true,
 			},
@@ -42,14 +52,16 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 		if (!fundraising) {
 			res.status(200).json({ message: "No active fundraising found" });
 		}
-		const remainingAmount =
+		const fundedPortions =
+			fundraising.totalPortions - fundraising.remainingPortions;
+		const fundedPercentage = (
+			(fundedPortions / fundraising.totalPortions) *
+			100
+		).toFixed(1);
+		const remainingEquity = (
 			fundraising.remainingPortions *
-			(fundraising.fundingAmount / fundraising.totalPortions);
-		const fundedAmount = fundraising.fundingAmount - remainingAmount;
-		const fundedPercentage = (fundedAmount / fundraising.fundingAmount) * 100;
-		const remainingEquity =
-			fundraising.remainingPortions *
-			(fundraising.equityPercentage / fundraising.totalPortions);
+			(fundraising.equityPercentage / fundraising.totalPortions)
+		).toFixed(1);
 
 		res.status(200).json({
 			raisingFundsId: fundraising.id,
@@ -57,15 +69,14 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 			companyName: fundraising.company.name,
 			totalAmount: fundraising.fundingAmount,
 			totalEquity: fundraising.equityPercentage,
-			remainingAmount: remainingAmount,
 			remainingEquity: remainingEquity,
 			remainingPortions: fundraising.remainingPortions,
 			pricePerPortion: fundraising.pricePerPortion,
 			portions: fundraising.totalPortions,
 			portionAmount: fundraising.fundingAmount / fundraising.totalPortions,
 			portionEquity: fundraising.equityPercentage / fundraising.totalPortions,
-			fundedAmount: fundedAmount,
-			fundedPercentage: fundedPercentage,
+			fundedPortions,
+			fundedPercentage,
 			totalPortions: fundraising.totalPortions,
 		});
 	} catch (e) {
@@ -73,7 +84,74 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 		res.status(400).json({ message: "Failed to retrieve" });
 	}
 };
+export const cancelInvestment = async (req, res) => {
+	const { fundraiserId } = req.body;
 
+	const investorType = req.decodedUser.role;
+	const investorId = req.decodedUser.id;
+
+	try {
+		const fundraiser = await prisma.fundraiser.findUnique({
+			where: { id: fundraiserId },
+			include: { raisingFunds: true },
+		});
+
+		if (!fundraiser) {
+			return res.status(404).json({ message: "Investment offer not found" });
+		}
+
+		if (fundraiser.investorType != investorType) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (investorType == "User" && fundraiser.investorUserId != investorId) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (
+			investorType == "Company" &&
+			fundraiser.investorCompanyId != investorId
+		) {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		if (fundraiser.raisingFunds.status != "Active") {
+			return res.status(400).json({ message: "Cannot cancel this Investment" });
+		}
+		await prisma.$transaction(async (prisma) => {
+			const fundraising = await prisma.raising_Funds.findUnique({
+				where: { id: fundraiser.raisingFundsId },
+			});
+			if (fundraising.status != "Active") {
+				return res
+					.status(400)
+					.json({ message: "Cannot cancel this Investment" });
+			}
+
+			const dataToUpdate = {
+				fundingAmount:
+					Math.abs(
+						fundraising.pricePerPortion * fundraiser.portions -
+							fundraiser.pricePerPortion * fundraiser.portions,
+					) + fundraising.fundingAmount,
+				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
+			};
+
+			await prisma.fundraiser.delete({
+				where: { id: fundraiserId },
+			});
+
+			await prisma.raising_Funds.update({
+				where: { id: fundraiser.raisingFundsId },
+				data: dataToUpdate,
+			});
+		});
+		res.status(200).json({ message: "Investment cancelled successfully" });
+	} catch (error) {
+		console.error("Error cancelling investment:", error);
+		res.status(400).json({ message: "Internal server error" });
+	}
+};
 export const investAtFixedPrice = async (req, res) => {
 	const { raisingFundsId, portions, walletBalance } = req.body;
 	const investorType = req.decodedUser.role;
@@ -377,9 +455,9 @@ export const acceptInvestmentOffer = async (req, res) => {
 				raisingFunds: {
 					connect: { id: offer.raisingFundsId },
 				},
-				investmentOffer: {
-					connect: { id: offer.id },
-				},
+				// investmentOffer: {
+				// 	connect: { id: offer.id },
+				// },
 				equityPercentage:
 					(offer.raisingFunds.equityPercentage /
 						offer.raisingFunds.totalPortions) *
@@ -388,17 +466,17 @@ export const acceptInvestmentOffer = async (req, res) => {
 				portions: offer.portions,
 				pricePerPortion: offer.offeredPricePerPortion,
 				date: new Date(),
-				status: "Active",
+				status: "Pending",
 				envelopeId: "",
 			};
 
-			if (investorType == "User") {
+			if (offer.investorType == "User") {
 				fundraiserData.investorUser = {
-					connect: { id: investorId },
+					connect: { id: offer.investorUserId },
 				};
-			} else if (investorType == "Company") {
+			} else if (offer.investorType == "Company") {
 				fundraiserData.investorCompany = {
-					connect: { id: investorId },
+					connect: { id: offer.investorCompanyId },
 				};
 			}
 			await prisma.fundraiser.create({ data: fundraiserData });

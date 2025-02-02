@@ -91,7 +91,7 @@ export function FundingComponent({ companyUsername }) {
 									variant="h5"
 									component="div"
 									color="textPrimary"
-								>{`${fundingData.fundedPercentage.toFixed(0)}%`}</Typography>
+								>{`${fundingData.fundedPercentage}%`}</Typography>
 								<Typography variant="body2" color="textSecondary">
 									Funded
 								</Typography>
@@ -106,10 +106,6 @@ export function FundingComponent({ companyUsername }) {
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Total Equity Offered:</strong> {fundingData.totalEquity}%
-						</Typography>
-						<Typography variant="body1" gutterBottom>
-							<strong>Remaining Amount:</strong> $
-							{fundingData.remainingAmount.toLocaleString()}
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Remaining Equity:</strong> {fundingData.remainingEquity}%
