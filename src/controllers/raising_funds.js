@@ -125,6 +125,7 @@ export const investAtFixedPrice = async (req, res) => {
 				status: "Pending",
 				envelopeId: null,
 			};
+			console.log(fundraiserData);
 
 			if (investorType == "User") {
 				fundraiserData.investorUserId = investorId;
@@ -484,6 +485,48 @@ export const cancelInvestmentOffer = async (req, res) => {
 	} catch (error) {
 		console.error("Error cancelling investment offer:", error);
 		res.status(400).json({ message: "Internal server error" });
+	}
+};
+
+export const cancelRaisingFunds = async (req, res) => {
+	const companyId = req.decodedUser.id;
+	const userRole = req.decodedUser.role;
+	const data = req.body.fundingData;
+	console.log(data);
+
+	try {
+		if (userRole !== "Company") {
+			return res.status(403).json({ message: "Unauthorized action" });
+		}
+
+		const activeFunds = await prisma.raising_Funds.findFirst({
+			where: {
+				companyId: companyId,
+				status: "Active" || "Pending",
+			},
+		});
+
+		if (activeFunds.length === 0) {
+			return res.status(404).json({ message: "No active raising funds found" });
+		}
+
+		await prisma.raising_Funds.update({
+			where: {
+				id: data.raisingFundsId,
+				companyId: companyId,
+				status: "Active" || "Pending",
+			},
+			data: {
+				status: "Failed",
+			},
+		});
+
+		res.status(200).json({
+			message: "All active raising funds have been cancelled successfully",
+		});
+	} catch (error) {
+		console.error("Error cancelling raising funds:", error);
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
 

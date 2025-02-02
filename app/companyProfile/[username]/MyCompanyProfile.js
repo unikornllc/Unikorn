@@ -82,7 +82,9 @@ const MyCompanyProfile = ({ company }) => {
 		<div className="container mx-auto">
 			<h1 className="text-2xl font-bold mb-4">{companyData.name}</h1>
 			{activeFund ? (
-				<FundingComponentCompany companyUsername={companyData.username} />
+				<div>
+					<FundingComponentCompany companyUsername={companyData.username} />
+				</div>
 			) : (
 				<button
 					className="bg-blue-500 text-white px-4 py-2 rounded mb-4"

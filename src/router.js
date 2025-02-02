@@ -155,6 +155,7 @@ import {
 	acceptInvestmentOffer,
 	rejectInvestmentOffer,
 	cancelInvestmentOffer,
+	cancelRaisingFunds,
 } from "./controllers/raising_funds.js";
 
 const router = Router();
@@ -291,6 +292,7 @@ router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
 router.get("/raisingFunds/offers", getFundingInvestmentOffers);
 router.post("/raisingFunds/offer/accept", acceptInvestmentOffer);
 router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
+router.post("/raisingFunds/cancel", cancelRaisingFunds);
 
 router.post("/investments/fixedPrice", investAtFixedPrice);
 router.post("/investments/negotiatePrice", makeInvestmentOffer);
