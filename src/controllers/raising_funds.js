@@ -100,17 +100,11 @@ export const cancelInvestment = async (req, res) => {
 			return res.status(404).json({ message: "Investment offer not found" });
 		}
 
-		if (fundraiser.investorType != investorType) {
-			return res.status(403).json({ message: "Unauthorized action" });
-		}
-
-		if (investorType == "User" && fundraiser.investorUserId != investorId) {
-			return res.status(403).json({ message: "Unauthorized action" });
-		}
-
 		if (
-			investorType == "Company" &&
-			fundraiser.investorCompanyId != investorId
+			fundraiser.investorType !== investorType ||
+			(investorType === "User" && fundraiser.investorUserId !== investorId) ||
+			(investorType === "Company" &&
+				fundraiser.investorCompanyId !== investorId)
 		) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
@@ -188,48 +182,67 @@ export const investAtFixedPrice = async (req, res) => {
 			return res.status(400).json({ message: "Insufficient funds" });
 		}
 
-		const equityPercentage =
+		const additionalEquity =
 			(fundraising.equityPercentage / fundraising.totalPortions) * portions;
-
 		await prisma.$transaction(async (prisma) => {
-			const fundraiserData = {
-				investorType,
-				raisingFunds: {
-					connect: { id: raisingFundsId },
-				},
-				equityPercentage,
-				fundingAmount,
-				portions,
-				pricePerPortion: fundraising.pricePerPortion,
-				date: new Date(),
-				status: "Pending",
-				envelopeId: "",
-			};
-
-			if (investorType == "User") {
-				fundraiserData.investorUser = {
-					connect: { id: investorId },
-				};
-			} else if (investorType == "Company") {
-				fundraiserData.investorCompany = {
-					connect: { id: investorId },
-				};
-			}
-
-			await prisma.fundraiser.create({ data: fundraiserData });
-
-			await prisma.raising_Funds.update({
-				where: { id: raisingFundsId },
-				data: {
-					remainingPortions: fundraising.remainingPortions - portions,
+			const existingFundraiser = await prisma.fundraiser.findFirst({
+				where: {
+					raisingFundsId,
+					...(investorType === "User"
+						? { investorUserId: investorId }
+						: { investorCompanyId: investorId }),
 				},
 			});
+			if (existingFundraiser) {
+				await prisma.fundraiser.update({
+					where: { id: existingFundraiser.id },
+					data: {
+						portions: { increment: portions },
+						fundingAmount: { increment: fundingAmount },
+						equityPercentage: { increment: additionalEquity },
+						pricePerPortion:
+							(existingFundraiser.fundingAmount + fundingAmount) /
+							(existingFundraiser.portions + portions),
+					},
+				});
+			} else {
+				await prisma.fundraiser.create({
+					data: {
+						investorType,
+						raisingFunds: { connect: { id: raisingFundsId } },
+						equityPercentage: additionalEquity,
+						fundingAmount,
+						portions,
+						pricePerPortion: fundraising.pricePerPortion,
+						date: new Date(),
+						status: "Pending",
+						envelopeId: "",
+						...(investorType === "User"
+							? { investorUser: { connect: { id: investorId } } }
+							: { investorCompany: { connect: { id: investorId } } }),
+					},
+				});
+			}
+			const newRaisingFunds = await prisma.raising_Funds.update({
+				where: { id: raisingFundsId },
+				data: { remainingPortions: { decrement: portions } },
+			});
+			if (newRaisingFunds.remainingPortions == 0) {
+				await prisma.raising_Funds.update({
+					where: { id: offer.raisingFundsId },
+					data: {
+						status: "Completed",
+					},
+				});
+			} else if (newRaisingFunds.remainingPortions < 0) {
+				throw new Error("Invalid remaining portions");
+			}
 		});
 
 		res.status(200).json({ message: "Investment successful" });
 	} catch (error) {
 		console.error("Error making investment:", error);
-		res.status(400).json({ message: "Internal server error" });
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
@@ -414,10 +427,10 @@ export const getFundingInvestmentOffers = async (req, res) => {
 	}
 };
 export const acceptInvestmentOffer = async (req, res) => {
-	if (req.decodedUser.role != "Company") {
+	if (req.decodedUser.role !== "Company") {
 		return res
 			.status(401)
-			.json({ message: "Only companies can view investment offers" });
+			.json({ message: "Only companies can accept investment offers" });
 	}
 
 	const { offerId } = req.body;
@@ -432,11 +445,11 @@ export const acceptInvestmentOffer = async (req, res) => {
 			return res.status(404).json({ message: "Offer not found" });
 		}
 
-		if (offer.raisingFunds.companyId != req.decodedUser.id) {
+		if (offer.raisingFunds.companyId !== req.decodedUser.id) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
-		if (offer.status != "Pending") {
+		if (offer.status !== "Pending") {
 			return res.status(400).json({ message: "Cannot accept this offer" });
 		}
 
@@ -444,60 +457,83 @@ export const acceptInvestmentOffer = async (req, res) => {
 			return res.status(400).json({ message: "Not enough portions available" });
 		}
 
+		const additionalEquity =
+			(offer.raisingFunds.equityPercentage / offer.raisingFunds.totalPortions) *
+			offer.portions;
+
 		await prisma.$transaction(async (prisma) => {
 			await prisma.investmentOffer.update({
 				where: { id: offerId },
 				data: { status: "Accepted" },
 			});
-
-			const fundraiserData = {
-				investorType: offer.investorType,
-				raisingFunds: {
-					connect: { id: offer.raisingFundsId },
-				},
-				// investmentOffer: {
-				// 	connect: { id: offer.id },
-				// },
-				equityPercentage:
-					(offer.raisingFunds.equityPercentage /
-						offer.raisingFunds.totalPortions) *
-					offer.portions,
-				fundingAmount: offer.totalOfferedPrice,
-				portions: offer.portions,
-				pricePerPortion: offer.offeredPricePerPortion,
-				date: new Date(),
-				status: "Pending",
-				envelopeId: "",
-			};
-
-			if (offer.investorType == "User") {
-				fundraiserData.investorUser = {
-					connect: { id: offer.investorUserId },
-				};
-			} else if (offer.investorType == "Company") {
-				fundraiserData.investorCompany = {
-					connect: { id: offer.investorCompanyId },
-				};
-			}
-			await prisma.fundraiser.create({ data: fundraiserData });
-
-			await prisma.raising_Funds.update({
-				where: { id: offer.raisingFundsId },
-				data: {
-					remainingPortions:
-						offer.raisingFunds.remainingPortions - offer.portions,
-					fundingAmount:
-						offer.raisingFunds.fundingAmount -
-						(offer.raisingFunds.pricePerPortion * offer.portions -
-							offer.totalOfferedPrice),
+			const existingFundraiser = await prisma.fundraiser.findFirst({
+				where: {
+					raisingFundsId: offer.raisingFundsId,
+					...(offer.investorType === "User"
+						? { investorUserId: offer.investorUserId }
+						: { investorCompanyId: offer.investorCompanyId }),
 				},
 			});
+			if (existingFundraiser) {
+				await prisma.fundraiser.update({
+					where: { id: existingFundraiser.id },
+					data: {
+						portions: { increment: offer.portions },
+						fundingAmount: { increment: offer.totalOfferedPrice },
+						equityPercentage: { increment: additionalEquity },
+						pricePerPortion:
+							(existingFundraiser.fundingAmount + offer.totalOfferedPrice) /
+							(existingFundraiser.portions + offer.portions),
+					},
+				});
+			} else {
+				await prisma.fundraiser.create({
+					data: {
+						investorType: offer.investorType,
+						raisingFunds: { connect: { id: offer.raisingFundsId } },
+						equityPercentage: additionalEquity,
+						fundingAmount: offer.totalOfferedPrice,
+						portions: offer.portions,
+						pricePerPortion: offer.offeredPricePerPortion,
+						date: new Date(),
+						status: "Pending",
+						envelopeId: "",
+						...(offer.investorType === "User"
+							? { investorUser: { connect: { id: offer.investorUserId } } }
+							: {
+									investorCompany: { connect: { id: offer.investorCompanyId } },
+								}),
+					},
+				});
+			}
+
+			const newRaisingFunds = await prisma.raising_Funds.update({
+				where: { id: offer.raisingFundsId },
+				data: {
+					remainingPortions: { decrement: offer.portions },
+					fundingAmount: {
+						decrement:
+							offer.raisingFunds.pricePerPortion * offer.portions -
+							offer.totalOfferedPrice,
+					},
+				},
+			});
+			if (newRaisingFunds.remainingPortions == 0) {
+				await prisma.raising_Funds.update({
+					where: { id: offer.raisingFundsId },
+					data: {
+						status: "Completed",
+					},
+				});
+			} else if (newRaisingFunds.remainingPortions < 0) {
+				throw new Error("Invalid remaining portions");
+			}
 		});
 
 		res.status(200).json({ message: "Offer accepted and investment recorded" });
 	} catch (error) {
 		console.error("Error accepting investment offer:", error);
-		res.status(400).json({ message: "Internal server error" });
+		res.status(500).json({ message: "Internal server error" });
 	}
 };
 
@@ -555,15 +591,11 @@ export const cancelInvestmentOffer = async (req, res) => {
 			return res.status(404).json({ message: "Investment offer not found" });
 		}
 
-		if (offer.investorType != investorType) {
-			return res.status(403).json({ message: "Unauthorized action" });
-		}
-
-		if (investorType == "User" && offer.investorUserId != investorId) {
-			return res.status(403).json({ message: "Unauthorized action" });
-		}
-
-		if (investorType == "Company" && offer.investorCompanyId != investorId) {
+		if (
+			offer.investorType !== investorType ||
+			(investorType === "User" && offer.investorUserId !== investorId) ||
+			(investorType === "Company" && offer.investorCompanyId !== investorId)
+		) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 

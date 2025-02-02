@@ -228,7 +228,7 @@ export default function CompanyDashboard() {
 					<Table>
 						<TableHead>
 							<TableRow>
-								<TableCell >Investor</TableCell>
+								<TableCell>Investor</TableCell>
 								<TableCell>Portions</TableCell>
 								<TableCell>Offered Price Per Portion</TableCell>
 								<TableCell>Total Offered Price</TableCell>
@@ -240,13 +240,25 @@ export default function CompanyDashboard() {
 						<TableBody>
 							{investmentOffers.map((offer) => (
 								<TableRow key={offer.id}>
-								<TableCell sx={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", }}>
-								<Box title={offer.investorType === "User" ? offer.investorUser?.name : offer.investorCompany?.name}>
-									{offer.investorType === "User"
-										? offer.investorUser?.name
-										: offer.investorCompany?.name}
-								</Box>
-							</TableCell>
+									<TableCell
+										sx={{
+											maxWidth: 150,
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+										}}
+									>
+										<Box
+											title={
+												offer.investorType === "User"
+													? offer.investorUser?.name
+													: offer.investorCompany?.name
+											}
+										>
+											{offer.investorType === "User"
+												? offer.investorUser?.name
+												: offer.investorCompany?.name}
+										</Box>
+									</TableCell>
 									<TableCell>{offer.portions}</TableCell>
 									<TableCell>${offer.offeredPricePerPortion}</TableCell>
 									<TableCell>${offer.totalOfferedPrice}</TableCell>

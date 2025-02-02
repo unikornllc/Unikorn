@@ -190,12 +190,14 @@ export default function MyInvestmentsPage() {
 										</TableCell>
 										<TableCell>{investment.portions}</TableCell>
 										<TableCell>
-											${investment.pricePerPortion.toLocaleString()}
+											${investment.pricePerPortion.toFixed(1)}
 										</TableCell>
 										<TableCell>
-											${investment.fundingAmount.toLocaleString()}
+											${investment.fundingAmount.toFixed(1)}
 										</TableCell>
-										<TableCell>{investment.equityPercentage}</TableCell>
+										<TableCell>
+											{investment.equityPercentage.toFixed(1)}
+										</TableCell>
 										<TableCell>{investment.status}</TableCell>
 										<TableCell>
 											{new Date(investment.date).toLocaleDateString()}
@@ -255,10 +257,10 @@ export default function MyInvestmentsPage() {
 										<TableCell>{offer.raisingFunds.company.name}</TableCell>
 										<TableCell>{offer.portions}</TableCell>
 										<TableCell>
-											${offer.offeredPricePerPortion.toLocaleString()}
+											${offer.offeredPricePerPortion.toFixed(1)}
 										</TableCell>
 										<TableCell>
-											${offer.totalOfferedPrice.toLocaleString()}
+											${offer.totalOfferedPrice.toFixed(1)}
 										</TableCell>
 										<TableCell>{offer.status}</TableCell>
 										<TableCell>
