@@ -14,7 +14,6 @@ import {
 	Switch,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import { InvestmentForm } from "./InvestmentForm";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PercentIcon from "@mui/icons-material/Percent";
 
@@ -38,6 +37,19 @@ const FundingCard = styled(Card)(() => ({
 export function FundingComponentCompany({ companyUsername }) {
 	const [fundingData, setFundingData] = useState(null);
 	const [tabValue, setTabValue] = useState(0);
+	const handleCancelFunds = async () => {
+		try {
+			const res = await axios.post(
+				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/cancel`,
+				{ fundingData },
+				{
+					withCredentials: true,
+				},
+			);
+		} catch (error) {
+			console.error("Error cancelling fundraising:", error);
+		}
+	};
 	const fetchActiveFunding = async () => {
 		try {
 			await axios
@@ -128,6 +140,12 @@ export function FundingComponentCompany({ companyUsername }) {
 						</Typography>
 					</Grid>
 				</Grid>
+				<button
+					className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+					onClick={() => handleCancelFunds(true)}
+				>
+					Cancel
+				</button>
 			</CardContent>
 		</FundingCard>
 	);
