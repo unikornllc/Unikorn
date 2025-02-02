@@ -43,7 +43,7 @@ model Fundraiser {
   investorCompany    Company_Profile? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id])
   investorCompanyId  String?
 
-  raisingFunds       Raising_Funds   @relation(fields: [raisingFundsId], references: [id])
+  raisingFunds       Raising_Funds   @relation(fields: [raisingFundsId], references: [id]) //make it unique 
   raisingFundsId     String
 
   equityPercentage   Float
@@ -52,7 +52,7 @@ model Fundraiser {
   pricePerPortion    Float
   date               DateTime
   status             Contract_Status @default(Pending)
-  envelopeId         String          @unique
+  envelopeId         String
 }
 
 model InvestmentOffer {

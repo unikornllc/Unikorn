@@ -94,38 +94,44 @@ export function InvestmentForm({ mode, fundingData }) {
 		setIsSubmitting(true);
 		try {
 			if (mode === "invest") {
-				const response = await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
-					{
-						walletBalance: user.walletBalance,
-						raisingFundsId: fundingData.raisingFundsId,
-						portions: partsToInvest,
-					},
-					{
-						withCredentials: true,
-					},
-				);
-				setSnackbarMessage("Investment successful!");
-				setSnackbarSeverity("success");
-				setUser((prevUser) => ({
-					...prevUser,
-					walletBalance: prevUser.walletBalance - totalInvestment,
-				}));
+				await axios
+					.post(
+						`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
+						{
+							walletBalance: user.walletBalance,
+							raisingFundsId: fundingData.raisingFundsId,
+							portions: partsToInvest,
+						},
+						{
+							withCredentials: true,
+						},
+					)
+					.then(() => {
+						setSnackbarMessage("Investment successful!");
+						setSnackbarSeverity("success");
+						setUser((prevUser) => ({
+							...prevUser,
+							walletBalance: prevUser.walletBalance - totalInvestment,
+						}));
+					});
 			} else if (mode === "offer") {
-				const response = await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/investments/negotiatePrice`,
-					{
-						walletBalance: user.walletBalance,
-						raisingFundsId: fundingData.raisingFundsId,
-						portions: partsToInvest,
-						offeredPricePerPortion: offeredPricePerPart,
-					},
-					{
-						withCredentials: true,
-					},
-				);
-				setSnackbarMessage("Investment offer submitted!");
-				setSnackbarSeverity("success");
+				await axios
+					.post(
+						`${process.env.NEXT_PUBLIC_SERVER}/investments/negotiatePrice`,
+						{
+							walletBalance: user.walletBalance,
+							raisingFundsId: fundingData.raisingFundsId,
+							portions: partsToInvest,
+							offeredPricePerPortion: offeredPricePerPart,
+						},
+						{
+							withCredentials: true,
+						},
+					)
+					.then(() => {
+						setSnackbarMessage("Investment offer submitted!");
+						setSnackbarSeverity("success");
+					});
 			}
 			setSnackbarOpen(true);
 		} catch (error) {

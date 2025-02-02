@@ -132,10 +132,6 @@ export function FundingComponentCompany({ companyUsername }) {
 							<strong>Total Equity Offered:</strong> {fundingData.totalEquity}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
-							<strong>Remaining Amount:</strong> $
-							{fundingData.remainingAmount.toLocaleString()}
-						</Typography>
-						<Typography variant="body1" gutterBottom>
 							<strong>Remaining Equity:</strong> {fundingData.remainingEquity}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
