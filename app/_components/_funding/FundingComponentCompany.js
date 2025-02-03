@@ -58,7 +58,7 @@ export function FundingComponentCompany({ companyUsername }) {
 					withCredentials: true,
 				})
 				.then((response) => {
-					setFundingData(response.data);
+					setFundingData(response.data.activeFundraising);
 					console.log(response);
 				});
 		} catch (err) {
@@ -115,7 +115,7 @@ export function FundingComponentCompany({ companyUsername }) {
 									variant="h5"
 									component="div"
 									color="textPrimary"
-								>{`${fundingData.fundedPercentage.toFixed(0)}%`}</Typography>
+								>{`${fundingData.fundedPercentage}%`}</Typography>
 								<Typography variant="body2" color="textSecondary">
 									Funded
 								</Typography>
@@ -126,17 +126,18 @@ export function FundingComponentCompany({ companyUsername }) {
 					<Grid item xs={12} md={6}>
 						<Typography variant="body1" gutterBottom>
 							<strong>Total Amount Required:</strong> $
-							{fundingData.totalAmount.toLocaleString()}
+							{fundingData.fundingAmount.toLocaleString()}
 						</Typography>
 						<Typography variant="body1" gutterBottom>
-							<strong>Total Equity Offered:</strong> {fundingData.totalEquity}%
+							<strong>Total Equity Offered:</strong>{" "}
+							{fundingData.equityPercentage}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Remaining Equity:</strong> {fundingData.remainingEquity}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Portions Available:</strong>{" "}
-							{fundingData.remainingPortions} out of {fundingData.portions}
+							{fundingData.remainingPortions} out of {fundingData.totalPortions}
 						</Typography>
 					</Grid>
 				</Grid>

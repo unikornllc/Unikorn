@@ -37,7 +37,7 @@ export function FundingComponent({ companyUsername }) {
 					withCredentials: true,
 				},
 			);
-			setFundingData(response.data);
+			setFundingData(response.data.activeFundraising);
 		} catch (err) {
 			console.error("Error fetching:", err);
 		}
@@ -102,10 +102,11 @@ export function FundingComponent({ companyUsername }) {
 					<Grid item xs={12} md={6}>
 						<Typography variant="body1" gutterBottom>
 							<strong>Total Amount Required:</strong> $
-							{fundingData.totalAmount.toLocaleString()}
+							{fundingData.fundingAmount.toLocaleString()}
 						</Typography>
 						<Typography variant="body1" gutterBottom>
-							<strong>Total Equity Offered:</strong> {fundingData.totalEquity}%
+							<strong>Total Equity Offered:</strong>{" "}
+							{fundingData.equityPercentage}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Remaining Equity:</strong> {fundingData.remainingEquity}%
