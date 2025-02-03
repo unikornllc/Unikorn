@@ -47,7 +47,7 @@ export default function MyInvestmentsPage() {
 					withCredentials: true,
 				},
 			);
-			setInvestments(response.data);
+			setInvestments(response.data.investments);
 		} catch (error) {
 			console.error("Error fetching investments:", error);
 		}
@@ -61,7 +61,7 @@ export default function MyInvestmentsPage() {
 					withCredentials: true,
 				},
 			);
-			setInvestmentOffers(response.data);
+			setInvestmentOffers(response.data.offers);
 		} catch (error) {
 			console.error("Error fetching investment offers:", error);
 		}

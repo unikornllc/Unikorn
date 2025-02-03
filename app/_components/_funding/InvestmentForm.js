@@ -99,7 +99,7 @@ export function InvestmentForm({ mode, fundingData }) {
 						`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
 						{
 							walletBalance: user.walletBalance,
-							raisingFundsId: fundingData.raisingFundsId,
+							raisingFundsId: fundingData.id,
 							portions: partsToInvest,
 						},
 						{
@@ -120,7 +120,7 @@ export function InvestmentForm({ mode, fundingData }) {
 						`${process.env.NEXT_PUBLIC_SERVER}/investments/negotiatePrice`,
 						{
 							walletBalance: user.walletBalance,
-							raisingFundsId: fundingData.raisingFundsId,
+							raisingFundsId: fundingData.id,
 							portions: partsToInvest,
 							offeredPricePerPortion: offeredPricePerPart,
 						},

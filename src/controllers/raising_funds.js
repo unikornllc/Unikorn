@@ -9,7 +9,7 @@ export const getActiveRaisingFunds = async (req, res) => {
 			},
 		});
 		if (!fundraisings) {
-			res.status(200).json({ message: "No active fundraising found" });
+			return res.status(200).json({ message: "No active fundraising found" });
 		}
 		fundraisings.forEach((fundraising) => {
 			const fundedPortions =
@@ -26,7 +26,7 @@ export const getActiveRaisingFunds = async (req, res) => {
 			fundraising.fundedPortions = fundedPortions;
 			fundraising.fundedPercentage = fundedPercentage;
 		});
-		res.status(200).json(fundraisings);
+		res.status(200).json({ fundraisings });
 	} catch (e) {
 		res.status(400).json({ message: "Failed to retrieve" });
 	}
@@ -50,7 +50,7 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 			},
 		});
 		if (!fundraising) {
-			res.status(200).json({ message: "No active fundraising found" });
+			return res.status(200).json({ message: "No active fundraising found" });
 		}
 		const fundedPortions =
 			fundraising.totalPortions - fundraising.remainingPortions;
@@ -64,26 +64,114 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 		).toFixed(1);
 
 		res.status(200).json({
-			raisingFundsId: fundraising.id,
-			companyUsername: fundraising.company.username,
-			companyName: fundraising.company.name,
-			totalAmount: fundraising.fundingAmount,
-			totalEquity: fundraising.equityPercentage,
-			remainingEquity: remainingEquity,
-			remainingPortions: fundraising.remainingPortions,
-			pricePerPortion: fundraising.pricePerPortion,
-			portions: fundraising.totalPortions,
-			portionAmount: fundraising.fundingAmount / fundraising.totalPortions,
-			portionEquity: fundraising.equityPercentage / fundraising.totalPortions,
-			fundedPortions,
-			fundedPercentage,
-			totalPortions: fundraising.totalPortions,
+			activeFundraising: {
+				id: fundraising.id,
+				companyUsername: fundraising.company.username,
+				companyName: fundraising.company.name,
+				portionAmount: fundraising.fundingAmount / fundraising.totalPortions,
+				portionEquity: fundraising.equityPercentage / fundraising.totalPortions,
+				fundedPortions,
+				fundedPercentage,
+				remainingEquity,
+				...fundraising,
+			},
 		});
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Failed to retrieve" });
 	}
 };
+
+export const getCompanyPendingRaisingFund = async (req, res) => {
+	try {
+		if (req.decodedUser.role != "Company") {
+			return res.status(401).json({ message: "Unauthorized action" });
+		}
+
+		const fundraising = await prisma.raising_Funds.findFirst({
+			where: { status: "Pending", company: { id: req.decodedUser.id } },
+			include: {
+				company: true,
+			},
+		});
+
+		if (!fundraising) {
+			return res.status(200).json({ message: "No pending fundraising found" });
+		}
+		res.status(200).json({
+			pendingFundraising: {
+				companyUsername: fundraising.company.username,
+				companyName: fundraising.company.name,
+				...fundraising,
+			},
+		});
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Failed to retrieve" });
+	}
+};
+
+export const getCompanyPastRaisingFunds = async (req, res) => {
+	try {
+		if (req.decodedUser.role != "Company") {
+			return res.status(401).json({ message: "Unauthorized action" });
+		}
+
+		const pastFundraisings = await prisma.raising_Funds.findMany({
+			where: {
+				status: {
+					notIn: ["Pending", "Active"],
+				},
+				company: { id: req.decodedUser.id },
+			},
+			include: {
+				company: true,
+			},
+		});
+
+		if (!pastFundraisings || pastFundraisings.length == 0) {
+			return res.status(200).json({ message: "No past fundraising found" });
+		}
+		res.status(200).json({ pastFundraisings });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Failed to retrieve" });
+	}
+};
+
+export const getRaisingFundFundraisers = async (req, res) => {
+	try {
+		console.log();
+		const { raisingFundsId } = req.query;
+		if (!raisingFundsId) {
+			return res.status(400).json({ message: "Missing required fields" });
+		}
+		if (req.decodedUser.role != "Company") {
+			return res.status(401).json({ message: "Unauthorized action" });
+		}
+		const fundraisers = await prisma.fundraiser.findMany({
+			where: {
+				raisingFundsId,
+				raisingFunds: {
+					companyId: req.decodedUser.id,
+				},
+			},
+			include: {
+				investorUser: true,
+				investorCompany: true,
+			},
+		});
+
+		if (!fundraisers || fundraisers.length == 0) {
+			return res.status(200).json({ message: "No fundraisers found" });
+		}
+		res.status(200).json({ fundraisers });
+	} catch (error) {
+		console.error("Error fetching fundraisers:", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};
+
 export const cancelInvestment = async (req, res) => {
 	const { fundraiserId } = req.body;
 
@@ -101,10 +189,9 @@ export const cancelInvestment = async (req, res) => {
 		}
 
 		if (
-			fundraiser.investorType !== investorType ||
-			(investorType === "User" && fundraiser.investorUserId !== investorId) ||
-			(investorType === "Company" &&
-				fundraiser.investorCompanyId !== investorId)
+			fundraiser.investorType != investorType ||
+			(investorType == "User" && fundraiser.investorUserId != investorId) ||
+			(investorType == "Company" && fundraiser.investorCompanyId != investorId)
 		) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
@@ -166,7 +253,7 @@ export const investAtFixedPrice = async (req, res) => {
 				.json({ message: "Fundraising campaign not found" });
 		}
 
-		if (fundraising.status !== "Active") {
+		if (fundraising.status != "Active") {
 			return res
 				.status(400)
 				.json({ message: "Fundraising campaign is not active" });
@@ -188,7 +275,7 @@ export const investAtFixedPrice = async (req, res) => {
 			const existingFundraiser = await prisma.fundraiser.findFirst({
 				where: {
 					raisingFundsId,
-					...(investorType === "User"
+					...(investorType == "User"
 						? { investorUserId: investorId }
 						: { investorCompanyId: investorId }),
 				},
@@ -217,7 +304,7 @@ export const investAtFixedPrice = async (req, res) => {
 						date: new Date(),
 						status: "Pending",
 						envelopeId: "",
-						...(investorType === "User"
+						...(investorType == "User"
 							? { investorUser: { connect: { id: investorId } } }
 							: { investorCompany: { connect: { id: investorId } } }),
 					},
@@ -250,9 +337,8 @@ export const makeInvestmentOffer = async (req, res) => {
 	const { raisingFundsId, portions, offeredPricePerPortion, walletBalance } =
 		req.body;
 	const investorType = req.decodedUser.role;
-
 	const investorId = req.decodedUser.id;
-	console.log(investorType);
+
 	if (!raisingFundsId || !portions || !offeredPricePerPortion) {
 		return res.status(400).json({ message: "Missing required fields" });
 	}
@@ -268,7 +354,7 @@ export const makeInvestmentOffer = async (req, res) => {
 				.json({ message: "Fundraising campaign not found" });
 		}
 
-		if (fundraising.status !== "Active") {
+		if (fundraising.status != "Active") {
 			return res
 				.status(400)
 				.json({ message: "Fundraising campaign is not active" });
@@ -336,7 +422,7 @@ export const getMyInvestments = async (req, res) => {
 			},
 		});
 
-		res.json(investments);
+		res.json({ investments });
 	} catch (error) {
 		console.error("Error fetching investments:", error);
 		res.status(500).json({ message: "Internal server error" });
@@ -382,6 +468,9 @@ export const getMyInvestmentOffers = async (req, res) => {
 				...(investorType == "User"
 					? { investorUserId: investorId }
 					: { investorCompanyId: investorId }),
+				raisingFunds: {
+					status: "Active"
+				},
 			},
 			include: {
 				raisingFunds: {
@@ -392,7 +481,7 @@ export const getMyInvestmentOffers = async (req, res) => {
 			},
 		});
 
-		res.status(200).json(offers);
+		res.status(200).json({ offers });
 	} catch (error) {
 		console.error("Error fetching investment offers:", error);
 		res.status(400).json({ message: "Internal server error" });
@@ -411,6 +500,7 @@ export const getFundingInvestmentOffers = async (req, res) => {
 			where: {
 				raisingFunds: {
 					companyId: req.decodedUser.id,
+					status: "Active"
 				},
 			},
 			include: {
@@ -420,14 +510,14 @@ export const getFundingInvestmentOffers = async (req, res) => {
 			},
 		});
 
-		res.status(200).json(offers);
+		res.status(200).json({ offers });
 	} catch (error) {
 		console.error("Error fetching investment offers:", error);
 		res.status(400).json({ message: "Internal server error" });
 	}
 };
 export const acceptInvestmentOffer = async (req, res) => {
-	if (req.decodedUser.role !== "Company") {
+	if (req.decodedUser.role != "Company") {
 		return res
 			.status(401)
 			.json({ message: "Only companies can accept investment offers" });
@@ -445,11 +535,11 @@ export const acceptInvestmentOffer = async (req, res) => {
 			return res.status(404).json({ message: "Offer not found" });
 		}
 
-		if (offer.raisingFunds.companyId !== req.decodedUser.id) {
+		if (offer.raisingFunds.companyId != req.decodedUser.id) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
-		if (offer.status !== "Pending") {
+		if (offer.status != "Pending") {
 			return res.status(400).json({ message: "Cannot accept this offer" });
 		}
 
@@ -469,7 +559,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 			const existingFundraiser = await prisma.fundraiser.findFirst({
 				where: {
 					raisingFundsId: offer.raisingFundsId,
-					...(offer.investorType === "User"
+					...(offer.investorType == "User"
 						? { investorUserId: offer.investorUserId }
 						: { investorCompanyId: offer.investorCompanyId }),
 				},
@@ -498,7 +588,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 						date: new Date(),
 						status: "Pending",
 						envelopeId: "",
-						...(offer.investorType === "User"
+						...(offer.investorType == "User"
 							? { investorUser: { connect: { id: offer.investorUserId } } }
 							: {
 									investorCompany: { connect: { id: offer.investorCompanyId } },
@@ -592,9 +682,9 @@ export const cancelInvestmentOffer = async (req, res) => {
 		}
 
 		if (
-			offer.investorType !== investorType ||
-			(investorType === "User" && offer.investorUserId !== investorId) ||
-			(investorType === "Company" && offer.investorCompanyId !== investorId)
+			offer.investorType != investorType ||
+			(investorType == "User" && offer.investorUserId != investorId) ||
+			(investorType == "Company" && offer.investorCompanyId != investorId)
 		) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
@@ -623,7 +713,7 @@ export const cancelRaisingFunds = async (req, res) => {
 	console.log(data);
 
 	try {
-		if (userRole !== "Company") {
+		if (userRole != "Company") {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
@@ -634,7 +724,7 @@ export const cancelRaisingFunds = async (req, res) => {
 			},
 		});
 
-		if (activeFunds.length === 0) {
+		if (activeFunds.length == 0) {
 			return res.status(404).json({ message: "No active raising funds found" });
 		}
 

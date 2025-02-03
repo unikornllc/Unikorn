@@ -157,6 +157,9 @@ import {
 	cancelInvestmentOffer,
 	cancelRaisingFunds,
 	cancelInvestment,
+	getCompanyPendingRaisingFund,
+	getCompanyPastRaisingFunds,
+	getRaisingFundFundraisers,
 } from "./controllers/raising_funds.js";
 
 const router = Router();
@@ -291,6 +294,10 @@ router.put("/calendly/settings", updateCalendlySettings);
 //raising_funds and investments offers
 router.get("/raisingFunds/active", getActiveRaisingFunds);
 router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
+router.get("/raisingFunds/company/pending", getCompanyPendingRaisingFund);
+router.get("/raisingFunds/company/past", getCompanyPastRaisingFunds);
+router.get("/raisingFunds/fundraisers", getRaisingFundFundraisers);
+
 router.get("/raisingFunds/offers", getFundingInvestmentOffers);
 router.post("/raisingFunds/offer/accept", acceptInvestmentOffer);
 router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
