@@ -161,6 +161,7 @@ import {
 	getCompanyPastRaisingFunds,
 	getRaisingFundFundraisers,
 } from "./controllers/raising_funds.js";
+import { depositWallet, withdrawWallet } from "./controllers/wallet.js";
 
 const router = Router();
 
@@ -202,6 +203,10 @@ router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
 router.get("/getTier", getTier);
 router.put("/updateTier", updateTier);
+
+//wallet
+router.put("/depositWallet", depositWallet);
+router.put("/widthrawWallet", withdrawWallet);
 
 //get followers and following returns an array of usernames
 router.get("/getFollowers", getFollowers);
