@@ -18,6 +18,11 @@ export const createUser = async (req, res) => {
 				password: hashedPassword,
 				description: userData.description || "",
 				title: userData.title,
+				wallet: {
+					create: {
+						amount: 0.0,
+					},
+				},
 			},
 		});
 

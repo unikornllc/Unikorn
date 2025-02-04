@@ -59,6 +59,27 @@ model User {
   logindevices           LoginDevices[]
   fundraiser             Fundraiser[]             @relation("UserInvestments")
   investmentOffers       InvestmentOffer[]        @relation("UserOffers")
+  wallet                 Wallet?                  @relation("Wallet")
+  sentTransactions       Transaction[]            @relation("SentTransactions")
+  receivedTransactions   Transaction[]            @relation("ReceivedTransactions")
+}
+
+model Wallet {
+  id         String   @id @default(uuid())
+  userId     String   @unique 
+  amount     Float    @default(0.0)
+  createdAt  DateTime @default(now())
+  user       User     @relation("Wallet", fields: [userId], references: [id])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  amount      Float
+  createdAt   DateTime @default(now())
+  sender      User     @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
 }
 
 model Expertise {
