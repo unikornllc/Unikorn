@@ -39,8 +39,31 @@ model Company_Profile {
   raising_Funds       Raising_Funds[]
   fundraiser          Fundraiser[]       @relation("CompanyInvestments")
   investmentOffers    InvestmentOffer[]   @relation("CompanyOffers")
+  wallet              companyWallet?         @relation("CompanyWallet")
+  userInvestmentsTransactions    userToCompanyTransactions[]    @relation("CompanyTransactions")
+  companyTransactions companyToCompanyTransactions[] @relation("SentTransactions")
+  receivedTransactions companyToCompanyTransactions[] @relation("ReceivedTransactions")
 }
 
+model companyWallet {
+  id         String   @id @default(uuid())
+  companyId  String   @unique 
+  amount     Float    @default(0.0)
+  onHold     Float    @default(0.0)
+  createdAt  DateTime @default(now())
+  company    Company_Profile  @relation("CompanyWallet", fields: [companyId], references: [id])
+}
+
+model companyToCompanyTransactions {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId   String
+  amount      Float
+  status      Status   @default(pending)
+  createdAt   DateTime @default(now())
+  sender      Company_Profile  @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver    Company_Profile  @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+}
 
 model Founder {
   id               String          @id @default(uuid())
