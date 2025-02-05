@@ -208,7 +208,7 @@ const ManageSub = ({ tier, wallet }) => {
 						isOpen={showWallet}
 						onRequestClose={() => setShowWallet(false)}
 						contentLabel="Manage Wallet"
-						className="z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-lg mx-auto relative" // Increased width
+						className="z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-lg mx-auto relative"
 						overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
 						ariaHideApp={false}
 					>

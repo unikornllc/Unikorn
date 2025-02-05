@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const depositWallet = async (req, res) => {
 	try {
-		await prisma.wallet.update({
+		await prisma.userWallet.update({
 			where: {
 				userId: req.decodedUser.id,
 			},
@@ -20,7 +20,7 @@ export const depositWallet = async (req, res) => {
 
 export const withdrawWallet = async (req, res) => {
 	try {
-		const wallet = await prisma.wallet.findUnique({
+		const wallet = await prisma.userWallet.findUnique({
 			where: {
 				userId: req.decodedUser.id,
 			},
