@@ -25,32 +25,7 @@ const ManageSub = ({ tier, wallet }) => {
 	const [depositAmount, setDepositAmount] = useState("");
 	const [withdrawAmount, setWithdrawAmount] = useState("");
 	const [result, setResult] = useState(null);
-	const [following, setFollowing] = useState([]);
-	const [transactionSuccess, setTransactionSuccess] = useState(false);
-	const [selectedUser, setSelectedUser] = useState("");
-	const [sendAmount, setSendAmount] = useState("");
 
-	useEffect(() => {
-		const fetchFollowing = async () => {
-			try {
-				const res = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/getFollowing`,
-					{
-						withCredentials: true,
-					},
-				);
-				console.log(res.data);
-				setFollowing(res.data);
-			} catch (err) {
-				console.error(err);
-			}
-		};
-		fetchFollowing();
-	}, []);
-
-	const handleSend = async () => {
-		//handle send money
-	};
 	const handleDeposit = async () => {
 		try {
 			await axios.put(
@@ -119,6 +94,10 @@ const ManageSub = ({ tier, wallet }) => {
 				<p className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit">
 					Wallet: ${wallet.amount}
 				</p>
+				<p className="bg-gray-700 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit mt-2">
+					On Hold: ${wallet.onHold}
+				</p>
+
 				<button
 					className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
 					onClick={() => setShowModal(true)}
@@ -228,7 +207,6 @@ const ManageSub = ({ tier, wallet }) => {
 								<Tab label="Deposit" />
 								<Tab label="Withdraw" />
 								<Tab label="Transactions" />
-								<Tab label="Send" />
 							</Tabs>
 							{tabValue === 0 && (
 								<Box sx={{ mt: 3 }}>
@@ -333,79 +311,6 @@ const ManageSub = ({ tier, wallet }) => {
 											Close
 										</Button>
 									</Box>
-								</Box>
-							)}
-							{tabValue === 3 && (
-								<Box sx={{ mt: 3 }}>
-									<Typography variant="h6">Send Money</Typography>
-									<FormControl fullWidth margin="normal">
-										<InputLabel>Select User</InputLabel>
-										<Select
-											value={selectedUser}
-											onChange={(e) => setSelectedUser(e.target.value)}
-										>
-											{following.map((user, index) => (
-												<MenuItem key={index} value={user}>
-													{user}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-
-									<TextField
-										label="Amount"
-										type="number"
-										variant="outlined"
-										fullWidth
-										margin="normal"
-										value={sendAmount}
-										onChange={(e) => setSendAmount(e.target.value)}
-										error={sendAmount > wallet.amount}
-										helperText={
-											sendAmount > wallet.amount ? "Insufficient balance!" : ""
-										}
-									/>
-									<Box
-										sx={{
-											display: "flex",
-											justifyContent: "space-between",
-											mt: 2,
-										}}
-									>
-										<Button
-											variant="contained"
-											color="primary"
-											onClick={handleSend}
-											disabled={
-												!selectedUser ||
-												sendAmount > wallet.amount ||
-												sendAmount <= 0
-											}
-										>
-											Send
-										</Button>
-										<Button
-											variant="contained"
-											color="error"
-											onClick={() => setShowWallet(false)}
-										>
-											Close
-										</Button>
-									</Box>
-
-									{transactionSuccess && (
-										<Typography
-											variant="body2"
-											sx={{
-												mt: 2,
-												color: "green",
-												textAlign: "center",
-												fontWeight: "bold",
-											}}
-										>
-											Money sent successfully to {selectedUser}!
-										</Typography>
-									)}
 								</Box>
 							)}
 						</Box>

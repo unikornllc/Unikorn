@@ -21,6 +21,7 @@ export const createUser = async (req, res) => {
 				wallet: {
 					create: {
 						amount: 0.0,
+						onHold: 0.0,
 					},
 				},
 			},

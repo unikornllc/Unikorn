@@ -44,14 +44,6 @@ export const withdrawWallet = async (req, res) => {
 	}
 };
 
-// export const sendTransaction = async (req, res) => {
-// 	try {
-// 		res.status(200).json({ message: "Transaction successful" });
-// 	} catch (err) {
-// 		console.error(err);
-// 	}
-// };
-
 export const getTransactionHistory = async (req, res) => {
 	try {
 		const transactions = await prisma.user.findUnique({
@@ -64,6 +56,19 @@ export const getTransactionHistory = async (req, res) => {
 			},
 		});
 		res.status(200).json(transactions);
+	} catch (err) {
+		console.error(err);
+	}
+};
+
+export const getUserWallet = async (req, res) => {
+	try {
+		const wallet = await prisma.userWallet.findUnique({
+			where: {
+				userId: req.decodedUser.id,
+			},
+		});
+		res.status(200).json(wallet.amount);
 	} catch (err) {
 		console.error(err);
 	}
