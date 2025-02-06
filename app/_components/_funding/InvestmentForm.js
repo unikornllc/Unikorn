@@ -28,7 +28,7 @@ export function InvestmentForm({ mode, fundingData }) {
 	const [offeredPricePerPart, setOfferedPricePerPart] = useState(
 		fundingData.pricePerPortion,
 	);
-	const [user, setUser] = useState({ walletBalance: 100000 });
+	const [user, setUser] = useState({ walletBalance: "loading..." });
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [openErrorDialog, setOpenErrorDialog] = useState(false);
   
@@ -50,9 +50,24 @@ export function InvestmentForm({ mode, fundingData }) {
 	//     }
 	//   };
 
-	//   useEffect(() => {
-	//     fetchUser();
-	//   }, []);
+	const fetchWallet = async () => {
+		try {
+			const response = await axios.get(
+				`${process.env.NEXT_PUBLIC_SERVER}/getUserWallet`,
+				{
+					withCredentials: true,
+				},
+			);
+			console.log("Wallet response:", response.data);
+			setUser({ walletBalance: response.data });
+		} catch (err) {
+			console.error("Error fetching wallet:", err);
+		}
+	};
+
+	useEffect(() => {
+		fetchWallet();
+	}, []);
 
 	const maxPartsByEquity = Math.floor(
 		fundingData.remainingEquity / fundingData.portionEquity,
@@ -98,7 +113,6 @@ export function InvestmentForm({ mode, fundingData }) {
 					.post(
 						`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
 						{
-							walletBalance: user.walletBalance,
 							raisingFundsId: fundingData.id,
 							portions: partsToInvest,
 						},

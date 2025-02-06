@@ -259,9 +259,7 @@ export default function MyInvestmentsPage() {
 										<TableCell>
 											${offer.offeredPricePerPortion.toFixed(1)}
 										</TableCell>
-										<TableCell>
-											${offer.totalOfferedPrice.toFixed(1)}
-										</TableCell>
+										<TableCell>${offer.totalOfferedPrice.toFixed(1)}</TableCell>
 										<TableCell>{offer.status}</TableCell>
 										<TableCell>
 											{new Date(offer.date).toLocaleDateString()}
@@ -302,9 +300,14 @@ export default function MyInvestmentsPage() {
 					<Typography>
 						Are you sure you want to cancel this{" "}
 						{actionType === "cancelInvestment"
-							? "investment"
-							: "investment offer"}
+							? "investment."
+							: "investment offer."}
 						?
+					</Typography>
+					<Typography component="p" className="text-center">
+						<span className="text-red-600 font-bold">
+							A 5% fee will be applied.
+						</span>
 					</Typography>
 				</DialogContent>
 				<DialogActions>

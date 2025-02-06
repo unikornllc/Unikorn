@@ -66,8 +66,6 @@ model User {
   fundraiser             Fundraiser[]             @relation("UserInvestments")
   investmentOffers       InvestmentOffer[]        @relation("UserOffers")
   wallet                 userWallet?                  @relation("Wallet")
-  sentTransactions       userTransactions[]            @relation("SentTransactions")
-  receivedTransactions   userTransactions[]            @relation("ReceivedTransactions")
   companyTransactions    userToCompanyTransactions[]    @relation("CompanyTransactions")
 }
 
@@ -78,16 +76,6 @@ model userWallet {
   onHold     Float    @default(0.0)
   createdAt  DateTime @default(now())
   user       User     @relation("Wallet", fields: [userId], references: [id])
-}
-model userTransactions {
-  id          String   @id @default(uuid())
-  senderId    String
-  receiverId  String
-  amount      Float
-  status      Status   @default(pending)
-  createdAt   DateTime @default(now())
-  sender      User     @relation("SentTransactions", fields: [senderId], references: [id])
-  receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
 }
 
 model userToCompanyTransactions {

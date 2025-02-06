@@ -16,6 +16,7 @@ export default async function CompanyProfile({ params }) {
 		financials: true,
 		activities: true,
 		raising_Funds: true,
+		wallet: true,
 	};
 
 	try {
@@ -39,6 +40,7 @@ export default async function CompanyProfile({ params }) {
 
 		if (!isCurrentCompany) {
 			try {
+				company.wallet = null;
 				await axios
 					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowingCompany`, {
 						params: { username: company.username },

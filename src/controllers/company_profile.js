@@ -22,6 +22,12 @@ export const createCompany = async (req, res) => {
 				board_members: companyData.board_members || [],
 				advisors: companyData.advisors || [],
 				founders: companyData.founders || [],
+				wallet: {
+					create: {
+						amount: 0.0,
+						onHold: 0.0,
+					},
+				},
 			},
 		});
 		res.status(200).json({

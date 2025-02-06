@@ -42,7 +42,6 @@ export default function CompanyDashboard() {
 
 	const fetchDashboardData = async () => {
 		try {
-			
 			// Fetch active fundraising
 			const activeResponse = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/active`,
@@ -86,10 +85,8 @@ export default function CompanyDashboard() {
 				setInvestmentOffers([]);
 				setFundraisers([]);
 			}
-
 		} catch (error) {
 			console.error("Error fetching dashboard data:", error);
-			
 		}
 	};
 
@@ -113,13 +110,13 @@ export default function CompanyDashboard() {
 	const handleConfirmAction = async () => {
 		setOpenConfirmDialog(false);
 		// if(actionType !== "cancelFundraising" && actionType !== "cancelPendingFundraising" ){
-			
+
 		// }
 		setHandlingItems((prevState) => ({
 			...prevState,
 			[selectedOffer.id]: true,
 		}));
-		try {		
+		try {
 			if (actionType === "accept") {
 				await axios.post(
 					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/offer/accept`,
@@ -286,9 +283,7 @@ export default function CompanyDashboard() {
 								<Box position="relative" display="inline-flex">
 									<CircularProgress
 										variant="determinate"
-										value={
-											activeFundraising.fundedPercentage
-										}
+										value={activeFundraising.fundedPercentage}
 										size={180}
 										thickness={4}
 										color="primary"
@@ -308,8 +303,7 @@ export default function CompanyDashboard() {
 											variant="h5"
 											component="div"
 											color="textPrimary"
-										>{`${(activeFundraising.fundedPercentage
-										)}%`}</Typography>
+										>{`${activeFundraising.fundedPercentage}%`}</Typography>
 										<Typography variant="body2" color="textSecondary">
 											Funded
 										</Typography>
@@ -337,8 +331,7 @@ export default function CompanyDashboard() {
 							</Grid>
 						</Grid>
 						<Box marginTop={2}>
-							{activeFundraising.fundedPercentage <
-								50 && (
+							{activeFundraising.fundedPercentage < 50 && (
 								<Button
 									variant="outlined"
 									color="error"
@@ -383,19 +376,19 @@ export default function CompanyDashboard() {
 						<TableBody>
 							{investmentOffers.map((offer) => (
 								<TableRow key={offer.id}>
-									<TableCell sx={{
-										maxWidth: 150,
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-									}}>
+									<TableCell
+										sx={{
+											maxWidth: 150,
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+										}}
+									>
 										{offer.investorType === "User"
 											? offer.investorUser?.name
 											: offer.investorCompany?.name}
 									</TableCell>
 									<TableCell>{offer.portions}</TableCell>
-									<TableCell>
-										${offer.offeredPricePerPortion}
-									</TableCell>
+									<TableCell>${offer.offeredPricePerPortion}</TableCell>
 									<TableCell>${offer.totalOfferedPrice}</TableCell>
 									<TableCell>
 										{new Date(offer.date).toLocaleDateString()}
@@ -412,11 +405,11 @@ export default function CompanyDashboard() {
 													sx={{ marginRight: 1 }}
 													disabled={handlingItems[offer.id]}
 												>
-												{handlingItems[offer.id] ? (
-													<CircularProgress size={24} color="inherit" />
-												) : (
-													"Accept"
-												)}
+													{handlingItems[offer.id] ? (
+														<CircularProgress size={24} color="inherit" />
+													) : (
+														"Accept"
+													)}
 												</Button>
 												<Button
 													variant="contained"
@@ -425,11 +418,11 @@ export default function CompanyDashboard() {
 													onClick={() => handleActionClick(offer, "reject")}
 													disabled={handlingItems[offer.id]}
 												>
-												{handlingItems[offer.id] ? (
-													<CircularProgress size={24} color="inherit" />
-												) : (
-													"Reject"
-												)}
+													{handlingItems[offer.id] ? (
+														<CircularProgress size={24} color="inherit" />
+													) : (
+														"Reject"
+													)}
 												</Button>
 											</div>
 										)}
@@ -491,7 +484,7 @@ export default function CompanyDashboard() {
 			>
 				<DialogTitle>Fundraisers</DialogTitle>
 				<DialogContent>
-					{fundraisers.length === 0 ? (
+					{fundraisers ? (
 						<Typography>No fundraisers found.</Typography>
 					) : (
 						<Table>
@@ -513,12 +506,8 @@ export default function CompanyDashboard() {
 												: fundraiser.investorCompany?.name}
 										</TableCell>
 										<TableCell>{fundraiser.portions}</TableCell>
-										<TableCell>
-											${fundraiser.pricePerPortion}
-										</TableCell>
-										<TableCell>
-											${fundraiser.fundingAmount}
-										</TableCell>
+										<TableCell>${fundraiser.pricePerPortion}</TableCell>
+										<TableCell>${fundraiser.fundingAmount}</TableCell>
 										<TableCell>{fundraiser.status}</TableCell>
 									</TableRow>
 								))}

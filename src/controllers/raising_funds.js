@@ -208,7 +208,6 @@ export const cancelInvestment = async (req, res) => {
 					.status(400)
 					.json({ message: "Cannot cancel this Investment" });
 			}
-
 			const dataToUpdate = {
 				fundingAmount:
 					Math.abs(
@@ -217,6 +216,14 @@ export const cancelInvestment = async (req, res) => {
 					) + fundraising.fundingAmount,
 				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
 			};
+
+			await prisma.userWallet.update({
+				where: { userId: investorId },
+				data: {
+					amount: { increment: fundraiser.fundingAmount * 0.95 },
+					onHold: { decrement: fundraiser.fundingAmount },
+				},
+			});
 
 			await prisma.fundraiser.delete({
 				where: { id: fundraiserId },
@@ -234,11 +241,14 @@ export const cancelInvestment = async (req, res) => {
 	}
 };
 export const investAtFixedPrice = async (req, res) => {
-	const { raisingFundsId, portions, walletBalance } = req.body;
+	const { raisingFundsId, portions } = req.body;
 	const investorType = req.decodedUser.role;
 	const investorId = req.decodedUser.id;
+	const walletBalance = await prisma.userWallet.findUnique({
+		where: { userId: investorId },
+	}).amount;
 
-	if (!raisingFundsId || !portions || !walletBalance) {
+	if (!raisingFundsId || !portions) {
 		return res.status(400).json({ message: "Missing required fields" });
 	}
 
@@ -314,6 +324,14 @@ export const investAtFixedPrice = async (req, res) => {
 				where: { id: raisingFundsId },
 				data: { remainingPortions: { decrement: portions } },
 			});
+			//this here only holds the money till they all sign the contracts
+			await prisma.userWallet.update({
+				where: { userId: investorId },
+				data: {
+					amount: { decrement: fundingAmount },
+					onHold: { increment: fundingAmount },
+				},
+			});
 			if (newRaisingFunds.remainingPortions == 0) {
 				await prisma.raising_Funds.update({
 					where: { id: offer.raisingFundsId },
@@ -334,8 +352,7 @@ export const investAtFixedPrice = async (req, res) => {
 };
 
 export const makeInvestmentOffer = async (req, res) => {
-	const { raisingFundsId, portions, offeredPricePerPortion, walletBalance } =
-		req.body;
+	const { raisingFundsId, portions, offeredPricePerPortion } = req.body;
 	const investorType = req.decodedUser.role;
 	const investorId = req.decodedUser.id;
 
@@ -344,6 +361,10 @@ export const makeInvestmentOffer = async (req, res) => {
 	}
 
 	try {
+		const walletBalance = await prisma.userWallet.findUnique({
+			where: { userId: investorId },
+		}).amount;
+
 		const fundraising = await prisma.raising_Funds.findUnique({
 			where: { id: raisingFundsId },
 		});
@@ -391,7 +412,13 @@ export const makeInvestmentOffer = async (req, res) => {
 				connect: { id: investorId },
 			};
 		}
-
+		await prisma.userWallet.update({
+			where: { userId: investorId },
+			data: {
+				amount: { decrement: totalOfferedPrice },
+				onHold: { increment: totalOfferedPrice },
+			},
+		});
 		await prisma.investmentOffer.create({ data: offerData });
 
 		res.status(200).json({ message: "Investment offer submitted" });
@@ -469,7 +496,7 @@ export const getMyInvestmentOffers = async (req, res) => {
 					? { investorUserId: investorId }
 					: { investorCompanyId: investorId }),
 				raisingFunds: {
-					status: "Active"
+					status: "Active",
 				},
 			},
 			include: {
@@ -500,7 +527,7 @@ export const getFundingInvestmentOffers = async (req, res) => {
 			where: {
 				raisingFunds: {
 					companyId: req.decodedUser.id,
-					status: "Active"
+					status: "Active",
 				},
 			},
 			include: {
@@ -608,6 +635,15 @@ export const acceptInvestmentOffer = async (req, res) => {
 					},
 				},
 			});
+
+			await prisma.userWallet.update({
+				where: { userId: offer.investorUserId },
+				data: {
+					amount: { decrement: offer.totalOfferedPrice },
+					onHold: { increment: offer.totalOfferedPrice },
+				},
+			});
+
 			if (newRaisingFunds.remainingPortions == 0) {
 				await prisma.raising_Funds.update({
 					where: { id: offer.raisingFundsId },
@@ -653,6 +689,14 @@ export const rejectInvestmentOffer = async (req, res) => {
 		if (offer.status != "Pending") {
 			return res.status(400).json({ message: "Cannot reject this offer" });
 		}
+
+		await prisma.userWallet.update({
+			where: { userId: offer.investorUserId },
+			data: {
+				amount: { increment: offer.totalOfferedPrice },
+				onHold: { decrement: offer.totalOfferedPrice },
+			},
+		});
 
 		await prisma.investmentOffer.update({
 			where: { id: offerId },
