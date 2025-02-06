@@ -8,7 +8,7 @@ export default async function UserProfile() {
 	let redirectPath = null;
 	try {
 		const res = await axios.get(
-			`${process.env.NEXT_PUBLIC_SERVER}/getCurrentUser`,
+			`${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
 			{
 				params: {},
 				headers: {

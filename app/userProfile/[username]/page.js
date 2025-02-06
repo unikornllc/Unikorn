@@ -24,7 +24,7 @@ export default async function UserProfile({ params }) {
 
 	try {
 		const res = await axios.get(
-			`${process.env.NEXT_PUBLIC_SERVER}/getOneUser`,
+			`${process.env.NEXT_PUBLIC_SERVER}/api/getOneUser`,
 			{
 				params: { username, include },
 				headers: {
@@ -38,7 +38,7 @@ export default async function UserProfile({ params }) {
 			try {
 				user.wallet = null;
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/isFollowing`, {
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
 						params: { username: user.username },
 						headers: {
 							cookie: cookie || "",
@@ -48,7 +48,7 @@ export default async function UserProfile({ params }) {
 						user.isFollowing = response.data.isFollowing;
 					});
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getTier`, {
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/getTier`, {
 						headers: {
 							cookie: cookie || "",
 						},

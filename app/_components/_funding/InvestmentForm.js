@@ -31,7 +31,7 @@ export function InvestmentForm({ mode, fundingData }) {
 	const [user, setUser] = useState({ walletBalance: 100000 });
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [openErrorDialog, setOpenErrorDialog] = useState(false);
-
+  
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 	const [snackbarMessage, setSnackbarMessage] = useState("");
 	const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
@@ -39,7 +39,7 @@ export function InvestmentForm({ mode, fundingData }) {
 	//   const fetchUser = async () => {
 	//     try {
 	//       const response = await axios.get(
-	//         `${process.env.NEXT_PUBLIC_SERVER}/getCurrentUser`,
+	//         `${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
 	//         {
 	//           withCredentials: true,
 	//         }

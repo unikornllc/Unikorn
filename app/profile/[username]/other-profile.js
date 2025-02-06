@@ -14,7 +14,7 @@ export default function OtherProfile({ username }) {
 	const handleSetSchedule = async () => {
 		try {
 			const slots = newSlots.split(",").map((slot) => slot.trim());
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/set_schedule`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/set_schedule`, {
 				email: userData.email,
 				availableSlots: slots,
 			});
@@ -35,7 +35,7 @@ export default function OtherProfile({ username }) {
 				return;
 			}
 
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/reserve_slot`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/reserve_slot`, {
 				target_email: userData.email,
 				requester_email: "current_user@example.com",
 				slot: selectedSlot,
@@ -56,7 +56,7 @@ export default function OtherProfile({ username }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
 					username,
 				},
@@ -77,7 +77,7 @@ export default function OtherProfile({ username }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
 					username,
 				},
@@ -98,7 +98,7 @@ export default function OtherProfile({ username }) {
 		const fetchUserData = async () => {
 			try {
 				const res = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/getOneUser`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getOneUser`,
 					{
 						params: { username },
 						withCredentials: true,
@@ -112,7 +112,7 @@ export default function OtherProfile({ username }) {
 		const following = async () => {
 			try {
 				const res = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/isFollowing`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`,
 					{
 						params: { username },
 						withCredentials: true,

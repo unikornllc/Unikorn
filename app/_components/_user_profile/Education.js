@@ -14,7 +14,7 @@ const Education = ({ username, educationList, editable }) => {
 	const addEducation = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createEducation`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createEducation`,
 				{
 					username,
 					...newEducation,
@@ -32,7 +32,7 @@ const Education = ({ username, educationList, editable }) => {
 	const removeEducation = async (educationId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteOneEducation`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteOneEducation`,
 				{
 					params: { educationId },
 					withCredentials: true,

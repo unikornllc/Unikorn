@@ -14,7 +14,7 @@ export default function ViewCompanyProfile({ company }) {
 	const handleSetSchedule = async () => {
 		try {
 			const slots = newSlots.split(",").map((slot) => slot.trim());
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/set_schedule`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/set_schedule`, {
 				email: userData.email,
 				availableSlots: slots,
 			});
@@ -35,7 +35,7 @@ export default function ViewCompanyProfile({ company }) {
 				return;
 			}
 
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/reserve_slot`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/reserve_slot`, {
 				target_email: userData.email,
 				requester_email: "current_user@example.com",
 				slot: selectedSlot,
@@ -56,7 +56,7 @@ export default function ViewCompanyProfile({ company }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/followCompany`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/followCompany`,
 				{
 					username: company.username,
 				},
@@ -76,7 +76,7 @@ export default function ViewCompanyProfile({ company }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/unfollowCompany`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowCompany`,
 				{
 					username: company.username,
 				},

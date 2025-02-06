@@ -91,7 +91,7 @@ const CalendlyEventTypes = () => {
 
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/calendly/createEventType`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/createEventType`,
 				eventData,
 				{
 					withCredentials: true,

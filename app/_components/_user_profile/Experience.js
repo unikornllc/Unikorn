@@ -35,7 +35,7 @@ const Experience = ({
 	const addCorporateExperience = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createCorporateExperience`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createCorporateExperience`,
 				{
 					username,
 					...newCorporateExp,
@@ -62,7 +62,7 @@ const Experience = ({
 	const removeCorporateExperience = async (experienceId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteCorporateExperience`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteCorporateExperience`,
 				{
 					params: { corporateExperienceId: experienceId },
 					withCredentials: true,
@@ -79,7 +79,7 @@ const Experience = ({
 	const addStartupExperience = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createStartupExperience`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createStartupExperience`,
 				{
 					username,
 					...newStartupExp,
@@ -105,7 +105,7 @@ const Experience = ({
 	const removeStartupExperience = async (experienceId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteStartupExperience`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteStartupExperience`,
 				{
 					params: { startupExperienceId: experienceId },
 					withCredentials: true,

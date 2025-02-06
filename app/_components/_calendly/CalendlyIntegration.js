@@ -10,7 +10,7 @@ const CalendlyIntegration = ({ user }) => {
 	const handleConnect = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/calendly/auth`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/auth`,
 				{
 					withCredentials: true,
 				},
@@ -29,7 +29,7 @@ const CalendlyIntegration = ({ user }) => {
 	const handleDisconnect = async () => {
 		try {
 			await axios
-				.delete(`${process.env.NEXT_PUBLIC_SERVER}/calendly/disconnect`, {
+				.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/disconnect`, {
 					withCredentials: true,
 				})
 				.then(setCalendlyIntegration(null));

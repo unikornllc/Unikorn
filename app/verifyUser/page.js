@@ -9,7 +9,7 @@ export default function Verify() {
 	const [loading, setLoading] = useState(true);
 	useEffect(() => {
 		axios
-			.get(`${process.env.NEXT_PUBLIC_SERVER}/verifyUser`, {
+			.get(`${process.env.NEXT_PUBLIC_SERVER}/api/verifyUser`, {
 				withCredentials: true,
 			})
 			.then((response) => setMessage(response.data))

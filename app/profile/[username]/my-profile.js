@@ -12,7 +12,7 @@ export default function MyProfile({ username }) {
 	const handleSetSchedule = async () => {
 		try {
 			const slots = newSlots.split(",").map((slot) => slot.trim());
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/set_schedule`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/set_schedule`, {
 				email: userData.email,
 				availableSlots: slots,
 			});
@@ -33,7 +33,7 @@ export default function MyProfile({ username }) {
 				return;
 			}
 
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/reserve_slot`, {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/reserve_slot`, {
 				target_email: userData.email,
 				requester_email: "current_user@example.com",
 				slot: selectedSlot,
@@ -54,7 +54,7 @@ export default function MyProfile({ username }) {
 		const fetchUserData = async () => {
 			try {
 				const res = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/getCurrentUser`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
 					{
 						withCredentials: true,
 					},

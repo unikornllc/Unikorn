@@ -1,5 +1,5 @@
 import prisma from "../db.js";
-import { hashPassword } from "./auth.js";
+import { hashPassword } from "../auth.js";
 
 export const createCompany = async (req, res) => {
 	try {

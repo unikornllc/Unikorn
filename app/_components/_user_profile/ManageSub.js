@@ -84,7 +84,7 @@ const ManageSub = ({ tier, wallet }) => {
 	const handleUpgrade = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/updateTier`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/updateTier`,
 				{ tier: "Pro" },
 				{
 					withCredentials: true,
@@ -100,7 +100,7 @@ const ManageSub = ({ tier, wallet }) => {
 	const handleDowngrade = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/updateTier`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/updateTier`,
 				{ tier: "Standard" },
 				{
 					withCredentials: true,

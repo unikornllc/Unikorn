@@ -9,7 +9,7 @@ const CalendlyWidget = ({ user }) => {
 		const fetchUser = async () => {
 			try {
 				const eventTypesResponse = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/calendly/eventType`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/eventType`,
 					{
 						withCredentials: true,
 					},

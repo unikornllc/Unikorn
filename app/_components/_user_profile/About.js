@@ -9,7 +9,7 @@ const About = ({ username, aboutList, editable }) => {
 	const handleSave = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/updateUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/updateUser`,
 				{ username, description: about.description },
 				{
 					withCredentials: true,

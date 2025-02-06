@@ -38,7 +38,7 @@ export default function Signup() {
 
 			try {
 				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/suggestUsername`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/suggestUsername`,
 					{ params: { email: formData.email, name: formData.name } },
 				);
 				console.log(response.data.username);
@@ -69,7 +69,7 @@ export default function Signup() {
 		}
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createUser`,
 				{ formData },
 				{ withCredentials: true },
 			);

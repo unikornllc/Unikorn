@@ -17,6 +17,54 @@ import ManageSub from "@/app/_components/_user_profile/ManageSub";
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
 
+
+	const handleFollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
+				{
+					followerUsername: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(true);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleUnfollow = async () => {
+		try {
+			setLoading(true);
+			const follow = await axios.put(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
+				{
+					followerUsername: user.username,
+				},
+				{
+					withCredentials: true,
+				},
+			);
+			setIsFollowing(false);
+			console.log(follow.data);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// useEffect(() => {
+	// 	console.log(editable);
+	// }, []);
+
+
 	if (!user)
 		return (
 			<div className="bg-gray-100 min-h-screen py-8">

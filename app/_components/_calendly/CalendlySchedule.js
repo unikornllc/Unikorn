@@ -9,7 +9,7 @@ const CalendlySchedule = ({ username }) => {
 		try {
 			console.log(username);
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/calendly/eventType`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/eventType`,
 				{
 					params: { username },
 					withCredentials: true,

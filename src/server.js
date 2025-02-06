@@ -6,7 +6,7 @@ import cors from "cors";
 import passport from "passport";
 import session from "express-session";
 import configurePassport from "./passport.js";
-import { protect } from "./controllers/auth.js";
+import { protect } from "./auth.js";
 import {
 	createUser,
 	verifyUser,
@@ -22,11 +22,11 @@ import {
 } from "./middlewares/signup.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { createJWT } from "./controllers/auth.js";
+import { ensureAuth, ensureGuest } from "./middlewares/auth.js";
+import { createJWT } from "./auth.js";
 import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
-import docusignRouter from "./docusign.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -84,13 +84,6 @@ app.get("/", (req, res, next) => {
 		next(new Error("hello"));
 	}, 1);
 });
-
-const cookieOptions = {
-	httpOnly: false,
-	secure: false,
-	maxAge: 24 * 60 * 60 * 1000,
-	sameSite: "lax",
-};
 
 // app.use(
 // 	session({
@@ -151,13 +144,54 @@ app.post(
 	confirmPassword,
 	createCompany,
 );
+
+import {
+	verifyRefreshToken,
+	verifyCredentialsIfNoRefreshToken,
+	verifyAccessToken,
+	verifyAccessTokenRoute,
+} from "./authentication/auth.js";
+import { handleNewDevice } from "./authentication/logindevice.js";
+import { generateRefreshTokenIfNeeded } from "./authentication/refreshtoken.js";
+import {
+	generateAccessTokenIfNeeded,
+	verifyRefreshTokenAndGenerateAccessToken,
+} from "./authentication/access.js";
+import {
+	resetPassword,
+	resetPasswordRequest,
+} from "./authentication/password_reset.js";
+
+app.post(
+	"/signin",
+	verifyRefreshToken,
+	handleNewDevice,
+	verifyCredentialsIfNoRefreshToken,
+	generateRefreshTokenIfNeeded,
+	verifyAccessToken,
+	generateAccessTokenIfNeeded,
+	(req, res) => {
+		res.status(200).json({ message: "Login Successful" });
+	},
+);
+
+app.use(
+	"/api",
+	verifyAccessTokenRoute,
+	verifyRefreshTokenAndGenerateAccessToken,
+	router,
+);
+
+app.post("/password-reset-request", resetPasswordRequest);
+app.post("/reset-password", resetPassword);
+
 app.get("/verifyUser", verifyUser);
-app.post("/signIn", verifiedUser, signIn);
+//app.post("/signIn", verifiedUser, signIn);
 app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
-app.use(docusignRouter);
-app.use(protect, router);
+
+//app.use(protect, router);
 
 //app.use(router);
 
@@ -262,4 +296,5 @@ io.on("connection", async (socket) => {
 		}
 	});
 });
+
 export default app;
