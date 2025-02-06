@@ -53,6 +53,8 @@ model Fundraiser {
   date               DateTime
   status             Contract_Status @default(Pending)
   envelopeId         String
+  @@unique([raisingFundsId, investorUserId, investorCompanyId])
+
 }
 
 model InvestmentOffer {

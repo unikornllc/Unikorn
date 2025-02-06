@@ -15,6 +15,7 @@ export default async function CompanyProfile({ params }) {
 		product_information: true,
 		financials: true,
 		activities: true,
+		raising_Funds: true,
 	};
 
 	try {
@@ -29,6 +30,13 @@ export default async function CompanyProfile({ params }) {
 		);
 		const isCurrentCompany = res.data.isCurrentCompany;
 		const company = res.data.company;
+		for (let i = 0; i < company.raising_Funds.length; ++i) {
+			if (company.raising_Funds[i].status == "Active") {
+				company.activeFund = true;
+				break;
+			}
+		}
+
 		if (!isCurrentCompany) {
 			try {
 				await axios

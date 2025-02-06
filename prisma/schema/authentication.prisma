@@ -33,3 +33,4 @@ model BlacklistedPasswordToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+

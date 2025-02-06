@@ -17,6 +17,7 @@ import ManageSub from "@/app/_components/_user_profile/ManageSub";
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
 
+
 	const handleFollow = async () => {
 		try {
 			setLoading(true);
@@ -63,6 +64,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 	// 	console.log(editable);
 	// }, []);
 
+
 	if (!user)
 		return (
 			<div className="bg-gray-100 min-h-screen py-8">
@@ -89,7 +91,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
-					<ManageSub tier={user.tier} />
+					<ManageSub tier={user.tier} wallet={user.wallet} />
 					{user.calendly_integration && (
 						<CalendlyEventTypes></CalendlyEventTypes>
 					)}

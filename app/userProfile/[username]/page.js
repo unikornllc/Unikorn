@@ -19,6 +19,7 @@ export default async function UserProfile({ params }) {
 		language: true,
 		social_media: true,
 		calendly_integration: true,
+		wallet: true,
 	};
 
 	try {
@@ -35,6 +36,7 @@ export default async function UserProfile({ params }) {
 		const user = res.data.user;
 		if (!isCurrentUser) {
 			try {
+				user.wallet = null;
 				await axios
 					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
 						params: { username: user.username },

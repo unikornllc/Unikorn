@@ -11,35 +11,48 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
+	Snackbar,
+	CircularProgress,
 } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PercentIcon from "@mui/icons-material/Percent";
+import MuiAlert from "@mui/material/Alert";
 import { styled } from "@mui/system";
 
 const FormBox = styled(Box)(({ theme }) => ({
 	marginTop: theme.spacing(4),
 }));
 
-export function InvestmentForm({ fundingData }) {
+export function InvestmentForm({ mode, fundingData }) {
 	const [partsToInvest, setPartsToInvest] = useState(1);
-	const [user, setUser] = useState({ walletBalance: 2000 });
+	const [offeredPricePerPart, setOfferedPricePerPart] = useState(
+		fundingData.pricePerPortion,
+	);
+	const [user, setUser] = useState({ walletBalance: 100000 });
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [openErrorDialog, setOpenErrorDialog] = useState(false);
+  
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const [snackbarMessage, setSnackbarMessage] = useState("");
+	const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	//   const fetchUser = async () => {
+	//     try {
+	//       const response = await axios.get(
+	//         `${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
+	//         {
+	//           withCredentials: true,
+	//         }
+	//       );
+	//       setUser(response.data);
+	//     } catch (err) {
+	//       console.error("Error fetching user:", err);
+	//     }
+	//   };
 
-	const fetchUser = async () => {
-		try {
-			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
-				{
-					withCredentials: true,
-				},
-			);
-			return response.data;
-		} catch (err) {
-			console.error("Error fetching user Certifications:", err);
-		}
-	};
-	useEffect(() => {}, []);
+	//   useEffect(() => {
+	//     fetchUser();
+	//   }, []);
 
 	const maxPartsByEquity = Math.floor(
 		fundingData.remainingEquity / fundingData.portionEquity,
@@ -53,7 +66,10 @@ export function InvestmentForm({ fundingData }) {
 		2,
 	);
 
-	const totalInvestment = partsToInvest * fundingData.portionAmount;
+	const totalInvestment =
+		mode === "invest"
+			? partsToInvest * fundingData.pricePerPortion
+			: partsToInvest * offeredPricePerPart;
 
 	const handleInvestment = () => {
 		if (!user) {
@@ -73,33 +89,59 @@ export function InvestmentForm({ fundingData }) {
 		}
 	};
 
-	const handleConfirmInvestment = () => {
+	const handleConfirmInvestment = async () => {
 		setOpenConfirmDialog(false);
-
-		fetch(`/api/companies/${companyUsername}/invest`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ userId: user.id, parts: partsToInvest }),
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error("Investment failed");
-				}
-				return response.json();
-			})
-			.then((data) => {
-				alert("Investment successful!");
-				setUser((prevUser) => ({
-					...prevUser,
-					walletBalance: prevUser.walletBalance - totalInvestment,
-				}));
-			})
-			.catch((error) => {
-				console.error("Error:", error);
-				alert("Investment failed.");
-			});
+		setIsSubmitting(true);
+		try {
+			if (mode === "invest") {
+				await axios
+					.post(
+						`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
+						{
+							walletBalance: user.walletBalance,
+							raisingFundsId: fundingData.id,
+							portions: partsToInvest,
+						},
+						{
+							withCredentials: true,
+						},
+					)
+					.then(() => {
+						setSnackbarMessage("Investment successful!");
+						setSnackbarSeverity("success");
+						setUser((prevUser) => ({
+							...prevUser,
+							walletBalance: prevUser.walletBalance - totalInvestment,
+						}));
+					});
+			} else if (mode === "offer") {
+				await axios
+					.post(
+						`${process.env.NEXT_PUBLIC_SERVER}/investments/negotiatePrice`,
+						{
+							walletBalance: user.walletBalance,
+							raisingFundsId: fundingData.id,
+							portions: partsToInvest,
+							offeredPricePerPortion: offeredPricePerPart,
+						},
+						{
+							withCredentials: true,
+						},
+					)
+					.then(() => {
+						setSnackbarMessage("Investment offer submitted!");
+						setSnackbarSeverity("success");
+					});
+			}
+			setSnackbarOpen(true);
+		} catch (error) {
+			console.error("Error:", error);
+			setSnackbarMessage("Transaction failed. Please try again.");
+			setSnackbarSeverity("error");
+			setSnackbarOpen(true); // Show error Snackbar
+		} finally {
+			setIsSubmitting(false); // Stop loading indicator
+		}
 	};
 
 	const handleCloseConfirmDialog = () => {
@@ -113,7 +155,9 @@ export function InvestmentForm({ fundingData }) {
 	return (
 		<FormBox>
 			<Typography variant="h6" gutterBottom>
-				Invest in this Company
+				{mode === "invest"
+					? "Invest at Fixed Price"
+					: "Make an Investment Offer"}
 			</Typography>
 			<TextField
 				label="Number of Parts to Invest"
@@ -125,9 +169,7 @@ export function InvestmentForm({ fundingData }) {
 					},
 					startAdornment: (
 						<InputAdornment position="start">
-							<IconButton disabled>
-								<PercentIcon />
-							</IconButton>
+							<IconButton disabled></IconButton>
 						</InputAdornment>
 					),
 				}}
@@ -146,6 +188,36 @@ export function InvestmentForm({ fundingData }) {
 				fullWidth
 				margin="normal"
 			/>
+			{mode === "offer" && (
+				<TextField
+					label="Offered Price Per Part"
+					type="number"
+					InputProps={{
+						inputProps: {
+							min: 1,
+						},
+						startAdornment: (
+							<InputAdornment position="start">
+								<IconButton disabled>
+									<AttachMoneyIcon />
+								</IconButton>
+							</InputAdornment>
+						),
+					}}
+					value={offeredPricePerPart}
+					onChange={(e) => {
+						const value = parseFloat(e.target.value);
+						if (value < 1 || isNaN(value)) {
+							setOfferedPricePerPart(1);
+						} else {
+							setOfferedPricePerPart(value);
+						}
+					}}
+					variant="outlined"
+					fullWidth
+					margin="normal"
+				/>
+			)}
 			<Typography variant="body1" gutterBottom>
 				Total Investment: ${totalInvestment.toLocaleString()}
 			</Typography>
@@ -162,7 +234,7 @@ export function InvestmentForm({ fundingData }) {
 				color="primary"
 				onClick={handleInvestment}
 				size="large"
-				disabled={!user}
+				disabled={!user || isSubmitting}
 				sx={{
 					marginTop: 2,
 					transition: "transform 0.2s",
@@ -171,23 +243,42 @@ export function InvestmentForm({ fundingData }) {
 					},
 				}}
 			>
-				Invest Now
+				{isSubmitting ? (
+					<CircularProgress size={24} color="inherit" />
+				) : mode === "invest" ? (
+					"Invest Now"
+				) : (
+					"Submit Offer"
+				)}
 			</Button>
 
 			<Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
-				<DialogTitle>Confirm Investment</DialogTitle>
+				<DialogTitle>
+					{mode === "invest"
+						? "Confirm Investment"
+						: "Confirm Investment Offer"}
+				</DialogTitle>
 				<DialogContent>
 					<Typography>
-						Are you sure you want to invest ${totalInvestment.toLocaleString()}{" "}
-						for {equityToReceive}% equity?
+						{mode === "invest"
+							? `Are you sure you want to invest $${totalInvestment.toLocaleString()} for ${equityToReceive}% equity?`
+							: `Are you sure you want to offer $${offeredPricePerPart.toLocaleString()} per part for ${partsToInvest} parts? Total offer amount: $${totalInvestment.toLocaleString()}`}
 					</Typography>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={handleCloseConfirmDialog} color="primary">
+					<Button
+						onClick={handleCloseConfirmDialog}
+						color="primary"
+						disabled={isSubmitting}
+					>
 						Cancel
 					</Button>
-					<Button onClick={handleConfirmInvestment} color="primary">
-						Confirm
+					<Button
+						onClick={handleConfirmInvestment}
+						color="primary"
+						disabled={isSubmitting}
+					>
+						{isSubmitting ? <CircularProgress size={24} /> : "Confirm"}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -205,6 +296,21 @@ export function InvestmentForm({ fundingData }) {
 					</Button>
 				</DialogActions>
 			</Dialog>
+			<Snackbar
+				open={snackbarOpen}
+				autoHideDuration={6000}
+				onClose={() => setSnackbarOpen(false)}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<MuiAlert
+					elevation={6}
+					variant="filled"
+					onClose={() => setSnackbarOpen(false)}
+					severity={snackbarSeverity}
+				>
+					{snackbarMessage}
+				</MuiAlert>
+			</Snackbar>
 		</FormBox>
 	);
 }

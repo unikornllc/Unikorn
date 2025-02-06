@@ -31,6 +31,12 @@ enum Tier {
   Standard
 }
 
+enum Status{
+  pending
+  accepted
+  rejected
+}
+
 model User {
   id                     String                   @id @default(uuid())
   name                   String
@@ -59,6 +65,40 @@ model User {
   logindevices           LoginDevices[]
   fundraiser             Fundraiser[]             @relation("UserInvestments")
   investmentOffers       InvestmentOffer[]        @relation("UserOffers")
+  wallet                 userWallet?                  @relation("Wallet")
+  sentTransactions       userTransactions[]            @relation("SentTransactions")
+  receivedTransactions   userTransactions[]            @relation("ReceivedTransactions")
+  companyTransactions    userToCompanyTransactions[]    @relation("CompanyTransactions")
+}
+
+model userWallet {
+  id         String   @id @default(uuid())
+  userId     String   @unique 
+  amount     Float    @default(0.0)
+  onHold     Float    @default(0.0)
+  createdAt  DateTime @default(now())
+  user       User     @relation("Wallet", fields: [userId], references: [id])
+}
+model userTransactions {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  amount      Float
+  status      Status   @default(pending)
+  createdAt   DateTime @default(now())
+  sender      User     @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+}
+
+model userToCompanyTransactions {
+  id          String   @id @default(uuid())
+  userId      String
+  companyId   String
+  amount      Float
+  status      Status   @default(pending)
+  createdAt   DateTime @default(now())
+  user        User     @relation("CompanyTransactions", fields: [userId], references: [id])
+  company     Company_Profile  @relation("CompanyTransactions", fields: [companyId], references: [id])
 }
 
 model Expertise {

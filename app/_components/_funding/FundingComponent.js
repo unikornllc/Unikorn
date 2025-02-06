@@ -3,30 +3,17 @@ import axios from "axios";
 import {
 	Card,
 	CardContent,
-	CardMedia,
 	Typography,
-	Button,
 	Grid,
 	CircularProgress,
 	Box,
 	Tabs,
 	Tab,
-	Switch,
+	Button,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { InvestmentForm } from "./InvestmentForm";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import PercentIcon from "@mui/icons-material/Percent";
 
-// const FundingCard = styled(Card)(({ theme }) => ({
-// 	maxWidth: 800,
-// 	margin: "auto",
-// 	marginTop: theme.spacing(4),
-// 	padding: theme.spacing(4),
-// 	backgroundColor: theme.palette.background.paper,
-// 	boxShadow: theme.shadows[5],
-// 	borderRadius: "12px",
-// }));
 const FundingCard = styled(Card)(() => ({
 	maxWidth: 600,
 	margin: "auto",
@@ -35,20 +22,22 @@ const FundingCard = styled(Card)(() => ({
 	position: "relative",
 	overflow: "visible",
 }));
+
 export function FundingComponent({ companyUsername }) {
 	const [fundingData, setFundingData] = useState(null);
 	const [tabValue, setTabValue] = useState(0);
+	const [mode, setMode] = useState("invest");
+
 	const fetchActiveFunding = async () => {
 		try {
-			await axios
-				.get(`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/active`, {
+			const response = await axios.get(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
+				{
 					params: { username: companyUsername },
 					withCredentials: true,
-				})
-				.then((response) => {
-					setFundingData(response.data);
-					console.log(response);
-				});
+				},
+			);
+			setFundingData(response.data.activeFundraising);
 		} catch (err) {
 			console.error("Error fetching:", err);
 		}
@@ -62,17 +51,16 @@ export function FundingComponent({ companyUsername }) {
 		setTabValue(newValue);
 	};
 
+	const handleModeChange = (newMode) => {
+		setMode(newMode);
+	};
+
 	if (!fundingData) {
 		return;
 	}
+
 	return (
 		<FundingCard>
-			{/*<CardMedia
-				component="img"
-				height="200"
-				image="/images/company-logo.jpg"
-				alt={`${companyName} Logo`}
-			/>*/}
 			<CardContent>
 				<Typography variant="h5" component="div" gutterBottom>
 					Investment Opportunity in {fundingData.companyName}
@@ -103,7 +91,7 @@ export function FundingComponent({ companyUsername }) {
 									variant="h5"
 									component="div"
 									color="textPrimary"
-								>{`${fundingData.fundedPercentage.toFixed(0)}%`}</Typography>
+								>{`${fundingData.fundedPercentage}%`}</Typography>
 								<Typography variant="body2" color="textSecondary">
 									Funded
 								</Typography>
@@ -114,21 +102,22 @@ export function FundingComponent({ companyUsername }) {
 					<Grid item xs={12} md={6}>
 						<Typography variant="body1" gutterBottom>
 							<strong>Total Amount Required:</strong> $
-							{fundingData.totalAmount.toLocaleString()}
+							{fundingData.fundingAmount.toLocaleString()}
 						</Typography>
 						<Typography variant="body1" gutterBottom>
-							<strong>Total Equity Offered:</strong> {fundingData.totalEquity}%
-						</Typography>
-						<Typography variant="body1" gutterBottom>
-							<strong>Remaining Amount:</strong> $
-							{fundingData.remainingAmount.toLocaleString()}
+							<strong>Total Equity Offered:</strong>{" "}
+							{fundingData.equityPercentage}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Remaining Equity:</strong> {fundingData.remainingEquity}%
 						</Typography>
 						<Typography variant="body1" gutterBottom>
 							<strong>Portions Available:</strong>{" "}
-							{fundingData.remainingPortions} out of {fundingData.portions}
+							{fundingData.remainingPortions} out of {fundingData.totalPortions}
+						</Typography>
+						<Typography variant="body1" gutterBottom>
+							<strong>Price Per Portion:</strong> $
+							{fundingData.pricePerPortion.toLocaleString()}
 						</Typography>
 					</Grid>
 				</Grid>
@@ -144,10 +133,24 @@ export function FundingComponent({ companyUsername }) {
 					<Tab label="FAQs" />
 				</Tabs>
 
-				{tabValue === 0 && <InvestmentForm fundingData={fundingData} />}
+				{tabValue === 0 && (
+					<div>
+						<Tabs
+							value={mode}
+							onChange={(event, newValue) => setMode(newValue)}
+							indicatorColor="primary"
+							textColor="primary"
+							variant="fullWidth"
+							sx={{ marginTop: 2 }}
+						>
+							<Tab value="invest" label="Invest at Fixed Price" />
+							<Tab value="offer" label="Make an Offer" />
+						</Tabs>
+						<InvestmentForm mode={mode} fundingData={fundingData} />
+					</div>
+				)}
 				{tabValue === 1 && (
 					<Typography variant="body1" sx={{ marginTop: 2 }}>
-						Company info content
 						{fundingData.companyDescription}
 					</Typography>
 				)}

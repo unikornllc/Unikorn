@@ -144,7 +144,24 @@ import {
 } from "./controllers/calendly.js";
 
 import { verifiedUser } from "./middlewares/verified_mail.js";
-import { getActiveRaisingFund } from "./controllers/raising_funds.js";
+import {
+	getCompanyActiveRaisingFund,
+	getActiveRaisingFunds,
+	investAtFixedPrice,
+	makeInvestmentOffer,
+	getMyInvestments,
+	getMyInvestmentOffers,
+	getFundingInvestmentOffers,
+	acceptInvestmentOffer,
+	rejectInvestmentOffer,
+	cancelInvestmentOffer,
+	cancelRaisingFunds,
+	cancelInvestment,
+	getCompanyPendingRaisingFund,
+	getCompanyPastRaisingFunds,
+	getRaisingFundFundraisers,
+} from "./controllers/raising_funds.js";
+import { depositWallet, withdrawWallet } from "./controllers/wallet.js";
 
 const router = Router();
 
@@ -186,6 +203,10 @@ router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
 router.get("/getTier", getTier);
 router.put("/updateTier", updateTier);
+
+//wallet
+router.put("/depositWallet", depositWallet);
+router.put("/widthrawWallet", withdrawWallet);
 
 //get followers and following returns an array of usernames
 router.get("/getFollowers", getFollowers);
@@ -275,6 +296,23 @@ router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
-router.get("/raisingFunds/active", getActiveRaisingFund);
+//raising_funds and investments offers
+router.get("/raisingFunds/active", getActiveRaisingFunds);
+router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
+router.get("/raisingFunds/company/pending", getCompanyPendingRaisingFund);
+router.get("/raisingFunds/company/past", getCompanyPastRaisingFunds);
+router.get("/raisingFunds/fundraisers", getRaisingFundFundraisers);
+
+router.get("/raisingFunds/offers", getFundingInvestmentOffers);
+router.post("/raisingFunds/offer/accept", acceptInvestmentOffer);
+router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
+router.post("/raisingFunds/cancel", cancelRaisingFunds);
+
+router.post("/investments/fixedPrice", investAtFixedPrice);
+router.post("/investments/negotiatePrice", makeInvestmentOffer);
+router.get("/investments/my", getMyInvestments);
+router.post("/investments/cancel", cancelInvestment);
+router.get("/investments/offers", getMyInvestmentOffers);
+router.post("/investments/offer/cancel", cancelInvestmentOffer);
 
 export default router;
