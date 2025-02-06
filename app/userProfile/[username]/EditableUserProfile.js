@@ -21,7 +21,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/followUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
 					followerUsername: user.username,
 				},
@@ -42,7 +42,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/unfollowUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
 					followerUsername: user.username,
 				},

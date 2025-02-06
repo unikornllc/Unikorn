@@ -36,7 +36,7 @@ const Sidebar = ({
 	const addLanguage = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createLanguage`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createLanguage`,
 				{
 					username,
 					...newLanguage,
@@ -54,7 +54,7 @@ const Sidebar = ({
 
 	const removeLanguage = async (languageId) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/deleteLanguage`, {
+			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteLanguage`, {
 				params: { languageId },
 				withCredentials: true,
 			});
@@ -67,7 +67,7 @@ const Sidebar = ({
 	const addInterest = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createInterest`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createInterest`,
 				{
 					username,
 					name: newInterest,
@@ -84,7 +84,7 @@ const Sidebar = ({
 
 	const removeInterest = async (interestId) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/deleteInterest`, {
+			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteInterest`, {
 				params: { interestId },
 				withCredentials: true,
 			});
@@ -99,7 +99,7 @@ const Sidebar = ({
 	const addSocialLink = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createSocialMedia`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createSocialMedia`,
 				{
 					username,
 					...newSocialLink,
@@ -117,7 +117,7 @@ const Sidebar = ({
 	const removeSocialLink = async (linkId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteSocialMedia`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteSocialMedia`,
 				{
 					params: { socialMediaId: linkId },
 					withCredentials: true,

@@ -29,7 +29,7 @@ export function InvestmentForm({ fundingData }) {
 	const fetchUser = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/getCurrentUser`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
 				{
 					withCredentials: true,
 				},

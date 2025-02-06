@@ -253,7 +253,7 @@ export const verifyAccessTokenRoute = (req, res, next) => {
 		const decoded = jwt.verify(bsid, process.env.JWT_SECRET);
 
 		req.decodedUser = decoded;
-
+		console.log(decodedUser);
 		return next();
 	} catch (error) {
 		return next();

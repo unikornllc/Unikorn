@@ -15,7 +15,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const addCertification = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createCertificationsCourses`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createCertificationsCourses`,
 				{
 					username,
 					...newCert,
@@ -38,7 +38,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const removeCertification = async (certId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteCertificationsCourses`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteCertificationsCourses`,
 				{
 					params: { certificationsCourseId: certId },
 					withCredentials: true,

@@ -10,7 +10,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 	const addSkill = async () => {
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/createExpertise`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createExpertise`,
 				{
 					username,
 					field: newSkill,
@@ -28,7 +28,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 	const removeSkill = async (skillId) => {
 		try {
 			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/deleteOneExpertise`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteOneExpertise`,
 				{
 					params: { expertiseId: skillId },
 					withCredentials: true,

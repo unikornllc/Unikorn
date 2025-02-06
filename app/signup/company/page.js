@@ -79,7 +79,7 @@ export default function Signup() {
     try {
       console.log(formData);
       const { status } = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER}/createCompany`,
+        `${process.env.NEXT_PUBLIC_SERVER}/api/createCompany`,
         { formData },
         {
           withCredentials: true,

@@ -9,7 +9,7 @@ export default async function UserProfile({ params }) {
 	const cookie = headersInstance.get("cookie");
 	try {
 		const res = await axios.get(
-			`${process.env.NEXT_PUBLIC_SERVER}/isCurrentUser`,
+			`${process.env.NEXT_PUBLIC_SERVER}/api/isCurrentUser`,
 			{
 				params: { username },
 				headers: {

@@ -18,7 +18,7 @@ export default function Home() {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER}/docusign`,
+        `${process.env.NEXT_PUBLIC_SERVER}/api/docusign`,
         formData,
         { withCredentials: true }
       );

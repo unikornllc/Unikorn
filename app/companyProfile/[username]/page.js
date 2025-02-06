@@ -19,7 +19,7 @@ export default async function CompanyProfile({ params }) {
 
 	try {
 		const res = await axios.get(
-			`${process.env.NEXT_PUBLIC_SERVER}/getOneCompanyProfile`,
+			`${process.env.NEXT_PUBLIC_SERVER}/api/getOneCompanyProfile`,
 			{
 				params: { username, include },
 				headers: {
@@ -32,7 +32,7 @@ export default async function CompanyProfile({ params }) {
 		if (!isCurrentCompany) {
 			try {
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/isFollowingCompany`, {
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowingCompany`, {
 						params: { username: company.username },
 						headers: {
 							cookie: cookie || "",
@@ -42,7 +42,7 @@ export default async function CompanyProfile({ params }) {
 						company.isFollowing = response.data.isFollowing;
 					});
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/getCompanyTier`, {
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/getCompanyTier`, {
 						headers: {
 							cookie: cookie || "",
 						},

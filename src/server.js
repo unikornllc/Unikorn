@@ -186,12 +186,12 @@ app.post("/password-reset-request", resetPasswordRequest);
 app.post("/reset-password", resetPassword);
 
 app.get("/verifyUser", verifyUser);
-app.post("/signIn", verifiedUser, signIn);
+//app.post("/signIn", verifiedUser, signIn);
 app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
 
-app.use(protect, router);
+//app.use(protect, router);
 
 //app.use(router);
 

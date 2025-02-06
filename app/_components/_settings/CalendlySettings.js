@@ -19,7 +19,7 @@ const CalendlySettings = ({ user }) => {
 	const handleSave = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/calendly/settings`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/calendly/settings`,
 				{
 					visibility,
 					allowedIndustries,

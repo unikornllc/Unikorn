@@ -18,7 +18,7 @@ const Files = ({ username, editable }) => {
 
 		try {
 			await axios
-				.post(`${process.env.NEXT_PUBLIC_SERVER}/uploadUserFile`, formData, {
+				.post(`${process.env.NEXT_PUBLIC_SERVER}/api/uploadUserFile`, formData, {
 					withCredentials: true,
 					headers: { "Content-Type": "multipart/form-data" },
 				})
@@ -39,7 +39,7 @@ const Files = ({ username, editable }) => {
 
 	const deleteFile = async (fileName) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/deleteUserFile`, {
+			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`, {
 				params: { username, fileName },
 				withCredentials: true,
 			});
@@ -55,7 +55,7 @@ const Files = ({ username, editable }) => {
 	const downloadFile = async (fileName) => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/getUserFile`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
 				{
 					params: { username, fileName },
 					withCredentials: true,
@@ -98,7 +98,7 @@ const Files = ({ username, editable }) => {
 		const fetchUserFiles = async () => {
 			try {
 				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/getUserFile`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
 					{
 						params: { username, fileName: "resume" },
 						withCredentials: true,
