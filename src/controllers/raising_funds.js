@@ -324,6 +324,19 @@ export const investAtFixedPrice = async (req, res) => {
 				where: { id: raisingFundsId },
 				data: { remainingPortions: { decrement: portions } },
 			});
+
+			await prisma.investmentOffer.updateMany({
+				where: {
+					raisingFundsId: newRaisingFunds.id,
+					status: "Pending",
+					portions: {
+						gt: newRaisingFunds.remainingPortions,
+					},
+				},
+				data: {
+					status: "Rejected",
+				},
+			});
 			//this here only holds the money till they all sign the contracts
 			await prisma.userWallet.update({
 				where: { userId: investorId },
@@ -633,6 +646,18 @@ export const acceptInvestmentOffer = async (req, res) => {
 							offer.raisingFunds.pricePerPortion * offer.portions -
 							offer.totalOfferedPrice,
 					},
+				},
+			});
+			await prisma.investmentOffer.updateMany({
+				where: {
+					raisingFundsId: newRaisingFunds.id,
+					status: "Pending",
+					portions: {
+						gt: newRaisingFunds.remainingPortions,
+					},
+				},
+				data: {
+					status: "Rejected",
 				},
 			});
 
