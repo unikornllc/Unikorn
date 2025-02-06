@@ -31,7 +31,7 @@ export function InvestmentForm({ mode, fundingData }) {
 	const [user, setUser] = useState({ walletBalance: "loading..." });
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [openErrorDialog, setOpenErrorDialog] = useState(false);
-  
+
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 	const [snackbarMessage, setSnackbarMessage] = useState("");
 	const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
@@ -53,12 +53,11 @@ export function InvestmentForm({ mode, fundingData }) {
 	const fetchWallet = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/getUserWallet`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getUserWallet`,
 				{
 					withCredentials: true,
 				},
 			);
-			console.log("Wallet response:", response.data);
 			setUser({ walletBalance: response.data });
 		} catch (err) {
 			console.error("Error fetching wallet:", err);
