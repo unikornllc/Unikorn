@@ -12,7 +12,7 @@ export default function UserProfile() {
 		const authenticateUser = async () => {
 			try {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/signin`,
+					`${process.env.NEXT_PUBLIC_SERVER}/signin`,
 					{},
 					{
 						withCredentials: true,
