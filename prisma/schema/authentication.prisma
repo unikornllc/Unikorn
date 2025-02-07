@@ -6,13 +6,15 @@ enum Role {
 model RefreshTokenValid {
   sid       String   @id
   profileId String
+  ip        String
+  browser   String
+  os        String
   expire    DateTime
   role      Role
 }
 
 model TokenBlacklist {
   token     String   @id
-  profileId String
   expire    DateTime
 }
 
@@ -25,6 +27,7 @@ model LoginDevices {
   companyId String?
   user      User?            @relation(fields: [userId], references: [id])
   company   Company_Profile? @relation(fields: [companyId], references: [id])
+  @@unique([ip, browser, os, userId, companyId])
 }
 
 model BlacklistedPasswordToken {
