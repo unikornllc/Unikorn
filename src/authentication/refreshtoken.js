@@ -3,6 +3,7 @@ import { UAParser } from "ua-parser-js";
 import prisma from "../db.js";
 import { comparePasswords } from "../auth.js";
 import NodeMailer from "nodemailer";
+import { sendNewLoginNotification } from "./logindevice.js";
 
 const refreshCookieOptions = {
 	httpOnly: true, // TODO: Change to true
@@ -23,12 +24,22 @@ export const generateRefreshToken = async (req, res, next) => {
 				.json({ message: "Email and password are required." });
 		}
 		const user =
-			(await prisma.user.findUnique({ where: { email } })) ||
-			(await prisma.user.findUnique({ where: { username: email } }));
+			(await prisma.user.findUnique({
+				where: { email },
+				include: { logindevices },
+			})) ||
+			(await prisma.user.findUnique({
+				where: { username: email },
+				include: { logindevices },
+			}));
 		const company = !user
 			? (await prisma.company_Profile.findUnique({
-					where: { username: email },
-				})) || (await prisma.company_Profile.findUnique({ where: { email } }))
+					where: { username: email, include: { logindevices } },
+				})) ||
+				(await prisma.company_Profile.findUnique({
+					where: { email },
+					include: { logindevices },
+				}))
 			: null;
 		if (!user && !company) {
 			return res.status(401).json({ message: "Invalid credentials." });
@@ -94,6 +105,9 @@ export const generateRefreshToken = async (req, res, next) => {
 				sid: token,
 				profileId: account.id,
 				expire: expiresAt,
+				ip,
+				browser: browser.name,
+				os: os.name,
 				role: user ? "User" : "Company",
 			},
 		});
@@ -164,6 +178,9 @@ export const generateRefreshTokenIfNeeded = async (req, res, next) => {
 				sid: token,
 				profileId: account.id,
 				expire: expiresAt,
+				ip,
+				browser: browser.name,
+				os: os.name,
 				role: account.role,
 			},
 		});

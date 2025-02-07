@@ -166,6 +166,7 @@ import {
 	getUserWallet,
 	withdrawWallet,
 } from "./controllers/wallet.js";
+import { logout } from "./authentication/logout.js";
 
 const router = Router();
 
@@ -319,5 +320,7 @@ router.get("/investments/my", getMyInvestments);
 router.post("/investments/cancel", cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
 router.post("/investments/offer/cancel", cancelInvestmentOffer);
+
+router.post("/logout", logout);
 
 export default router;
