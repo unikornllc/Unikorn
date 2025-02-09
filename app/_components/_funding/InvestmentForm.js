@@ -110,7 +110,7 @@ export function InvestmentForm({ mode, fundingData }) {
 			if (mode === "invest") {
 				await axios
 					.post(
-						`${process.env.NEXT_PUBLIC_SERVER}/investments/fixedPrice`,
+						`${process.env.NEXT_PUBLIC_SERVER}/api/investments/fixedPrice`,
 						{
 							raisingFundsId: fundingData.id,
 							portions: partsToInvest,
@@ -130,7 +130,7 @@ export function InvestmentForm({ mode, fundingData }) {
 			} else if (mode === "offer") {
 				await axios
 					.post(
-						`${process.env.NEXT_PUBLIC_SERVER}/investments/negotiatePrice`,
+						`${process.env.NEXT_PUBLIC_SERVER}/api/investments/negotiatePrice`,
 						{
 							walletBalance: user.walletBalance,
 							raisingFundsId: fundingData.id,

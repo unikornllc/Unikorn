@@ -1,4 +1,5 @@
 import prisma from "../db.js";
+import axios from "axios";
 
 export const getActiveRaisingFunds = async (req, res) => {
 	try {
@@ -345,17 +346,38 @@ export const investAtFixedPrice = async (req, res) => {
 					onHold: { increment: fundingAmount },
 				},
 			});
-			if (newRaisingFunds.remainingPortions == 0) {
-				await prisma.raising_Funds.update({
-					where: { id: offer.raisingFundsId },
-					data: {
-						status: "Completed",
-					},
-				});
-			} else if (newRaisingFunds.remainingPortions < 0) {
-				throw new Error("Invalid remaining portions");
-			}
+			// if (newRaisingFunds.remainingPortions == 0) {
+			// 	await prisma.raising_Funds.update({
+			// 		where: { id: raisingFundsId },
+			// 		data: {
+			// 			status: "Completed",
+			// 		},
+			// 	});
+			// } else if (newRaisingFunds.remainingPortions < 0) {
+			// 	throw new Error("Invalid remaining portions");
+			// }
 		});
+		const updatedFundraising = await prisma.raising_Funds.findUnique({
+			where: { id: raisingFundsId },
+			include: {
+				fundraisers: { include: { investorUser: true, investorCompany: true } },
+			},
+		});
+
+		const totalRaised = updatedFundraising.fundraisers.reduce(
+			(sum, fundraiser) => sum + fundraiser.fundingAmount,
+			0,
+		);
+
+		const isComplete =
+			totalRaised >= updatedFundraising.fundingAmount ||
+			updatedFundraising.remainingPortions === 0;
+
+		if (isComplete) {
+			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/docusigninvestor`, {
+				raisingFundsId: raisingFundsId,
+			});
+		}
 
 		res.status(200).json({ message: "Investment successful" });
 	} catch (error) {
@@ -778,38 +800,55 @@ export const cancelInvestmentOffer = async (req, res) => {
 export const cancelRaisingFunds = async (req, res) => {
 	const companyId = req.decodedUser.id;
 	const userRole = req.decodedUser.role;
-	const data = req.body.fundingData;
-	console.log(data);
-
+	const { raisingFundsId } = req.body.fundingData;
 	try {
 		if (userRole != "Company") {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
-		const activeFunds = await prisma.raising_Funds.findFirst({
+		const raisingFunds = await prisma.raising_Funds.findUnique({
 			where: {
+				id: raisingFundsId,
 				companyId: companyId,
-				status: "Active" || "Pending",
+			},
+			include: {
+				investmentOffers: true,
+				fundraisers: true,
 			},
 		});
 
-		if (activeFunds.length == 0) {
-			return res.status(404).json({ message: "No active raising funds found" });
+		if (!raisingFunds) {
+			return res.status(404).json({ message: "Raising funds not found" });
 		}
 
-		await prisma.raising_Funds.update({
-			where: {
-				id: data.raisingFundsId,
-				companyId: companyId,
-				status: "Active" || "Pending",
-			},
-			data: {
-				status: "Failed",
-			},
+		if (raisingFunds.status !== "Active" && raisingFunds.status !== "Pending") {
+			return res
+				.status(400)
+				.json({ message: "Cannot cancel this raising fund" });
+		}
+
+		await prisma.$transaction(async (prisma) => {
+			await prisma.investmentOffer.deleteMany({
+				where: { raisingFundsId },
+			});
+
+			await prisma.fundraiser.deleteMany({
+				where: { raisingFundsId },
+			});
+			if (activeFunds.length == 0) {
+				return res
+					.status(404)
+					.json({ message: "No active raising funds found" });
+			}
+
+			await prisma.raising_Funds.update({
+				where: { id: raisingFundsId },
+				data: { status: "Failed" },
+			});
 		});
 
 		res.status(200).json({
-			message: "All active raising funds have been cancelled successfully",
+			message: "Raising funds and related investments cancelled successfully",
 		});
 	} catch (error) {
 		console.error("Error cancelling raising funds:", error);

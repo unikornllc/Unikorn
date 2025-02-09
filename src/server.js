@@ -27,6 +27,7 @@ import { createJWT } from "./auth.js";
 import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
+import docusignRouter from "./docusign.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -190,6 +191,7 @@ app.get("/verifyUser", verifyUser);
 app.get("/checkUsername", checkUsername);
 app.get("/checkEmail", checkEmail);
 app.get("/suggestUsername", suggestUsername);
+app.use(docusignRouter);
 
 //app.use(protect, router);
 
