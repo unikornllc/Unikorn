@@ -28,19 +28,6 @@ const ExternalRedirect = () => {
 		window.close();
 	};
 
-	// Optional: Automatically close the tab if the user navigates away
-	useEffect(() => {
-		const handleBeforeUnload = () => {
-			window.close();
-		};
-
-		window.addEventListener("beforeunload", handleBeforeUnload);
-
-		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-		};
-	}, []);
-
 	return (
 		<div className="container mx-auto p-4">
 			<h1 className="text-2xl font-bold mb-4">You are leaving our site</h1>

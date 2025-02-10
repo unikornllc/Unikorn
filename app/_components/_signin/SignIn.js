@@ -1,134 +1,188 @@
 "use client";
 
-import axios from "axios";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { Button } from "../_ui/Button";
+import { Input } from "../_ui/Input";
+import { Label } from "../_ui/Label";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+	CardFooter,
+} from "../_ui/Card";
+import { Alert, AlertDescription, AlertTitle, AlertCircle } from "../_ui/Alert";
+import { Separator } from "../_ui/Separator";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 
-const signIn = async (email, password) => {
-	return await axios.post(
-		`${process.env.NEXT_PUBLIC_SERVER}/signin`,
-		{
-			email,
-			password,
-		},
-		{ withCredentials: true },
-	);
-};
-
 export default function SignIn() {
 	const router = useRouter();
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState(false);
-	const [success, setSuccess] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState("");
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm();
 
-	const handleSignIn = async (e) => {
-		e.preventDefault();
+	const [signInError, setSignInError] = useState(null);
+	const [signUpSuccess, setSignUpSuccess] = useState(false);
+
+	const [loading, setLoading] = useState(false);
+
+	const onSubmit = async ({ email, password }) => {
 		setLoading(true);
-		setError(false);
-		setSuccess(false);
+		setSignInError(null);
 
 		try {
-			const res = await signIn(email, password);
-			setSuccess(true);
-			setMessage("Signed in successfully");
-			router.push("/userHome");
+			const response = await axios.post(
+				`${process.env.NEXT_PUBLIC_SERVER}/signin`,
+				{ email, password },
+				{ withCredentials: true },
+			);
+			if (response.status === 200) {
+				setSignUpSuccess(true);
+
+				router.push("/userHome");
+			} else {
+				setSignInError("Invalid email or password");
+				setLoading(false);
+			}
 		} catch (error) {
-			setError(true);
-			setMessage("Invalid email or password");
-		} finally {
+			setSignInError(
+				error.response?.data?.message || "An error occurred. Please try again.",
+			);
 			setLoading(false);
 		}
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-[#fff0db]">
-			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
-				<h2 className="text-2xl font-bold text-center mb-4 text-gray-700">
-					Sign In
-				</h2>
-				<form onSubmit={handleSignIn} className="space-y-4">
-					<div>
-						<label
-							htmlFor="email"
-							className="block text-sm font-medium text-gray-700"
-						>
-							Email
-						</label>
-						<div className="mt-1 relative rounded-md shadow-sm">
-							<input
-								id="email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								required
-								className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-							/>
-						</div>
-					</div>
-					<div>
-						<label
-							htmlFor="password"
-							className="block text-sm font-medium text-gray-700"
-						>
-							Password
-						</label>
-						<div className="mt-1 relative rounded-md shadow-sm">
-							<input
-								type="password"
-								id="password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-								className="block w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-							/>
-						</div>
-					</div>
-					<button
-						type="submit"
-						disabled={loading}
-						className="w-full bg-[#7e57c2] hover:bg-[#8e23e7] text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-					>
-						{loading ? "Signing in..." : "Sign In"}
-					</button>
-				</form>
-				<div className="text-center mt-4">
-					<p className="text-sm text-gray-500">or sign up with</p>
-					<div className="flex justify-center gap-4 mt-2">
-						<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
-							<FaFacebook className="text-blue-600 h-6 w-6" />
-						</button>
-						<a href={`${process.env.NEXT_PUBLIC_SERVER}/auth/google`}>
-							<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
-								<FcGoogle className="text-red-500 h-6 w-6" />
-							</button>
-						</a>
-					</div>
-				</div>
-				{error && <p className="text-red-500 text-sm mt-4">{message}</p>}
-				{success && <p className="text-green-500 text-sm mt-4">{message}</p>}
-			</div>
-			<div className="mt-4 text-sm text-gray-500">
-				Don’t have an account?{" "}
-				<div className="mt-4 text-sm text-gray-500">
-					Are you a user?{" "}
-					<Link href="/signup/user" className="text-blue-500 hover:underline">
-						Sign up
-					</Link>
-				</div>
-				<div className="mt-4 text-sm text-gray-500">
-					Are you a company?{" "}
-					<Link
-						href="/signup/company"
-						className="text-blue-500 hover:underline"
-					>
-						Sign up
-					</Link>
-				</div>
+		<div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+			<div className="container mx-auto px-4 py-20">
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.5 }}
+				>
+					<Card className="max-w-md mx-auto bg-white/80 backdrop-blur-sm shadow-xl">
+						<CardHeader className="space-y-1">
+							<CardTitle className="text-3xl font-bold text-center text-indigo-900">
+								Sign In
+							</CardTitle>
+							<CardDescription className="text-center text-indigo-700">
+								Enter your credentials to access your account
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							{signUpSuccess && (
+								<Alert className="bg-green-50 text-green-700 border-green-500">
+									<AlertCircle className="h-4 w-4" />
+									<AlertTitle>Success</AlertTitle>
+									<AlertDescription>
+										Sign in successful! Redirecting...
+									</AlertDescription>
+								</Alert>
+							)}
+							{signInError && (
+								<Alert variant="destructive">
+									<AlertCircle className="h-4 w-4" />
+									<AlertTitle>Login Failed</AlertTitle>
+									<AlertDescription>{signInError}</AlertDescription>
+								</Alert>
+							)}
+							<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+								<div className="space-y-2">
+									<Label htmlFor="email" className="text-indigo-900">
+										Email
+									</Label>
+									<Input
+										id="email"
+										placeholder="you@example.com"
+										{...register("email", { required: "Email is required" })}
+										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
+									/>
+									{errors.email && (
+										<span className="text-red-500 text-sm">
+											{errors.email.message}
+										</span>
+									)}
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="password" className="text-indigo-900">
+										Password
+									</Label>
+									<Input
+										id="password"
+										type="password"
+										{...register("password", {
+											required: "Password is required",
+										})}
+										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
+									/>
+									{errors.password && (
+										<span className="text-red-500 text-sm">
+											{errors.password.message}
+										</span>
+									)}
+								</div>
+								<Button
+									type="submit"
+									className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+									disabled={loading}
+								>
+									{loading ? "Signing In..." : "Sign In"}
+								</Button>
+							</form>
+							<div className="relative">
+								<div className="absolute inset-0 flex items-center">
+									<Separator className="w-full" />
+								</div>
+								<div className="relative flex justify-center text-xs uppercase">
+									<span className="bg-white px-2 text-muted-foreground">
+										Or continue with
+									</span>
+								</div>
+							</div>
+							<div className="flex justify-center gap-4 mt-2">
+								<button
+									onClick={() => console.log("Facebook sign-in clicked")}
+									className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow"
+								>
+									<FaFacebook className="text-blue-600 h-6 w-6" />
+								</button>
+								<a href={`${process.env.NEXT_PUBLIC_SERVER}/auth/google`}>
+									<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
+										<FcGoogle className="h-6 w-6" />
+									</button>
+								</a>
+							</div>
+						</CardContent>
+						<CardFooter className="flex flex-col space-y-4">
+							<div className="text-sm text-center text-indigo-700">
+								Don't have an account?
+							</div>
+							<div className="flex justify-between w-full">
+								<Link
+									href="/signup/user"
+									className="text-sm text-indigo-600 hover:underline"
+								>
+									Sign up as Investor
+								</Link>
+								<Link
+									href="/signup/company"
+									className="text-sm text-indigo-600 hover:underline"
+								>
+									Sign up as Company
+								</Link>
+							</div>
+						</CardFooter>
+					</Card>
+				</motion.div>
 			</div>
 		</div>
 	);
