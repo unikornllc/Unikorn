@@ -1,0 +1,54 @@
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionType {
+  WALLET_DEPOSIT
+  EQUITY_TRANSFER
+  WALLET_TRANSFER
+}
+
+model Transaction {
+  id                String           @id @default(uuid())
+  transactionType   TransactionType
+  amount            Decimal
+  date              DateTime         @default(now())
+  description       String?
+  senderCompanyId   String?
+  senderCompany     Company_Profile? @relation("TransactionsSentCompany", fields: [senderCompanyId], references: [id])
+  senderUserId      String?
+  senderUser        User?            @relation("TransactionsSentUser", fields: [senderUserId], references: [id])
+  receiverCompanyId String
+  receiverCompany   Company_Profile? @relation("TransactionsReceivedCompany", fields: [receiverCompanyId], references: [id])
+  journalEntries    JournalEntry[]
+}
+
+model Entry {
+  id              String        @id @default(uuid())
+  journalEntryId  String
+  journalEntry    JournalEntry  @relation(fields: [journalEntryId], references: [id])
+  ledgerAccountId String
+  ledgerAccount   LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+  entryType       EntryType
+  amount          Decimal
+}
+
+model JournalEntry {
+  id            String          @id @default(uuid())
+  transactionId String
+  transaction   Transaction     @relation(fields: [transactionId], references: [id])
+  date          DateTime        @default(now())
+  description   String?
+  entries       Entry[]
+  LedgerAccount LedgerAccount[]
+}
+
+model LedgerAccount {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  balance        Decimal        @default(0)
+  journalEntries JournalEntry[]
+  Entry          Entry[]
+}

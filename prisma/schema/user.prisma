@@ -31,7 +31,7 @@ enum Tier {
   Standard
 }
 
-enum Status{
+enum Status {
   pending
   accepted
   rejected
@@ -65,28 +65,17 @@ model User {
   logindevices           LoginDevices[]
   fundraiser             Fundraiser[]             @relation("UserInvestments")
   investmentOffers       InvestmentOffer[]        @relation("UserOffers")
-  wallet                 userWallet?                  @relation("Wallet")
-  companyTransactions    userToCompanyTransactions[]    @relation("CompanyTransactions")
+  wallet                 userWallet?              @relation("Wallet")
+  Transaction            Transaction[]            @relation("TransactionsSentUser")
 }
 
 model userWallet {
-  id         String   @id @default(uuid())
-  userId     String   @unique 
-  amount     Float    @default(0.0)
-  onHold     Float    @default(0.0)
-  createdAt  DateTime @default(now())
-  user       User     @relation("Wallet", fields: [userId], references: [id])
-}
-
-model userToCompanyTransactions {
-  id          String   @id @default(uuid())
-  userId      String
-  companyId   String
-  amount      Float
-  status      Status   @default(pending)
-  createdAt   DateTime @default(now())
-  user        User     @relation("CompanyTransactions", fields: [userId], references: [id])
-  company     Company_Profile  @relation("CompanyTransactions", fields: [companyId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  amount    Float    @default(0.0)
+  onHold    Float    @default(0.0)
+  createdAt DateTime @default(now())
+  user      User     @relation("Wallet", fields: [userId], references: [id])
 }
 
 model Expertise {
