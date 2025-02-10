@@ -44,23 +44,6 @@ export const withdrawWallet = async (req, res) => {
 	}
 };
 
-export const getTransactionHistory = async (req, res) => {
-	try {
-		const transactions = await prisma.user.findUnique({
-			where: {
-				id: req.decodedUser.id,
-			},
-			select: {
-				sentTransactions: true,
-				receivedTransactions: true,
-			},
-		});
-		res.status(200).json(transactions);
-	} catch (err) {
-		console.error(err);
-	}
-};
-
 export const getUserWallet = async (req, res) => {
 	try {
 		const wallet = await prisma.userWallet.findUnique({

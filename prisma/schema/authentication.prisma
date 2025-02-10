@@ -14,8 +14,8 @@ model RefreshTokenValid {
 }
 
 model TokenBlacklist {
-  token     String   @id
-  expire    DateTime
+  token  String   @id
+  expire DateTime
 }
 
 model LoginDevices {
@@ -27,6 +27,7 @@ model LoginDevices {
   companyId String?
   user      User?            @relation(fields: [userId], references: [id])
   company   Company_Profile? @relation(fields: [companyId], references: [id])
+
   @@unique([ip, browser, os, userId, companyId])
 }
 
@@ -36,4 +37,3 @@ model BlacklistedPasswordToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
-
