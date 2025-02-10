@@ -41,9 +41,9 @@ export default function Signup() {
 					`${process.env.NEXT_PUBLIC_SERVER}/api/suggestUsername`,
 					{ params: { email: formData.email, name: formData.name } },
 				);
-				console.log(response.data.username);
+				console.log(response.data.usernameSuggestions);
 				if (!usernameTaken) {
-					setSuggestedUsernames(response.data.username);
+					setSuggestedUsernames(response.data.usernameSuggestions);
 				}
 			} catch (e) {
 				console.error("Error suggesting username", e);
@@ -85,7 +85,7 @@ export default function Signup() {
 					description: "",
 					title: "Mr",
 				});
-				router.push("/checkEmail");
+				router.push("/api/checkEmail");
 				//console.log(response.cookies);
 			} else {
 				setMessage("Signup failed.");
