@@ -36,45 +36,46 @@ export async function sendNewLoginNotification(email, ip, os, browser) {
 
 export const handleNewDevice = async (req, res, next) => {
 	try {
-		if (!req.account) {
-			return next();
+	  if (!req.account) return next();
+  
+	  const account = req.account;
+	  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+	  const userAgent = req.get("User-Agent") || "";
+	  const parser = new UAParser(userAgent);
+	  const { os, browser } = parser.getResult();
+  
+	  const accountFilter = account.role === "User" 
+		? { userId: account.id } 
+		: { companyId: account.id };
+  
+	  const existingDevice = await prisma.loginDevices.findFirst({
+		where: {
+		  ...accountFilter,
+		  OR: [
+			{ ip: ip },
+			{ browser: browser.name },
+			{ os: os.name }
+		  ]
 		}
-
-		const account = req.account;
-		const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-		const userAgent = req.get("User-Agent") || "";
-		const parser = new UAParser(userAgent);
-		const { os, browser } = parser.getResult();
-
-		const existingDevice = await prisma.loginDevices.findFirst({
-			where: {
-				OR: [
-					{ userId: account.role === "User" ? account.id : undefined },
-					{ companyId: account.role === "Company" ? account.id : undefined },
-				],
-				ip,
-				browser: browser.name,
-				os: os.name,
-			},
+	  });
+  
+	  if (!existingDevice) {
+		await prisma.loginDevices.create({
+		  data: {
+			...accountFilter,
+			ip,
+			browser: browser.name,
+			os: os.name,
+		  },
 		});
-
-		if (!existingDevice) {
-			await prisma.loginDevices.create({
-				data: {
-					userId: account.role === "User" ? account.id : null,
-					companyId: account.role === "Company" ? account.id : null,
-					ip,
-					browser: browser.name,
-					os: os.name,
-				},
-			});
-
-			await sendNewLoginNotification(account.email, ip, os.name, browser.name);
-		}
-
-		return next();
+  
+		await sendNewLoginNotification(account.email, ip, os.name, browser.name);
+	  }
+  
+	  return next();
 	} catch (error) {
-		console.error("Error in handleNewDevice:", error);
-		return res.status(500).json({ message: "Server Error" });
+	  console.error("Error in handleNewDevice:", error);
+	  return res.status(500).json({ message: "Server Error" });
 	}
-};
+  };
+  

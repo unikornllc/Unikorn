@@ -11,45 +11,36 @@ enum companyTier {
 }
 
 model Company_Profile {
-  id                          String                @id @default(uuid())
-  name                        String
-  username                    String                @unique
-  email                       String                @unique
-  password                    String
-  description                 String                @db.VarChar(500)
-  website                     String
-  founded                     DateTime
-  type                        Company_Type          @default(Public)
-  hqlocation                  String
-  industry                    String
-  emailVerify                 Boolean               @default(false)
-  verified                    Boolean               @default(false)
-  tier                        companyTier           @default(Holder)
-  board_members               String[]
-  advisors                    String[]
-  founders                    Founder[]
-  key_employees               Key_Employees[]
-  product_information         Product_Information[]
-  financials                  Financial?
-  activities                  Activity[]
-  company_file                Company_File[]
-  followers                   UserFollowsCompany[]
-  logindevices                LoginDevices[]
-  raising_Funds               Raising_Funds[]
-  fundraiser                  Fundraiser[]          @relation("CompanyInvestments")
-  investmentOffers            InvestmentOffer[]     @relation("CompanyOffers")
-  wallet                      companyWallet?        @relation("CompanyWallet")
-  TransactionsSentCompany     Transaction[]         @relation("TransactionsSentCompany")
-  TransactionsReceivedCompany Transaction[]         @relation("TransactionsReceivedCompany")
-}
-
-model companyWallet {
-  id        String          @id @default(uuid())
-  companyId String          @unique
-  amount    Float           @default(0.0)
-  onHold    Float           @default(0.0)
-  createdAt DateTime        @default(now())
-  company   Company_Profile @relation("CompanyWallet", fields: [companyId], references: [id])
+  id                   String                @id @default(uuid())
+  name                 String
+  username             String                @unique
+  email                String                @unique
+  password             String
+  description          String                @db.VarChar(500)
+  website              String
+  founded              DateTime
+  type                 Company_Type          @default(Public)
+  hqlocation           String
+  industry             String
+  emailVerify          Boolean               @default(false)
+  verified             Boolean               @default(false)
+  tier                 companyTier           @default(Holder)
+  board_members        String[]
+  advisors             String[]
+  founders             Founder[]
+  key_employees        Key_Employees[]
+  product_information  Product_Information[]
+  financials           Financial?
+  activities           Activity[]
+  company_file         Company_File[]
+  followers            UserFollowsCompany[]
+  logindevices         LoginDevices[]
+  raising_Funds        Raising_Funds[]
+  fundraiser           Fundraiser[]          @relation("CompanyInvestments")
+  investmentOffers     InvestmentOffer[]     @relation("CompanyOffers")
+  wallet               Wallet?               @relation("CompanyWallet")
+  Transaction          Transaction[]         @relation("Transaction")
+  LedgerAccountCompany LedgerAccount?        @relation("LedgerAccountCompany")
 }
 
 model Founder {

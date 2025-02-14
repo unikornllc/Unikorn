@@ -65,17 +65,9 @@ model User {
   logindevices           LoginDevices[]
   fundraiser             Fundraiser[]             @relation("UserInvestments")
   investmentOffers       InvestmentOffer[]        @relation("UserOffers")
-  wallet                 userWallet?              @relation("Wallet")
-  Transaction            Transaction[]            @relation("TransactionsSentUser")
-}
-
-model userWallet {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  amount    Float    @default(0.0)
-  onHold    Float    @default(0.0)
-  createdAt DateTime @default(now())
-  user      User     @relation("Wallet", fields: [userId], references: [id])
+  wallet                 Wallet?                  @relation("Wallet")
+  Transaction            Transaction[]            @relation("Transaction")
+  LedgerAccount          LedgerAccount?           @relation("LedgerAccountUser")
 }
 
 model Expertise {
