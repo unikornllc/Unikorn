@@ -55,8 +55,8 @@ export async function middleware(req) {
             return withRoleResponse(NextResponse.next(), role);
         }
 
-        // return NextResponse.rewrite(new URL("/not-found", req.url));
-        return withRoleResponse(NextResponse.next(), role)
+        return NextResponse.rewrite(new URL("/not-found", req.url));
+        // return withRoleResponse(NextResponse.next(), role)
     } catch (error) {
         return NextResponse.redirect(new URL("/signin", req.url));
     }
