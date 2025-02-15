@@ -40,7 +40,7 @@ export function FundingComponentCompany({ companyUsername }) {
 	const handleCancelFunds = async () => {
 		try {
 			const res = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/cancel`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/cancel`,
 				{ fundingData },
 				{
 					withCredentials: true,
@@ -53,10 +53,13 @@ export function FundingComponentCompany({ companyUsername }) {
 	const fetchActiveFunding = async () => {
 		try {
 			await axios
-				.get(`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/active`, {
-					params: { username: companyUsername },
-					withCredentials: true,
-				})
+				.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
+					{
+						params: { username: companyUsername },
+						withCredentials: true,
+					},
+				)
 				.then((response) => {
 					setFundingData(response.data.activeFundraising);
 					console.log(response);
