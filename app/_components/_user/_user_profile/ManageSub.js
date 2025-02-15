@@ -29,7 +29,7 @@ const ManageSub = ({ tier, wallet }) => {
 	const handleDeposit = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/depositWallet`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/depositWallet`,
 				{ amount: depositAmount },
 				{
 					withCredentials: true,
@@ -44,7 +44,7 @@ const ManageSub = ({ tier, wallet }) => {
 	const handleWithdraw = async () => {
 		try {
 			await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/widthrawWallet`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/widthrawWallet`,
 				{ amount: withdrawAmount },
 				{
 					withCredentials: true,
@@ -90,16 +90,18 @@ const ManageSub = ({ tier, wallet }) => {
 
 	return (
 		<div className="relative mb-6">
-			<div>{wallet &&
-				<div>
-					<p className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit">
-						Wallet: ${wallet.amount}
-					</p>
+			<div>
+				{wallet && (
+					<div>
+						<p className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit">
+							Wallet: ${wallet.amount}
+						</p>
 
-					<p className="bg-gray-700 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit mt-2">
-						On Hold: ${wallet.onHold}
-					</p>
-				</div>}
+						<p className="bg-gray-700 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit mt-2">
+							On Hold: ${wallet.onHold}
+						</p>
+					</div>
+				)}
 				<button
 					className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
 					onClick={() => setShowModal(true)}
@@ -258,7 +260,7 @@ const ManageSub = ({ tier, wallet }) => {
 										value={withdrawAmount}
 										onChange={(e) => setWithdrawAmount(e.target.value)}
 									/>
-									{withdrawAmount > wallet.amount && (
+									{withdrawAmount > parseFloat(wallet.amount) && (
 										<Typography
 											variant="body2"
 											sx={{
@@ -281,7 +283,7 @@ const ManageSub = ({ tier, wallet }) => {
 										<Button
 											variant="contained"
 											color="secondary"
-											disabled={withdrawAmount > wallet.amount}
+											disabled={withdrawAmount > parseFloat(wallet.amount)}
 											onClick={handleWithdraw}
 										>
 											Withdraw
