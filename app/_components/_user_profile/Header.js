@@ -9,7 +9,7 @@ import AvatarEditor from "react-avatar-editor";
 import Modal from "react-modal";
 import axios from "axios";
 import Webcam from "react-webcam";
-import SettingsOverlay from "../_settings/Settings";
+import SettingsOverlay from "../_shared/_settings/Settings";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -196,11 +196,10 @@ const Header = ({ user, editable }) => {
 			</div>
 			{editable && (
 				<p
-					className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-lg transition duration-300 ${
-						user.tier === "Standard"
-							? "bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100"
-							: "bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-white"
-					}`}
+					className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-lg transition duration-300 ${user.tier === "Standard"
+						? "bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100"
+						: "bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-white"
+						}`}
 				>
 					{user.tier}
 				</p>

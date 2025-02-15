@@ -9,7 +9,7 @@ import Certifications from "../../_components/_user_profile/Certifications";
 import Sidebar from "../../_components/_user_profile/Sidebar";
 import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
-import CalendlySchedule from "@/app/_components/_calendly/CalendlySchedule";
+import CalendlySchedule from "@/app/_components/_shared/_calendly/CalendlySchedule";
 
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(false);

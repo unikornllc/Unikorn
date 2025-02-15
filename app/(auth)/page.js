@@ -1,14 +1,14 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "./../_components/_ui/Button";
+import { Button } from "../_components/_ui/Button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "./../_components/_ui/Card";
+} from "../_components/_ui/Card";
 import { ChevronRight, LineChart, ShieldCheck, Users } from "lucide-react";
 
 export default function Home() {

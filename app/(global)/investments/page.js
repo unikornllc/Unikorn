@@ -42,7 +42,7 @@ export default function MyInvestmentsPage() {
 	const fetchInvestments = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/investments/my`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/investments/my`,
 				{
 					withCredentials: true,
 				},
@@ -56,7 +56,7 @@ export default function MyInvestmentsPage() {
 	const fetchInvestmentOffers = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/investments/offers`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/investments/offers`,
 				{
 					withCredentials: true,
 				},
@@ -98,7 +98,7 @@ export default function MyInvestmentsPage() {
 		try {
 			if (actionType === "cancelInvestment") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/investments/cancel`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/investments/cancel`,
 					{ fundraiserId: selectedItem.id },
 					{ withCredentials: true },
 				);
@@ -109,7 +109,7 @@ export default function MyInvestmentsPage() {
 				});
 			} else if (actionType === "cancelOffer") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/investments/offer/cancel`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/investments/offer/cancel`,
 					{ offerId: selectedItem.id },
 					{ withCredentials: true },
 				);

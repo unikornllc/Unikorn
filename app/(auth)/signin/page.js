@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect } from "react";
-import SignIn from "./../../_components/_signin/SignIn.js";
+import SignIn from "../../_components/_auth/_signin/SignIn.js";
 import { useRouter } from "next/navigation";
 
 export default function UserProfile() {
@@ -21,7 +21,7 @@ export default function UserProfile() {
 				)
 				.then((res) => {
 					if (res.status === 200) {
-						router.push("/userHome");
+						router.push("/home");
 					}
 				})
 				.catch((error) => {

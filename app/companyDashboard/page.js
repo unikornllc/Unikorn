@@ -180,7 +180,7 @@ export default function CompanyDashboard() {
 	};
 
 	const handleContinueContract = () => {
-		window.location.href = `/signContract/${pendingFundraising.id}`;
+		window.location.href = `/api/signContract/${pendingFundraising.id}`;
 	};
 
 	const handleViewFundraisers = async (fundraising) => {

@@ -90,14 +90,16 @@ const ManageSub = ({ tier, wallet }) => {
 
 	return (
 		<div className="relative mb-6">
-			<div>
-				<p className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit">
-					Wallet: ${wallet.amount}
-				</p>
-				<p className="bg-gray-700 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit mt-2">
-					On Hold: ${wallet.onHold}
-				</p>
+			<div>{wallet &&
+				<div>
+					<p className="bg-gray-800 text-gray-200 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit">
+						Wallet: ${wallet.amount}
+					</p>
 
+					<p className="bg-gray-700 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium shadow-md w-fit mt-2">
+						On Hold: ${wallet.onHold}
+					</p>
+				</div>}
 				<button
 					className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-4"
 					onClick={() => setShowModal(true)}

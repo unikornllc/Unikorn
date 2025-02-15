@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { Button } from "../_ui/Button";
-import { Input } from "../_ui/Input";
-import { Label } from "../_ui/Label";
+import { Button } from "../../_ui/Button";
+import { Input } from "../../_ui/Input";
+import { Label } from "../../_ui/Label";
 import {
 	Card,
 	CardContent,
@@ -14,9 +14,9 @@ import {
 	CardHeader,
 	CardTitle,
 	CardFooter,
-} from "../_ui/Card";
-import { Alert, AlertDescription, AlertTitle, AlertCircle } from "../_ui/Alert";
-import { Separator } from "../_ui/Separator";
+} from "../../_ui/Card";
+import { Alert, AlertDescription, AlertTitle, AlertCircle } from "../../_ui/Alert";
+import { Separator } from "../../_ui/Separator";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaFacebook } from "react-icons/fa";
@@ -47,8 +47,7 @@ export default function SignIn() {
 			);
 			if (response.status === 200) {
 				setSignUpSuccess(true);
-
-				router.push("/userHome");
+				router.push("/home");
 			} else {
 				setSignInError("Invalid email or password");
 				setLoading(false);

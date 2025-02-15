@@ -113,7 +113,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 								<ExternalLink
 									href={
 										founder.crunch_base_link.startsWith("http://") ||
-										founder.crunch_base_link.startsWith("https://")
+											founder.crunch_base_link.startsWith("https://")
 											? founder.crunch_base_link
 											: `https://${founder.crunch_base_link}`
 									}

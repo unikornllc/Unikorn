@@ -188,7 +188,7 @@ app.post(
 	verifyAccessToken,
 	generateAccessTokenIfNeeded,
 	(req, res) => {
-		res.status(200).json({ message: "Login Successful" });
+		res.status(200).json({ role: req.account.role, message: "Login Successful" });
 	},
 );
 

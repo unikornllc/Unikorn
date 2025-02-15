@@ -9,9 +9,9 @@ import Certifications from "../../_components/_user_profile/Certifications";
 import Sidebar from "../../_components/_user_profile/Sidebar";
 import Files from "../../_components/_user_profile/Files";
 import axios from "axios";
-import SettingsPage from "@/app/_components/_settings/Settings";
-import CalendlyWidget from "@/app/_components/_calendly/CalendlyWidget";
-import CalendlyEventTypes from "@/app/_components/_calendly/CalendlyEventTypes";
+import SettingsPage from "@/app/_components/_shared/_settings/Settings";
+import CalendlyWidget from "@/app/_components/_shared/_calendly/CalendlyWidget";
+import CalendlyEventTypes from "@/app/_components/_shared/_calendly/CalendlyEventTypes";
 import ManageSub from "@/app/_components/_user_profile/ManageSub";
 
 export default function EditableUserProfile({ user, editable = false }) {
