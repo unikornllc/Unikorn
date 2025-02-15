@@ -89,7 +89,7 @@ export const callbackCalendly = async (req, res) => {
 			},
 		});
 
-		res.redirect(process.env.FRONTEND + "/userProfile");
+		res.redirect(process.env.FRONTEND + "/user/profile");
 	} catch (error) {
 		console.error(
 			"Error during OAuth callback:",

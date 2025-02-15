@@ -85,6 +85,7 @@ import {
 	isFollowingCompany,
 	getFollowingCompanies,
 	getCompanyTier,
+	getCurrentCompany,
 } from "./controllers/company_profile.js";
 
 import {
@@ -247,6 +248,7 @@ router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
 router.get("/getCompanyTier", getCompanyTier);
+router.get("/getCurrentCompany", getCurrentCompany)
 
 //get all companies that the user is following
 //returns an array of usernames

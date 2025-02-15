@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import GeneralInfo from "@/app/_components/_company_profile/GeneralInfo";
-import BoardMembers from "@/app/_components/_company_profile/BoardMembers";
-import FounderInfo from "@/app/_components/_company_profile/FounderInfo";
-import ProductInformation from "@/app/_components/_company_profile/ProductInformation";
-import Activity from "@/app/_components/_company_profile/Activity";
-import CompanyFiles from "@/app/_components/_company_profile/CompanyFiles";
-import Advisors from "@/app/_components/_company_profile/Advisors";
-import KeyEmployees from "@/app/_components/_company_profile/KeyEmployees";
-import { FundingComponentCompany } from "@/app/_components/_funding/FundingComponentCompany";
+import GeneralInfo from "@/app/_components/_company/_company_profile/GeneralInfo";
+import BoardMembers from "@/app/_components/_company/_company_profile/BoardMembers";
+import FounderInfo from "@/app/_components/_company/_company_profile/FounderInfo";
+import ProductInformation from "@/app/_components/_company/_company_profile/ProductInformation";
+import Activity from "@/app/_components/_company/_company_profile/Activity";
+import CompanyFiles from "@/app/_components/_company/_company_profile/CompanyFiles";
+import Advisors from "@/app/_components/_company/_company_profile/Advisors";
+import KeyEmployees from "@/app/_components/_company/_company_profile/KeyEmployees";
+import { FundingComponentCompany } from "@/app/_components/_company/_funding/FundingComponentCompany";
 
 const MyCompanyProfile = ({ company }) => {
 	const [companyData, setCompanyData] = useState(company);

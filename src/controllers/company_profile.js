@@ -98,7 +98,31 @@ export const isCurrentCompany = async (req, res) => {
 		res.status(400).json({ message: "Error fetching company" });
 	}
 };
-
+export const getCurrentCompany = async (req, res) => {
+	try {
+		const { include } = req.query;
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				id: req.decodedUser.id,
+			},
+			...(include
+				? {
+					include: Object.fromEntries(
+						Object.entries(include).map(([key, value]) => [
+							key,
+							value === "true",
+						]),
+					),
+				}
+				: {}),
+		});
+		const safe = (({ verified, id, password, ...rest }) => rest)(company);
+		res.status(200).json({ company: safe });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
 const isPlainObject = (obj) => {
 	if (Object.getPrototypeOf(obj) === null) {
 		return true;
@@ -146,13 +170,13 @@ export const getOneCompanyProfile = async (req, res) => {
 			},
 			...(include
 				? {
-						include: Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+					include: Object.fromEntries(
+						Object.entries(include).map(([key, value]) => [
+							key,
+							value === "true",
+						]),
+					),
+				}
 				: {}),
 		});
 

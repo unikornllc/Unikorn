@@ -1,24 +1,67 @@
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 
-export function middleware(req) {
-    const authRoutes = ["/", "/signin", "/signup"];
-    const protectedUserRoutes = ["/userHome", "/userProfile", "myInvestments"];
-    const protectedCompanyRoutes = ["/companyDashboard", "/companyProfile", "/myInvestments"];
+const routeRules = {
+    authRoutes: ["/", "/signin", "/signup"],
+    protectedUserRoutes: ["/user/home", "/user/profile", "/myInvestments"],
+    protectedCompanyRoutes: ["/company/home", "/company/profile", "/fundraising"],
+    sharedRoutes: ["/investments", "/reset-password", "/password-reset-request", "/userChat", "/text"],
+    dynamicRoutes: ["/user/profile/", "/company/profile/", "/companyProfile/", "/userProfile/"],
+};
 
-    const token = req.cookies.get("SID")?.value;
-    console.log(token)
-    if (token && authRoutes.includes(req.nextUrl.pathname)) {
-        return NextResponse.redirect(new URL("/userHome", req.url));
+
+const isDynamicRoute = (pathname, routeList) => routeList.some(route => pathname.startsWith(route));
+
+function withRoleResponse(response, role) {
+    response.headers.set("role", role);
+    return response;
+}
+
+export async function middleware(req) {
+    const token = req.cookies.get("BSID")?.value;
+    const pathname = req.nextUrl.pathname;
+
+
+    if (pathname.startsWith("/_next/") || pathname.startsWith("/static/") || pathname.startsWith("/api/")) {
+        return NextResponse.next();
     }
 
-    if (!token && (protectedUserRoutes.includes(req.nextUrl.pathname) || protectedCompanyRoutes.includes(req.nextUrl.pathname))) {
+    if (!token) {
+        if (routeRules.authRoutes.includes(pathname)) {
+            return NextResponse.next();
+        }
         return NextResponse.redirect(new URL("/signin", req.url));
     }
 
-    return NextResponse.next();
+    try {
+        const { payload } = await jwtVerify(token, secretKey);
+        const role = payload.role;
+
+        if (routeRules.authRoutes.includes(pathname) || pathname == "/home") {
+            return withRoleResponse(NextResponse.redirect(new URL(role === "User" ? "/user/home" : "/company/home", req.url)), role);
+        }
+
+        if (routeRules.sharedRoutes.includes(pathname) || isDynamicRoute(pathname, routeRules.dynamicRoutes)) {
+            return withRoleResponse(NextResponse.next(), role);
+        }
+
+        if (role === "User" && routeRules.protectedUserRoutes.includes(pathname)) {
+            return withRoleResponse(NextResponse.next(), role);
+        }
+        if (role === "Company" && routeRules.protectedCompanyRoutes.includes(pathname)) {
+            return withRoleResponse(NextResponse.next(), role);
+        }
+
+        // return NextResponse.rewrite(new URL("/not-found", req.url));
+        return withRoleResponse(NextResponse.next(), role)
+    } catch (error) {
+        return NextResponse.redirect(new URL("/signin", req.url));
+    }
 }
 
 export const config = {
-    matcher: "/:path*",
+    matcher: ["/((?!_next|static|api).*)"],
 };
