@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { set } from "react-hook-form";
 
 const Files = ({ username, editable }) => {
 	const [userFiles, setUserFiles] = useState([]);
 	const [addingFile, setAddingFile] = useState(false);
 	const [selectedFile, setSelectedFile] = useState(null);
+	const [loading, setLoading] = useState(false);
 
 	const uploadFile = async (e) => {
 		e.preventDefault();
@@ -17,11 +19,16 @@ const Files = ({ username, editable }) => {
 		formData.append("fileName", "resume");
 
 		try {
+			setLoading(true);
 			await axios
-				.post(`${process.env.NEXT_PUBLIC_SERVER}/api/uploadUserFile`, formData, {
-					withCredentials: true,
-					headers: { "Content-Type": "multipart/form-data" },
-				})
+				.post(
+					`${process.env.NEXT_PUBLIC_SERVER}/api/uploadUserFile`,
+					formData,
+					{
+						withCredentials: true,
+						headers: { "Content-Type": "multipart/form-data" },
+					},
+				)
 				.then((response) => {
 					const uploadedFile = {
 						id: response.data.id || Date.now(),
@@ -34,21 +41,29 @@ const Files = ({ username, editable }) => {
 				});
 		} catch (error) {
 			console.error("Error uploading file:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const deleteFile = async (fileName) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`, {
-				params: { username, fileName },
-				withCredentials: true,
-			});
+			setLoading(true);
+			await axios.delete(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`,
+				{
+					params: { username, fileName },
+					withCredentials: true,
+				},
+			);
 
 			setUserFiles((prevFiles) =>
 				prevFiles.filter((file) => file.fileName !== fileName),
 			);
 		} catch (error) {
 			console.error("Error deleting file:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -142,6 +157,7 @@ const Files = ({ username, editable }) => {
 						<button
 							type="submit"
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
+							disabled={loading}
 						>
 							Upload
 						</button>
@@ -193,6 +209,7 @@ const Files = ({ username, editable }) => {
 									<button
 										className="p-2 text-red-500 hover:text-red-700"
 										onClick={() => deleteFile(file.fileName)}
+										disabled={loading}
 									>
 										<TrashIcon className="w-5 h-5" />
 									</button>

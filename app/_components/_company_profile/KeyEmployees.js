@@ -17,7 +17,9 @@ const KeyEmployees = ({ employees = [], onUpdate }) => {
 	const [isAdding, setIsAdding] = useState(false);
 
 	useEffect(() => {
-		setLocalEmployees(employees);
+		if (JSON.stringify(localEmployees) !== JSON.stringify(employees)) {
+			setLocalEmployees(employees);
+		}
 	}, [employees]);
 
 	const startEditing = (index) => {

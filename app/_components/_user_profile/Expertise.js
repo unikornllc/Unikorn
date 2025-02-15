@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const Expertise = ({ username, expertiseList, editable }) => {
 	const [expertise, setExpertise] = useState(expertiseList);
 	const [newSkill, setNewSkill] = useState("");
 	const [addingSkill, setAddingSkill] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const addSkill = async () => {
 		try {
+			setLoading(true);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createExpertise`,
 				{
@@ -22,11 +25,14 @@ const Expertise = ({ username, expertiseList, editable }) => {
 			setAddingSkill(false);
 		} catch (error) {
 			console.error("Error adding skill:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const removeSkill = async (skillId) => {
 		try {
+			setLoading(true);
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteOneExpertise`,
 				{
@@ -37,6 +43,8 @@ const Expertise = ({ username, expertiseList, editable }) => {
 			setExpertise(expertise.filter((skill) => skill.id !== skillId));
 		} catch (error) {
 			console.error("Error removing skill:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -83,6 +91,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 					<button
 						className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary"
 						onClick={addSkill}
+						disabled={loading}
 					>
 						Add
 					</button>
@@ -92,6 +101,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 							setAddingSkill(false);
 							setNewSkill("");
 						}}
+						disabled={loading}
 					>
 						Cancel
 					</button>
@@ -109,6 +119,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 								<button
 									className="ml-2 text-red-500 hover:text-red-700"
 									onClick={() => removeSkill(exp.id)}
+									disabled={loading}
 								>
 									<TrashIcon className="w-4 h-4" />
 								</button>

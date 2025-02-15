@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const Experience = ({
 	username,
@@ -32,8 +33,11 @@ const Experience = ({
 		description: "",
 	});
 
+	const [loading, setLoading] = useState(false);
+
 	const addCorporateExperience = async () => {
 		try {
+			setLoading(true);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createCorporateExperience`,
 				{
@@ -56,11 +60,14 @@ const Experience = ({
 			setAddingCorporateExp(false);
 		} catch (error) {
 			console.error("Error adding corporate experience:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const removeCorporateExperience = async (experienceId) => {
 		try {
+			setLoading(true);
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteCorporateExperience`,
 				{
@@ -73,11 +80,14 @@ const Experience = ({
 			);
 		} catch (error) {
 			console.error("Error removing corporate experience:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const addStartupExperience = async () => {
 		try {
+			setLoading(true);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createStartupExperience`,
 				{
@@ -99,11 +109,14 @@ const Experience = ({
 			setAddingStartupExp(false);
 		} catch (error) {
 			console.error("Error adding startup experience:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const removeStartupExperience = async (experienceId) => {
 		try {
+			setLoading(true);
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteStartupExperience`,
 				{
@@ -116,6 +129,8 @@ const Experience = ({
 			);
 		} catch (error) {
 			console.error("Error removing startup experience:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -263,6 +278,7 @@ const Experience = ({
 								<button
 									className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 									onClick={addCorporateExperience}
+									disabled={loading}
 								>
 									Add
 								</button>
@@ -278,6 +294,7 @@ const Experience = ({
 											responsibilities: "",
 										});
 									}}
+									disabled={loading}
 								>
 									Cancel
 								</button>
@@ -309,6 +326,7 @@ const Experience = ({
 									<button
 										className="p-2 text-red-500 hover:text-red-700"
 										onClick={() => removeCorporateExperience(exp.id)}
+										disabled={loading}
 									>
 										<TrashIcon className="w-5 h-5" />
 									</button>
@@ -361,6 +379,7 @@ const Experience = ({
 								<button
 									className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 									onClick={addStartupExperience}
+									disabled={loading}
 								>
 									Add
 								</button>
@@ -374,6 +393,7 @@ const Experience = ({
 											description: "",
 										});
 									}}
+									disabled={loading}
 								>
 									Cancel
 								</button>
@@ -397,6 +417,7 @@ const Experience = ({
 									<button
 										className="p-2 text-red-500 hover:text-red-700"
 										onClick={() => removeStartupExperience(exp.id)}
+										disabled={loading}
 									>
 										<TrashIcon className="w-5 h-5" />
 									</button>

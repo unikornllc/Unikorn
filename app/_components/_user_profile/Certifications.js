@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const Certifications = ({ username, certificationList, editable }) => {
 	const [certs, setCerts] = useState(certificationList);
@@ -11,9 +12,11 @@ const Certifications = ({ username, certificationList, editable }) => {
 		completion_date: "",
 		focus_area: "",
 	});
+	const [loading, setLoading] = useState(false);
 
 	const addCertification = async () => {
 		try {
+			setLoading(true);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createCertificationsCourses`,
 				{
@@ -32,11 +35,14 @@ const Certifications = ({ username, certificationList, editable }) => {
 			setAddingCert(false);
 		} catch (error) {
 			console.error("Error adding certification:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const removeCertification = async (certId) => {
 		try {
+			setLoading(true);
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteCertificationsCourses`,
 				{
@@ -47,6 +53,8 @@ const Certifications = ({ username, certificationList, editable }) => {
 			setCerts(certs.filter((cert) => cert.id !== certId));
 		} catch (error) {
 			console.error("Error removing certification:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -124,6 +132,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 						<button
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 							onClick={addCertification}
+							disabled={loading}
 						>
 							Add
 						</button>
@@ -138,6 +147,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 									focus_area: "",
 								});
 							}}
+							disabled={loading}
 						>
 							Cancel
 						</button>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const Sidebar = ({
 	username,
@@ -33,8 +34,14 @@ const Sidebar = ({
 		X: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/X_icon_2.svg/1483px-X_icon_2.svg.png",
 		Meetup: "https://cdn-icons-png.flaticon.com/512/3984/3984399.png",
 	};
+	const [loading, setLoading] = useState({
+		language: false,
+		interest: false,
+		socialMedia: false,
+	});
 	const addLanguage = async () => {
 		try {
+			setLoading({ ...loading, language: true });
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createLanguage`,
 				{
@@ -49,23 +56,32 @@ const Sidebar = ({
 			setAddingLanguage(false);
 		} catch (error) {
 			console.error("Error adding language:", error);
+		} finally {
+			setLoading({ ...loading, language: false });
 		}
 	};
 
 	const removeLanguage = async (languageId) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteLanguage`, {
-				params: { languageId },
-				withCredentials: true,
-			});
+			setLoading({ ...loading, language: true });
+			await axios.delete(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteLanguage`,
+				{
+					params: { languageId },
+					withCredentials: true,
+				},
+			);
 			setUserLanguages(userLanguages.filter((lang) => lang.id !== languageId));
 		} catch (error) {
 			console.error("Error removing language:", error);
+		} finally {
+			setLoading({ ...loading, language: false });
 		}
 	};
 
 	const addInterest = async () => {
 		try {
+			setLoading({ ...loading, interest: true });
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createInterest`,
 				{
@@ -79,25 +95,34 @@ const Sidebar = ({
 			setAddingInterest(false);
 		} catch (error) {
 			console.error("Error adding interest:", error);
+		} finally {
+			setLoading({ ...loading, interest: false });
 		}
 	};
 
 	const removeInterest = async (interestId) => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteInterest`, {
-				params: { interestId },
-				withCredentials: true,
-			});
+			setLoading({ ...loading, interest: true });
+			await axios.delete(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteInterest`,
+				{
+					params: { interestId },
+					withCredentials: true,
+				},
+			);
 			setUserInterests(
 				userInterests.filter((interest) => interest.id !== interestId),
 			);
 		} catch (error) {
 			console.error("Error removing interest:", error);
+		} finally {
+			setLoading({ ...loading, interest: false });
 		}
 	};
 
 	const addSocialLink = async () => {
 		try {
+			setLoading({ ...loading, socialMedia: true });
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createSocialMedia`,
 				{
@@ -111,11 +136,14 @@ const Sidebar = ({
 			setAddingSocialLink(false);
 		} catch (error) {
 			console.error("Error adding social media link:", error);
+		} finally {
+			setLoading({ ...loading, socialMedia: false });
 		}
 	};
 
 	const removeSocialLink = async (linkId) => {
 		try {
+			setLoading({ ...loading, socialMedia: true });
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteSocialMedia`,
 				{
@@ -126,6 +154,8 @@ const Sidebar = ({
 			setUserSocialLinks(userSocialLinks.filter((link) => link.id !== linkId));
 		} catch (error) {
 			console.error("Error removing social media link:", error);
+		} finally {
+			setLoading({ ...loading, socialMedia: false });
 		}
 	};
 
@@ -197,6 +227,7 @@ const Sidebar = ({
 							<button
 								className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 								onClick={addLanguage}
+								disabled={loading.language}
 							>
 								Add
 							</button>
@@ -226,6 +257,7 @@ const Sidebar = ({
 									<button
 										className="p-2 text-red-500 hover:text-red-700"
 										onClick={() => removeLanguage(lang.id)}
+										disabled={loading.language}
 									>
 										<TrashIcon className="w-5 h-5" />
 									</button>
@@ -258,6 +290,7 @@ const Sidebar = ({
 						<button
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary"
 							onClick={addInterest}
+							disabled={loading.interest}
 						>
 							Add
 						</button>
@@ -284,6 +317,7 @@ const Sidebar = ({
 									<button
 										className="ml-2 text-red-500 hover:text-red-700"
 										onClick={() => removeInterest(interest.id)}
+										disabled={loading.interest}
 									>
 										<TrashIcon className="w-4 h-4" />
 									</button>
@@ -335,6 +369,7 @@ const Sidebar = ({
 							<button
 								className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 								onClick={addSocialLink}
+								disabled={loading.socialMedia}
 							>
 								Add
 							</button>
@@ -371,6 +406,7 @@ const Sidebar = ({
 									<button
 										className="p-2 text-red-500 hover:text-red-700"
 										onClick={() => removeSocialLink(link.id)}
+										disabled={loading.socialMedia}
 									>
 										<TrashIcon className="w-5 h-5" />
 									</button>
