@@ -10,21 +10,29 @@ export const depositWallet = async (req, res) => {
 
 		const wallet = await prisma.wallet.findUnique({
 			where:
-				req.decodedUser.role === "user"
+				req.decodedUser.role === "User"
 					? { userId: req.decodedUser.id }
 					: { companyId: req.decodedUser.id },
 		});
 
+		const bank = await prisma.ledgerAccount.findUnique({
+			where: {
+				id: "4b00a1c6-ea92-4ffd-8488-419a2a087c28",
+			},
+			select: { id: true },
+		});
+
 		if (!wallet) {
-			return res.status(404).json({ message: "Wallet not found" });
+			return res.status(402).json({ message: "Wallet not found" });
 		}
 
 		const account = await prisma[
-			req.decodedUser.role === "user" ? "user" : "company_profile"
+			req.decodedUser.role === "User" ? "user" : "company_profile"
 		].findUnique({
 			where: { id: req.decodedUser.id },
-			select: { username: true, ledgerAccount: true },
+			select: { username: true, LedgerAccount: true },
 		});
+
 		const journal = await prisma.journal.findUnique({
 			where: {
 				name: "Wallet Deposit",
@@ -47,17 +55,12 @@ export const depositWallet = async (req, res) => {
 						amount +
 						"\nDate " +
 						date,
-					...(req.decodedUser.role === "user"
+					...(req.decodedUser.role === "User"
 						? { userId: req.decodedUser.id }
 						: { companyId: req.decodedUser.id }),
 				},
 			});
-			const bank = await prisma.ledgerAccount.findUnique({
-				where: {
-					id: "Bank Ledger",
-				},
-				select: { id: true },
-			});
+
 			const dr = await prisma.entry.create({
 				data: {
 					entryType: "DEBIT",
@@ -95,11 +98,11 @@ export const depositWallet = async (req, res) => {
 						date,
 					amount: amount,
 					journalId: journal.id,
-					ledgerId: account.ledgerAccount.id,
+					ledgerId: account.LedgerAccount.id,
 				},
 			});
 			await prisma.ledgerAccount.update({
-				where: { id: account.ledgerAccount.id },
+				where: { id: account.LedgerAccount.id },
 				data: { totalBalance: { decrement: amount } },
 			});
 		});
@@ -118,23 +121,29 @@ export const withdrawWallet = async (req, res) => {
 		if (isNaN(amount) || amount <= 0) {
 			return res.status(400).json({ message: "Invalid deposit amount" });
 		}
+		const bank = await prisma.ledgerAccount.findUnique({
+			where: {
+				id: "4b00a1c6-ea92-4ffd-8488-419a2a087c28",
+			},
+			select: { id: true },
+		});
 
 		const wallet = await prisma.wallet.findUnique({
 			where:
-				req.decodedUser.role === "user"
+				req.decodedUser.role === "User"
 					? { userId: req.decodedUser.id }
 					: { companyId: req.decodedUser.id },
 		});
 
 		if (!wallet) {
-			return res.status(404).json({ message: "Wallet not found" });
+			return res.status(402).json({ message: "Wallet not found" });
 		}
 
 		const account = await prisma[
-			req.decodedUser.role === "user" ? "user" : "company_profile"
+			req.decodedUser.role === "User" ? "user" : "company_profile"
 		].findUnique({
 			where: { id: req.decodedUser.id },
-			select: { username: true, ledgerAccount: true },
+			select: { username: true, LedgerAccount: true },
 		});
 		const journal = await prisma.journal.findUnique({
 			where: {
@@ -158,16 +167,12 @@ export const withdrawWallet = async (req, res) => {
 						amount +
 						"\nDate " +
 						date,
-					...(req.decodedUser.role === "user"
+					...(req.decodedUser.role === "User"
 						? { userId: req.decodedUser.id }
 						: { companyId: req.decodedUser.id }),
 				},
 			});
-			const bank = await prisma.ledgerAccount.findUnique({
-				where: {
-					id: "Bank Ledger",
-				},
-			});
+
 			const cr = await prisma.entry.create({
 				data: {
 					entryType: "CREDIT",
@@ -205,11 +210,11 @@ export const withdrawWallet = async (req, res) => {
 						date,
 					amount: amount,
 					journalId: journal.id,
-					ledgerId: account.ledgerAccount.id,
+					ledgerId: account.LedgerAccount.id,
 				},
 			});
 			await prisma.ledgerAccount.update({
-				where: { id: account.ledgerAccount.id },
+				where: { id: account.LedgerAccount.id },
 				data: { totalBalance: { increment: amount } },
 			});
 		});
