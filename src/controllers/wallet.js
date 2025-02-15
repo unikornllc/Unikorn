@@ -19,7 +19,7 @@ export const depositWallet = async (req, res) => {
 			return res.status(404).json({ message: "Wallet not found" });
 		}
 
-		await prisma.wallet.update({
+		await prisma.wallet.update({	
 			where: { id: wallet.id },
 			data: { amount: { increment: amount } },
 		});
