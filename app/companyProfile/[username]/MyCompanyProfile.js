@@ -9,7 +9,7 @@ import Activity from "@/app/_components/_company_profile/Activity";
 import CompanyFiles from "@/app/_components/_company_profile/CompanyFiles";
 import Advisors from "@/app/_components/_company_profile/Advisors";
 import KeyEmployees from "@/app/_components/_company_profile/KeyEmployees";
-import { FundingComponentCompany } from "@/app/_components/_funding/FundingComponentCompany";
+import { FundingComponentCompany } from "@/app/_components/_company/_funding/FundingComponentCompany";
 
 const MyCompanyProfile = ({ company }) => {
 	const [companyData, setCompanyData] = useState(company);
