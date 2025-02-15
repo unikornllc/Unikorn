@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
-import ExternalLink from "../../ExternalLink";
+import ExternalLink from "../ExternalLink";
 
 const Company_Type = {
 	Profit: "Profit",

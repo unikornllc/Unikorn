@@ -9,7 +9,7 @@ import AvatarEditor from "react-avatar-editor";
 import Modal from "react-modal";
 import axios from "axios";
 import Webcam from "react-webcam";
-import SettingsOverlay from "../../_shared/_settings/Settings";
+import SettingsOverlay from "../_shared/_settings/Settings";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 

@@ -1,18 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Header from "@/app/_components/_user/_user_profile/Header";
-import About from "@/app/_components/_user/_user_profile/About";
-import Experience from "@/app/_components/_user/_user_profile/Experience";
-import Education from "@/app/_components/_user/_user_profile/Education";
-import Expertise from "@/app/_components/_user/_user_profile/Expertise";
-import Certifications from "@/app/_components/_user/_user_profile/Certifications";
-import Sidebar from "@/app/_components/_user/_user_profile/Sidebar";
-import Files from "@/app/_components/_user/_user_profile/Files";
+import Header from "@/app/_components/_user_profile/Header";
+import About from "@/app/_components/_user_profile/About";
+import Experience from "@/app/_components/_user_profile/Experience";
+import Education from "@/app/_components/_user_profile/Education";
+import Expertise from "@/app/_components/_user_profile/Expertise";
+import Certifications from "@/app/_components/_user_profile/Certifications";
+import Sidebar from "@/app/_components/_user_profile/Sidebar";
+import Files from "@/app/_components/_user_profile/Files";
 import axios from "axios";
 // import SettingsPage from "@/app/_components/_shared/_settings/Settings";
 // import CalendlyWidget from "@/app/_components/_shared/_calendly/CalendlyWidget";
 import CalendlyEventTypes from "@/app/_components/_shared/_calendly/CalendlyEventTypes";
-import ManageSub from "@/app/_components/_user/_user_profile/ManageSub";
+import ManageSub from "@/app/_components/_user_profile/ManageSub";
 
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
