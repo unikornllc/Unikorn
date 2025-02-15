@@ -3,7 +3,7 @@ enum EntryType {
   CREDIT
 }
 
-enum FlowType{
+enum FlowType {
   Wallet_Deposit
   Wallet_Withdraw
   Investment_Flow
@@ -21,10 +21,10 @@ model Wallet {
   id        String          @id @default(uuid())
   amount    Decimal         @default(0.0)
   onHold    Decimal         @default(0.0)
-  userId    String          @unique
-  user      User            @relation("Wallet", fields: [userId], references: [id])
-  companyId String          @unique
-  company   Company_Profile @relation("CompanyWallet", fields: [companyId], references: [id])
+  userId    String?          @unique
+  user      User?            @relation("Wallet", fields: [userId], references: [id])
+  companyId String?          @unique
+  company   Company_Profile? @relation("CompanyWallet", fields: [companyId], references: [id])
 }
 
 model Transaction {
@@ -41,24 +41,24 @@ model Transaction {
 }
 
 model Journal {
-  id           String         @id @default(uuid())
-  totalBalance Decimal        @default(0)
-  flowType     FlowType
-  raisingFundsId String?         @unique
-  raisingFunds    Raising_Funds? @relation(fields: [raisingFundsId], references: [id])
-  Entry        Entry[]
+  id             String         @id @default(uuid())
+  name           String         @unique
+  flowType       FlowType
+  raisingFundsId String?        @unique
+  raisingFunds   Raising_Funds? @relation(fields: [raisingFundsId], references: [id])
+  Entry          Entry[]
 }
 
 model Entry {
-  id            String      @id @default(uuid())
+  id            String        @id @default(uuid())
   transactionId String
-  transaction   Transaction @relation(fields: [transactionId], references: [id])
-  date          DateTime    @default(now())
+  transaction   Transaction   @relation(fields: [transactionId], references: [id])
+  date          DateTime      @default(now())
   description   String?
   amount        Decimal
   entryType     EntryType
   journalId     String
-  journal       Journal     @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journal       Journal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
   ledgerId      String
   ledger        LedgerAccount @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
 }
