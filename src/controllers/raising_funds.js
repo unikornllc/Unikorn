@@ -800,7 +800,7 @@ export const cancelInvestmentOffer = async (req, res) => {
 export const cancelRaisingFunds = async (req, res) => {
 	const companyId = req.decodedUser.id;
 	const userRole = req.decodedUser.role;
-	const { raisingFundsId } = req.body.fundingData;
+	const { id } = req.body.fundingData;
 	try {
 		if (userRole != "Company") {
 			return res.status(403).json({ message: "Unauthorized action" });
@@ -808,7 +808,7 @@ export const cancelRaisingFunds = async (req, res) => {
 
 		const raisingFunds = await prisma.raising_Funds.findUnique({
 			where: {
-				id: raisingFundsId,
+				id: id,
 				companyId: companyId,
 			},
 			include: {
@@ -829,20 +829,20 @@ export const cancelRaisingFunds = async (req, res) => {
 
 		await prisma.$transaction(async (prisma) => {
 			await prisma.investmentOffer.deleteMany({
-				where: { raisingFundsId },
+				where: { raisingFundsId: id },
 			});
 
 			await prisma.fundraiser.deleteMany({
-				where: { raisingFundsId },
+				where: { raisingFundsId: id },
 			});
-			if (activeFunds.length == 0) {
+			if (raisingFunds.length == 0) {
 				return res
 					.status(404)
 					.json({ message: "No active raising funds found" });
 			}
 
 			await prisma.raising_Funds.update({
-				where: { id: raisingFundsId },
+				where: { id: id },
 				data: { status: "Failed" },
 			});
 		});

@@ -44,35 +44,35 @@ export default function CompanyDashboard() {
 		try {
 			// Fetch active fundraising
 			const activeResponse = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/active`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
 				{ withCredentials: true },
 			);
 			setActiveFundraising(activeResponse.data.activeFundraising);
 
 			// Fetch pending fundraising
 			const pendingResponse = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/pending`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/pending`,
 				{ withCredentials: true },
 			);
 			setPendingFundraising(pendingResponse.data.pendingFundraising);
 
 			// Fetch past fundraisings
 			const pastResponse = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/company/past`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/past`,
 				{ withCredentials: true },
 			);
 			setPastFundraisings(pastResponse.data.pastFundraisings);
 			// Fetch investment offers for active fundraising
 			if (activeResponse.data.activeFundraising) {
 				const offersResponse = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/offers`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/offers`,
 					{ withCredentials: true },
 				);
 				setInvestmentOffers(offersResponse.data.offers);
 
 				// Fetch fundraisers for active fundraising
 				const fundraisersResponse = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/fundraisers`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/fundraisers`,
 					{
 						params: {
 							raisingFundsId: activeResponse.data.activeFundraising.id,
@@ -119,7 +119,7 @@ export default function CompanyDashboard() {
 		try {
 			if (actionType === "accept") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/offer/accept`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/offer/accept`,
 					{ offerId: selectedOffer.id },
 					{ withCredentials: true },
 				);
@@ -130,7 +130,7 @@ export default function CompanyDashboard() {
 				});
 			} else if (actionType === "reject") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/offer/reject`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/offer/reject`,
 					{ offerId: selectedOffer.id },
 					{ withCredentials: true },
 				);
@@ -141,7 +141,7 @@ export default function CompanyDashboard() {
 				});
 			} else if (actionType === "cancelFundraising") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/cancel`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/cancel`,
 					{ raisingFundsId: activeFundraising.id },
 					{ withCredentials: true },
 				);
@@ -152,7 +152,7 @@ export default function CompanyDashboard() {
 				});
 			} else if (actionType === "cancelPendingFundraising") {
 				await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/cancel`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/cancel`,
 					{ raisingFundsId: pendingFundraising.id },
 					{ withCredentials: true },
 				);
@@ -186,7 +186,7 @@ export default function CompanyDashboard() {
 	const handleViewFundraisers = async (fundraising) => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/raisingFunds/fundraisers`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/fundraisers`,
 				{ params: { raisingFundsId: fundraising.id }, withCredentials: true },
 			);
 			setFundraisers(response.data.fundraisers);
@@ -484,7 +484,7 @@ export default function CompanyDashboard() {
 			>
 				<DialogTitle>Fundraisers</DialogTitle>
 				<DialogContent>
-					{fundraisers ? (
+					{!fundraisers ? (
 						<Typography>No fundraisers found.</Typography>
 					) : (
 						<Table>

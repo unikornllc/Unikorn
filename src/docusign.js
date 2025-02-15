@@ -233,6 +233,22 @@ docusignRouter.post("/docusign", async (req, res) => {
 		const company = await prisma.company_Profile.findUnique({
 			where: { username: req.body.username },
 		});
+
+		if (!company) {
+			return res.status(404).json({ message: "Company not found" });
+		}
+		const existingFund = await prisma.raising_Funds.findFirst({
+			where: {
+				companyId: company.id,
+				status: { in: ["Pending", "Active"] },
+			},
+		});
+
+		if (existingFund) {
+			return res.status(400).json({
+				message: "Company already has a pending or active raising fund",
+			});
+		}
 		const envelopesApi = getEnvelopeApi(req);
 		const envelope = makeEnvelopeCompany(
 			req.body.name,
@@ -261,7 +277,6 @@ docusignRouter.post("/docusign", async (req, res) => {
 				company: { connect: { id: company.id } },
 			},
 		});
-		// console.log("envelope results", results);
 		const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
 		const recipientViewRequest = await envelopesApi.createRecipientView(
 			process.env.ACCOUNT_ID_DOCUSIGN,
