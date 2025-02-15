@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const Education = ({ username, educationList, editable }) => {
 	const [educations, setEducations] = useState(educationList);
@@ -10,9 +11,11 @@ const Education = ({ username, educationList, editable }) => {
 		institution: "",
 	});
 	const degrees = ["NONE", "BA", "BSc", "MA", "MSc", "MBA", "PhD"];
+	const [loading, setLoading] = useState(false);
 
 	const addEducation = async () => {
 		try {
+			setLoading(true);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createEducation`,
 				{
@@ -26,11 +29,14 @@ const Education = ({ username, educationList, editable }) => {
 			setAddingEducation(false);
 		} catch (error) {
 			console.error("Error adding education:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const removeEducation = async (educationId) => {
 		try {
+			setLoading(true);
 			await axios.delete(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteOneEducation`,
 				{
@@ -41,6 +47,8 @@ const Education = ({ username, educationList, editable }) => {
 			setEducations(educations.filter((edu) => edu.id !== educationId));
 		} catch (error) {
 			console.error("Error removing education:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -101,6 +109,7 @@ const Education = ({ username, educationList, editable }) => {
 						<button
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 							onClick={addEducation}
+							disabled={loading}
 						>
 							Add
 						</button>
@@ -110,6 +119,7 @@ const Education = ({ username, educationList, editable }) => {
 								setAddingEducation(false);
 								setNewEducation({ degree: "", institution: "" });
 							}}
+							disabled={loading}
 						>
 							Cancel
 						</button>

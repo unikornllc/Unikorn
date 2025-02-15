@@ -18,7 +18,9 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [isAdding, setIsAdding] = useState(false);
 
 	useEffect(() => {
-		setLocalFounders(founders);
+		if (JSON.stringify(localFounders) !== JSON.stringify(founders)) {
+			setLocalFounders(founders);
+		}
 	}, [founders]);
 
 	const startEditing = (index) => {

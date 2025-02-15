@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
+import { set } from "react-hook-form";
 
 const About = ({ username, aboutList, editable }) => {
 	const [about, setAbout] = useState(aboutList);
 	const [editing, setEditing] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const handleSave = async () => {
 		try {
+			setLoading(true);
 			await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/updateUser`,
 				{ username, description: about.description },
@@ -17,6 +20,8 @@ const About = ({ username, aboutList, editable }) => {
 			);
 		} catch (error) {
 			console.error("Error removing certification:", error);
+		} finally {
+			setLoading(false);
 		}
 		setEditing(false);
 	};
@@ -48,6 +53,7 @@ const About = ({ username, aboutList, editable }) => {
 						<button
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"
 							onClick={handleSave}
+							disabled={loading}
 						>
 							Save
 						</button>
