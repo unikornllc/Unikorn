@@ -30,6 +30,7 @@ model Raising_Funds {
   companyId         String
   fundraisers       Fundraiser[]
   investmentOffers  InvestmentOffer[]
+  journal           Journal?
 }
 
 model Fundraiser {
