@@ -3,25 +3,105 @@ import prisma from "../db.js";
 export const depositWallet = async (req, res) => {
 	try {
 		const amount = parseFloat(req.body.amount);
+		const date = Date.now();
 		if (isNaN(amount) || amount <= 0) {
 			return res.status(400).json({ message: "Invalid deposit amount" });
 		}
 
-		const wallet =
-			(await prisma.wallet.findUnique({
-				where: { userId: req.decodedUser.id },
-			})) ||
-			(await prisma.wallet.findUnique({
-				where: { companyId: req.decodedUser.id },
-			}));
+		const wallet = await prisma.wallet.findUnique({
+			where:
+				req.decodedUser.role === "user"
+					? { userId: req.decodedUser.id }
+					: { companyId: req.decodedUser.id },
+		});
 
 		if (!wallet) {
 			return res.status(404).json({ message: "Wallet not found" });
 		}
 
-		await prisma.wallet.update({	
-			where: { id: wallet.id },
-			data: { amount: { increment: amount } },
+		const account = await prisma[
+			req.decodedUser.role === "user" ? "user" : "company_profile"
+		].findUnique({
+			where: { id: req.decodedUser.id },
+			select: { username: true, ledgerAccount: true },
+		});
+		const journal = await prisma.journal.findUnique({
+			where: {
+				name: "Wallet Deposit",
+			},
+		});
+		await prisma.$transaction(async (prisma) => {
+			await prisma.wallet.update({
+				where: { id: wallet.id },
+				data: { amount: { increment: amount } },
+			});
+
+			const transaction = await prisma.transaction.create({
+				data: {
+					transactionType: "Wallet_Deposit",
+					amount: amount,
+					description:
+						"Wallet Deposit by user " +
+						account.username +
+						"\nDeposit Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					...(req.decodedUser.role === "user"
+						? { userId: req.decodedUser.id }
+						: { companyId: req.decodedUser.id }),
+				},
+			});
+			const bank = await prisma.ledgerAccount.findUnique({
+				where: {
+					id: "Bank Ledger",
+				},
+				select: { id: true },
+			});
+			const dr = await prisma.entry.create({
+				data: {
+					entryType: "DEBIT",
+					transactionId: transaction.id,
+					description:
+						"Entry type DEBIT:" +
+						"\n" +
+						account.username +
+						" deposited money into his wallet" +
+						"\nDeposit Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					amount: amount,
+					journalId: journal.id,
+					ledgerId: bank.id,
+				},
+			});
+			await prisma.ledgerAccount.update({
+				where: { id: bank.id },
+				data: { totalBalance: { increment: amount } },
+			});
+			const cr = await prisma.entry.create({
+				data: {
+					entryType: "CREDIT",
+					transactionId: transaction.id,
+					description:
+						"Entry type CREDIT:" +
+						"\n" +
+						account.username +
+						" deposited money into his wallet" +
+						"\nDeposit Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					amount: amount,
+					journalId: journal.id,
+					ledgerId: account.ledgerAccount.id,
+				},
+			});
+			await prisma.ledgerAccount.update({
+				where: { id: account.ledgerAccount.id },
+				data: { totalBalance: { decrement: amount } },
+			});
 		});
 
 		res.status(200).json({ message: "Deposited successfully" });
@@ -34,29 +114,104 @@ export const depositWallet = async (req, res) => {
 export const withdrawWallet = async (req, res) => {
 	try {
 		const amount = parseFloat(req.body.amount);
+		const date = Date.now();
 		if (isNaN(amount) || amount <= 0) {
-			return res.status(400).json({ message: "Invalid withdrawal amount" });
+			return res.status(400).json({ message: "Invalid deposit amount" });
 		}
 
-		const wallet =
-			(await prisma.wallet.findUnique({
-				where: { userId: req.decodedUser.id },
-			})) ||
-			(await prisma.wallet.findUnique({
-				where: { companyId: req.decodedUser.id },
-			}));
+		const wallet = await prisma.wallet.findUnique({
+			where:
+				req.decodedUser.role === "user"
+					? { userId: req.decodedUser.id }
+					: { companyId: req.decodedUser.id },
+		});
 
 		if (!wallet) {
 			return res.status(404).json({ message: "Wallet not found" });
 		}
 
-		if (wallet.amount < amount) {
-			return res.status(400).json({ message: "Insufficient funds" });
-		}
+		const account = await prisma[
+			req.decodedUser.role === "user" ? "user" : "company_profile"
+		].findUnique({
+			where: { id: req.decodedUser.id },
+			select: { username: true, ledgerAccount: true },
+		});
+		const journal = await prisma.journal.findUnique({
+			where: {
+				name: "Wallet Withdraw",
+			},
+		});
+		await prisma.$transaction(async (prisma) => {
+			await prisma.wallet.update({
+				where: { id: wallet.id },
+				data: { amount: { decrement: amount } },
+			});
 
-		await prisma.wallet.update({
-			where: { id: wallet.id },
-			data: { amount: { decrement: amount } },
+			const transaction = await prisma.transaction.create({
+				data: {
+					transactionType: "Wallet_Withdraw",
+					amount: amount,
+					description:
+						"Wallet Withdraw by user " +
+						account.username +
+						"\nWithdraw Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					...(req.decodedUser.role === "user"
+						? { userId: req.decodedUser.id }
+						: { companyId: req.decodedUser.id }),
+				},
+			});
+			const bank = await prisma.ledgerAccount.findUnique({
+				where: {
+					id: "Bank Ledger",
+				},
+			});
+			const cr = await prisma.entry.create({
+				data: {
+					entryType: "CREDIT",
+					transactionId: transaction.id,
+					description:
+						"Entry type CREDIT:" +
+						"\n" +
+						account.username +
+						" withdrawn money from his wallet" +
+						"\nWithdraw Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					amount: amount,
+					journalId: journal.id,
+					ledgerId: bank.id,
+				},
+			});
+			await prisma.ledgerAccount.update({
+				where: { id: bank.id },
+				data: { totalBalance: { decrement: amount } },
+			});
+			const dr = await prisma.entry.create({
+				data: {
+					entryType: "DEBIT",
+					transactionId: transaction.id,
+					description:
+						"Entry type DEBIT:" +
+						"\n" +
+						account.username +
+						" withdrawn money from his wallet" +
+						"\nWithdraw Amount $" +
+						amount +
+						"\nDate " +
+						date,
+					amount: amount,
+					journalId: journal.id,
+					ledgerId: account.ledgerAccount.id,
+				},
+			});
+			await prisma.ledgerAccount.update({
+				where: { id: account.ledgerAccount.id },
+				data: { totalBalance: { increment: amount } },
+			});
 		});
 
 		res.status(200).json({ message: "Withdrawn successfully" });
