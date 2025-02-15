@@ -34,12 +34,12 @@ export const generateRefreshToken = async (req, res, next) => {
 			}));
 		const company = !user
 			? (await prisma.company_Profile.findUnique({
-					where: { username: email, include: { logindevices } },
-				})) ||
-				(await prisma.company_Profile.findUnique({
-					where: { email },
-					include: { logindevices },
-				}))
+				where: { username: email, include: { logindevices } },
+			})) ||
+			(await prisma.company_Profile.findUnique({
+				where: { email },
+				include: { logindevices },
+			}))
 			: null;
 		if (!user && !company) {
 			return res.status(401).json({ message: "Invalid credentials." });

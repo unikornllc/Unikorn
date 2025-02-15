@@ -1,0 +1,87 @@
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+enum FlowType{
+  Wallet_Deposit
+  Wallet_Withdraw
+  Investment_Flow
+}
+
+enum TransactionType {
+  Wallet_Deposit
+  Wallet_Withdraw
+  Surrender_Equity
+  Purchase_Equity
+  Withdraw_Equity
+}
+
+model Wallet {
+  id        String          @id @default(uuid())
+  amount    Decimal         @default(0.0)
+  onHold    Decimal         @default(0.0)
+  userId    String          @unique
+  user      User            @relation("Wallet", fields: [userId], references: [id])
+  companyId String          @unique
+  company   Company_Profile @relation("CompanyWallet", fields: [companyId], references: [id])
+}
+
+model Transaction {
+  id              String           @id @default(uuid())
+  transactionType TransactionType
+  amount          Decimal
+  date            DateTime         @default(now())
+  description     String
+  companyId       String?
+  company         Company_Profile? @relation("Transaction", fields: [companyId], references: [id])
+  userId          String?
+  user            User?            @relation("Transaction", fields: [userId], references: [id])
+  Entry           Entry[]
+}
+
+model Journal {
+  id           String         @id @default(uuid())
+  totalBalance Decimal        @default(0)
+  flowType     FlowType
+  raisingFundsId String?         @unique
+  raisingFunds    Raising_Funds? @relation(fields: [raisingFundsId], references: [id])
+  Entry        Entry[]
+}
+
+model Entry {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  date          DateTime    @default(now())
+  description   String?
+  amount        Decimal
+  entryType     EntryType
+  journalId     String
+  journal       Journal     @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  ledgerId      String
+  ledger        LedgerAccount @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
+}
+
+model LedgerAccount {
+  id           String           @id @default(uuid())
+  name         String
+  totalBalance Decimal          @default(0)
+  companyId    String?          @unique
+  company      Company_Profile? @relation("LedgerAccountCompany", fields: [companyId], references: [id])
+  userId       String?          @unique
+  user         User?            @relation("LedgerAccountUser", fields: [userId], references: [id])
+  Entry        Entry[]
+}
+
+// model LedgerEntry {
+//   id            String        @id @default(uuid())
+//   date          DateTime      @default(now())
+//   description   String
+//   amount        Decimal       @default(0.0)
+//   transactionId String
+//   transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+//   type          EntryType
+//   journalId     String
+//   journal       Journal       @relation(fields: [journalId], references: [id], onDelete: Cascade)
+// }

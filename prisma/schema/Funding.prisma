@@ -17,65 +17,66 @@ enum Contract_Status {
 }
 
 model Raising_Funds {
-  id                String          @id @default(uuid())
+  id                String            @id @default(uuid())
   equityPercentage  Float
   fundingAmount     Float
   pricePerPortion   Float
-  remainingPortions Int             @default(10)
-  totalPortions     Int             @default(10)
+  remainingPortions Int               @default(10)
+  totalPortions     Int               @default(10)
   date              DateTime
-  status            Contract_Status @default(Pending)
-  envelopeId        String          @unique
-  company           Company_Profile @relation(fields: [companyId], references: [id])
+  status            Contract_Status   @default(Pending)
+  envelopeId        String            @unique
+  company           Company_Profile   @relation(fields: [companyId], references: [id])
   companyId         String
   fundraisers       Fundraiser[]
   investmentOffers  InvestmentOffer[]
+  journal           Journal?
 }
 
 model Fundraiser {
-  id                 String          @id @default(uuid())
+  id String @id @default(uuid())
 
-  investorType       InvestorType
+  investorType InvestorType
 
-  investorUser       User?           @relation("UserInvestments",fields: [investorUserId], references: [id])
-  investorUserId     String?
+  investorUser   User?   @relation("UserInvestments", fields: [investorUserId], references: [id])
+  investorUserId String?
 
-  investorCompany    Company_Profile? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id])
-  investorCompanyId  String?
+  investorCompany   Company_Profile? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id])
+  investorCompanyId String?
 
-  raisingFunds       Raising_Funds   @relation(fields: [raisingFundsId], references: [id])
-  raisingFundsId     String
+  raisingFunds   Raising_Funds @relation(fields: [raisingFundsId], references: [id])
+  raisingFundsId String
 
-  equityPercentage   Float
-  fundingAmount      Float
-  portions           Int
-  pricePerPortion    Float
-  date               DateTime
-  status             Contract_Status @default(Pending)
-  envelopeId         String
+  equityPercentage Float
+  fundingAmount    Float
+  portions         Int
+  pricePerPortion  Float
+  date             DateTime
+  status           Contract_Status @default(Pending)
+  envelopeId       String
+
   @@unique([raisingFundsId, investorUserId, investorCompanyId])
-
 }
 
 model InvestmentOffer {
-  id                        String          @id @default(uuid())
+  id String @id @default(uuid())
 
-  investorType              InvestorType
+  investorType InvestorType
 
-  investorUser              User?           @relation("UserOffers",fields: [investorUserId], references: [id])
-  investorUserId            String?
+  investorUser   User?   @relation("UserOffers", fields: [investorUserId], references: [id])
+  investorUserId String?
 
-  investorCompany           Company_Profile? @relation("CompanyOffers",fields: [investorCompanyId], references: [id])
-  investorCompanyId         String?
+  investorCompany   Company_Profile? @relation("CompanyOffers", fields: [investorCompanyId], references: [id])
+  investorCompanyId String?
 
-  raisingFunds              Raising_Funds   @relation(fields: [raisingFundsId], references: [id])
-  raisingFundsId            String
+  raisingFunds   Raising_Funds @relation(fields: [raisingFundsId], references: [id])
+  raisingFundsId String
 
-  portions                  Int
-  offeredPricePerPortion    Float
-  totalOfferedPrice         Float
-  status                    OfferStatus     @default(Pending)
-  date                      DateTime        @default(now())
+  portions               Int
+  offeredPricePerPortion Float
+  totalOfferedPrice      Float
+  status                 OfferStatus @default(Pending)
+  date                   DateTime    @default(now())
 }
 
 model Funding_Round {

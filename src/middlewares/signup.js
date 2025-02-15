@@ -49,23 +49,83 @@ export const checkEmail = async (req, res, next) => {
 
 export const checkUsername = async (req, res, next) => {
 	try {
+		const MIN_USERNAME_LENGTH = 5;
+		const MAX_USERNAME_LENGTH = 16;
 		const username = req.body.formData.username;
-		const userUsername = await prisma.user.findFirst({
-			where: {
-				username: username,
-			},
-		});
-		const companyUsername = await prisma.company_Profile.findFirst({
-			where: {
-				username: username,
-			},
-		});
-		if (userUsername == null && companyUsername == null) {
+
+		console.log(username);
+		if (!username || username.length < MIN_USERNAME_LENGTH) {
+			return res.status(400).json({
+				message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long.`,
+			});
+		}
+		if (username.length > MAX_USERNAME_LENGTH) {
+			return res.status(400).json({
+				message: `Username must be at most ${MAX_USERNAME_LENGTH} characters long.`,
+			});
+		}
+
+		const existingUsername = await prisma.$queryRaw`
+			SELECT username FROM (
+				SELECT username FROM "User"
+				UNION ALL
+				SELECT username FROM "Company_Profile"
+			) AS combined
+			WHERE username = ${username}
+			LIMIT 1
+		`;
+		if (!existingUsername.length) {
 			next();
 		} else {
-			res.status(400).json(req.body.formData);
+			return res.status(400).json({ message: "Username is already taken." });
 		}
 	} catch (e) {
-		console.error(e);
+		console.error("Database Error:", e);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+};
+
+export const checkUsernameAPI = async (req, res, next) => {
+	try {
+		const MIN_USERNAME_LENGTH = 5;
+		const MAX_USERNAME_LENGTH = 16;
+		const { username } = req.query;
+
+		console.log(username);
+		if (!username || username.length < MIN_USERNAME_LENGTH) {
+			return res.status(200).json({
+				valid: false,
+				message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long.`,
+			});
+		}
+		if (username.length > MAX_USERNAME_LENGTH) {
+			return res.status(200).json({
+				valid: false,
+				message: `Username must be at most ${MAX_USERNAME_LENGTH} characters long.`,
+			});
+		}
+
+		const existingUsername = await prisma.$queryRaw`
+			SELECT username FROM (
+				SELECT username FROM "User"
+				UNION ALL
+				SELECT username FROM "Company_Profile"
+			) AS combined
+			WHERE username = ${username}
+			LIMIT 1
+		`;
+		console.log(!existingUsername.length);
+		if (!existingUsername.length) {
+			return res
+				.status(200)
+				.json({ valid: true, message: "Username is available." });
+		} else {
+			return res
+				.status(200)
+				.json({ valid: false, message: "Username is already taken." });
+		}
+	} catch (e) {
+		console.error("Database Error:", e);
+		return res.status(500).json({ message: "Internal server error" });
 	}
 };
