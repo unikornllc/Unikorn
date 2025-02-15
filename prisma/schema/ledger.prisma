@@ -27,10 +27,10 @@ model Transaction {
   amount          Decimal
   date            DateTime         @default(now())
   description     String
-  senderCompanyId String?
-  senderCompany   Company_Profile? @relation("Transaction", fields: [senderCompanyId], references: [id])
-  senderUserId    String?
-  senderUser      User?            @relation("Transaction", fields: [senderUserId], references: [id])
+  companyId String?
+  company   Company_Profile? @relation("Transaction", fields: [companyId], references: [id])
+  userId    String?
+  user      User?            @relation("Transaction", fields: [userId], references: [id])
   ledgers         LedgerEntry[]
   JournalEntry    JournalEntry[]
 }
