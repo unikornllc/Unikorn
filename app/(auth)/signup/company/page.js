@@ -152,6 +152,12 @@ export default function CompanySignUp() {
 		}
 
 		try {
+			console.log(formData);
+			// dataToSend.hunter == "on"
+			// 	? (dataToSend.hunter = "true")
+			// 	: (dataToSend.hunter = "false");
+			formData.hunter = undefined;
+
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createCompany`,
 				{ formData },
@@ -290,17 +296,18 @@ export default function CompanySignUp() {
 											id="password"
 											type="password"
 											{...register("password", {
-												required: "Password is required",
-												minLength: {
-													value: 8,
-													message: "Password must be at least 8 characters",
-												},
-												pattern: {
-													value:
-														/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
-													message:
-														"Password must contain uppercase, lowercase, number, and special character",
-												},
+
+												// required: "Password is required",
+												// minLength: {
+												// 	value: 8,
+												// 	message: "Password must be at least 8 characters",
+												// },
+												// pattern: {
+												// 	value:
+												// 		/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+												// 	message:
+												// 		"Password must contain uppercase, lowercase, number, and special character",
+												// },
 											})}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
@@ -357,23 +364,23 @@ export default function CompanySignUp() {
 								</div>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
-										<Label htmlFor="foundedDate" className="text-indigo-900">
+										<Label htmlFor="founded" className="text-indigo-900">
 											Founded Date
 										</Label>
 										<Input
-											id="foundedDate"
+											id="founded"
 											type="date"
-											{...register("foundedDate")}
+											{...register("founded")}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="hqLocation" className="text-indigo-900">
+										<Label htmlFor="hqlocation" className="text-indigo-900">
 											HQ Location
 										</Label>
 										<Input
-											id="hqLocation"
-											{...register("hqLocation")}
+											id="hqlocation"
+											{...register("hqlocation")}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 									</div>
@@ -401,8 +408,8 @@ export default function CompanySignUp() {
 									/>
 								</div>
 								<div className="flex items-center space-x-2">
-									<Switch id="isHunter" {...register("isHunter")} />
-									<Label htmlFor="isHunter" className="text-indigo-900">
+									<Switch id="hunter" {...register("hunter")} />
+									<Label htmlFor="hunter" className="text-indigo-900">
 										Are you a hunter?
 									</Label>
 								</div>
