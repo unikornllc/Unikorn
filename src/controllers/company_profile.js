@@ -18,10 +18,10 @@ export const createCompany = async (req, res) => {
 				type: companyData.type || "Public",
 				hqlocation: companyData.hqlocation,
 				industry: companyData.industry,
-				hunter: companyData.hunter || false,
+				//hunter: companyData.hunter || false,
 				board_members: companyData.board_members || [],
 				advisors: companyData.advisors || [],
-				founders: companyData.founders || [],
+				// founders: companyData.founders || [],
 				wallet: {
 					create: {
 						amount: 0.0,
@@ -98,7 +98,35 @@ export const isCurrentCompany = async (req, res) => {
 		res.status(400).json({ message: "Error fetching company" });
 	}
 };
+<<<<<<< Updated upstream
 
+=======
+export const getCurrentCompany = async (req, res) => {
+	try {
+		const { include } = req.query;
+		const company = await prisma.company_Profile.findUnique({
+			where: {
+				id: req.decodedUser.id,
+			},
+			...(include
+				? {
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
+				: {}),
+		});
+		const safe = (({ verified, id, password, ...rest }) => rest)(company);
+		res.status(200).json({ company: safe });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching user" });
+	}
+};
+>>>>>>> Stashed changes
 const isPlainObject = (obj) => {
 	if (Object.getPrototypeOf(obj) === null) {
 		return true;
