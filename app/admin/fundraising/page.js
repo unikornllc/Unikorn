@@ -57,9 +57,9 @@ export default function FundRaisingPage() {
             setFundRaisings(data.fundRaisings);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
         } catch (error) {
-            console.error("Error fetching fund raisings:", error.response?.data || error.message);
+            console.error("Error fetching fundraisings:", error.response?.data || error.message);
             toast({
-                message: "Failed to fetch fund raisings. Please try again.",
+                message: "Failed to fetch fundraisings. Please try again.",
                 type: "error",
             });
         } finally {
@@ -82,7 +82,7 @@ export default function FundRaisingPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Fund Raising Activities</h1>
+            <h1 className="text-3xl font-bold">Fundraising Activities</h1>
 
             <Card>
                 <CardHeader>
@@ -91,7 +91,7 @@ export default function FundRaisingPage() {
                 <CardContent className="space-y-4">
                     <div className="flex space-x-4">
                         <Input
-                            placeholder="Search fund raisings"
+                            placeholder="Search fundraisings"
                             value={filters.search}
                             onChange={(e) => handleFilterChange("search", e.target.value)}
                             className="max-w-sm"
@@ -101,7 +101,7 @@ export default function FundRaisingPage() {
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value=" ">All Statuses</SelectItem>
                                 <SelectItem value="Pending">Pending</SelectItem>
                                 <SelectItem value="Active">Active</SelectItem>
                                 <SelectItem value="Completed">Completed</SelectItem>
@@ -116,12 +116,12 @@ export default function FundRaisingPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Fund Raising List</CardTitle>
+                    <CardTitle>Fundraising List</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
                         <div className="flex justify-center items-center h-64">
-                            <p>Loading fund raising activities...</p>
+                            <p>Loading fundraising activities...</p>
                         </div>
                     ) : fundRaisings.length > 0 ? (
                         <>
@@ -173,8 +173,8 @@ export default function FundRaisingPage() {
                         </>
                     ) : (
                         <EmptyState
-                            title="No fund raising activities found"
-                            description="Try adjusting your filters or create a new fund raising activity."
+                            title="No fundraising activities found"
+                            description="Try adjusting your filters or create a new fundraising activity."
                         />
                     )}
                 </CardContent>
