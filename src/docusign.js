@@ -112,7 +112,7 @@ docusignRouter.post("/docusigninvestor", async (req, res) => {
 		await checkDocuSignToken(req);
 		const eventNotification = new docusign.EventNotification();
 		eventNotification.url =
-			"https://7326-156-213-95-133.ngrok-free.app/webhook";
+			"https://d79c-156-213-237-58.ngrok-free.app/webhook";
 		eventNotification.loggingEnabled = "true";
 		eventNotification.requireAcknowledgment = "true";
 		eventNotification.format = "json";
@@ -211,7 +211,7 @@ docusignRouter.post("/docusign", async (req, res) => {
 		await checkDocuSignToken(req);
 		const eventNotification = new docusign.EventNotification();
 		eventNotification.url =
-			"https://13a6-156-213-122-65.ngrok-free.app/webhook";
+			"https://d79c-156-213-237-58.ngrok-free.app/webhook";
 		eventNotification.loggingEnabled = "true";
 		eventNotification.requireAcknowledgment = "true";
 		eventNotification.format = "json";

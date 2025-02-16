@@ -49,7 +49,7 @@ export default async function AdminDashboard() {
                     link="/admin/companies"
                 />
                 <DashboardCard
-                    title="Active Fund Raising"
+                    title="Active Fundraising"
                     value={totalFundRaising}
                     icon={<PieChart className="h-4 w-4" />}
                     link="/admin/fundraising"
@@ -86,7 +86,7 @@ function QuickLinksCard() {
         { href: "/admin/transactions/new", label: "New Transaction" },
         { href: "/admin/ledger-accounts/new", label: "New Ledger Account" },
         { href: "/admin/journals/new", label: "New Journal" },
-        { href: "/admin/fundraising/new", label: "New Fund Raising" },
+        { href: "/admin/fundraising/new", label: "New Fundraising" },
     ]
 
     return (
@@ -119,7 +119,7 @@ function RecentActivityCard() {
             <CardContent>
                 <p className="text-sm text-muted-foreground">
                     Recent activity will be displayed here. Implement this feature by fetching and displaying the latest
-                    transactions, journal entries, or fund raising activities.
+                    transactions, journal entries, or fundraising activities.
                 </p>
             </CardContent>
         </Card>

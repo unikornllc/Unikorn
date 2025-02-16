@@ -99,7 +99,7 @@ export default function TransactionsPage() {
                                 <SelectValue placeholder="Transaction Type" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Types</SelectItem>
+                                <SelectItem value=" ">All Types</SelectItem>
                                 <SelectItem value="Wallet_Deposit">Wallet Deposit</SelectItem>
                                 <SelectItem value="Wallet_Withdraw">Wallet Withdraw</SelectItem>
                                 <SelectItem value="Surrender_Equity">Surrender Equity</SelectItem>

@@ -10,7 +10,7 @@ const navItems = [
     { href: "/admin/transactions", label: "Transactions" },
     { href: "/admin/ledger-accounts", label: "Ledger Accounts" },
     { href: "/admin/journals", label: "Journals" },
-    { href: "/admin/fundraising", label: "Fund Raising" },
+    { href: "/admin/fundraising", label: "Fundraising" },
 ]
 
 export default function AdminLayout({ children }) {
