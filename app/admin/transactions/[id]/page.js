@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/_ui/Card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/_components/_ui/Table"
+import axios from "axios";
+import { headers } from "next/headers";
 
 async function getTransaction(transactionId) {
     try {
@@ -16,11 +18,13 @@ async function getTransaction(transactionId) {
             },
         );
         const transaction = response.data.transaction;
+        console.log(transaction);
         if (!transaction) {
             notFound()
         }
         return transaction
     } catch (error) {
+        console.error(error);
         notFound()
     }
 }

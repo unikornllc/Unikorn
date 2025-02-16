@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePickerWithRange } from "@/app/_components/_ui/DateRangePicker"
 import { useToast } from "@/app/_components/_ui/UseToast"
 import { EmptyState } from "@/app/_components/_ui/EmptyState"
+import axios from "axios";
 
 const ITEMS_PER_PAGE = 10
 
@@ -27,11 +28,13 @@ export default function TransactionsPage() {
     const { toast } = useToast()
 
     useEffect(() => {
-        fetchTransactions()
-    }, [])
+        console.log("in effect");
+        fetchTransactions();
+    }, [page, filters])
 
     const fetchTransactions = async () => {
         setIsLoading(true);
+        console.log("in fetch transactions");
 
         const searchParams = new URLSearchParams({
             page: page.toString(),
@@ -49,10 +52,12 @@ export default function TransactionsPage() {
             const { data } = await axios.get(`${process.env.NEXT_PUBLIC_SERVER}/api/admin/transactions?${searchParams.toString()}`, {
                 withCredentials: true,
             });
+            console.log(data);
 
             setTransactions(data.transactions);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
         } catch (error) {
+            console.error(error);
             toast({
                 message: "Failed to fetch transactions. Please try again.",
                 type: "error",
@@ -122,7 +127,6 @@ export default function TransactionsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>ID</TableHead>
                                         <TableHead>Type</TableHead>
                                         <TableHead>Amount</TableHead>
                                         <TableHead>Date</TableHead>
@@ -133,16 +137,16 @@ export default function TransactionsPage() {
                                 <TableBody>
                                     {transactions.map((transaction) => (
                                         <TableRow key={transaction.id}>
-                                            <TableCell>{transaction.id}</TableCell>
+
                                             <TableCell>{transaction.transactionType}</TableCell>
-                                            <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                                            <TableCell>${transaction.amount}</TableCell>
                                             <TableCell>{new Date(transaction.date).toLocaleString()}</TableCell>
                                             <TableCell>{transaction.description}</TableCell>
                                             <TableCell>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => router.push(`/admin/transactions/${transaction.id}`)}
+                                                // onClick={() => router.push(`/admin/transactions/${transaction.id}`)}
                                                 >
                                                     View
                                                 </Button>
