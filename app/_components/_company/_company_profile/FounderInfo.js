@@ -5,7 +5,7 @@ import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
 import EditIcon from "@/app/_icons/EditIcon.jsx";
 import SaveIcon from "@/app/_icons/SaveIcon.jsx";
-import ExternalLink from "../ExternalLink";
+import ExternalLink from "../../ExternalLink";
 
 const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [localFounders, setLocalFounders] = useState(founders);
