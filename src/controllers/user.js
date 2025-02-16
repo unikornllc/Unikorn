@@ -312,7 +312,7 @@ export const suggestUsername = async (req, res) => {
 			return res.status(400).json({ message: "Email and name are required." });
 		}
 		const usernameSuggestions = await suggestUsernamePassport(email, name);
-		res.status(200).json({ username: usernameSuggestions });
+		res.status(200).json({ usernameSuggestions: usernameSuggestions });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Internal Server Error" });
@@ -420,8 +420,10 @@ export async function suggestUsernamePassport(email, name) {
 			const userExists = await prisma.user.findUnique({
 				where: { username: potentialUsername },
 			});
-
-			if (!userExists) {
+			const companyExists = await prisma.company_Profile.findUnique({
+				where: { username: potentialUsername },
+			});
+			if (!userExists && !companyExists) {
 				isUnique = true;
 				username = potentialUsername;
 			} else {
@@ -458,8 +460,15 @@ export async function suggestUsernamePassport(email, name) {
 		const userExists = await prisma.user.findUnique({
 			where: { username: trimmedRandomUsername },
 		});
+		const companyExists = await prisma.company_Profile.findUnique({
+			where: { username: trimmedRandomUsername },
+		});
 
-		if (!userExists && !usernameSuggestions.includes(trimmedRandomUsername)) {
+		if (
+			!userExists &&
+			!companyExists &&
+			!usernameSuggestions.includes(trimmedRandomUsername)
+		) {
 			usernameSuggestions.push(trimmedRandomUsername);
 		}
 	}

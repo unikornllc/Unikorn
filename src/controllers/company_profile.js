@@ -98,9 +98,7 @@ export const isCurrentCompany = async (req, res) => {
 		res.status(400).json({ message: "Error fetching company" });
 	}
 };
-<<<<<<< Updated upstream
 
-=======
 export const getCurrentCompany = async (req, res) => {
 	try {
 		const { include } = req.query;
@@ -126,7 +124,6 @@ export const getCurrentCompany = async (req, res) => {
 		res.status(400).json({ message: "Error fetching user" });
 	}
 };
->>>>>>> Stashed changes
 const isPlainObject = (obj) => {
 	if (Object.getPrototypeOf(obj) === null) {
 		return true;
@@ -174,13 +171,13 @@ export const getOneCompanyProfile = async (req, res) => {
 			},
 			...(include
 				? {
-						include: Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+					include: Object.fromEntries(
+						Object.entries(include).map(([key, value]) => [
+							key,
+							value === "true",
+						]),
+					),
+				}
 				: {}),
 		});
 

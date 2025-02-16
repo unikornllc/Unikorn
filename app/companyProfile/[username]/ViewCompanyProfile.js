@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FundingComponent } from "@/app/_components/_funding/FundingComponent";
+import { FundingComponent } from "@/app/_components/_company/_funding/FundingComponent";
 
 export default function ViewCompanyProfile({ company }) {
 	const [loading, setLoading] = useState(false);

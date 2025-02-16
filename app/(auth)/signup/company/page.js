@@ -157,6 +157,7 @@ export default function CompanySignUp() {
 			// 	? (dataToSend.hunter = "true")
 			// 	: (dataToSend.hunter = "false");
 			formData.hunter = undefined;
+
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createCompany`,
 				{ formData },
@@ -295,6 +296,7 @@ export default function CompanySignUp() {
 											id="password"
 											type="password"
 											{...register("password", {
+
 												// required: "Password is required",
 												// minLength: {
 												// 	value: 8,

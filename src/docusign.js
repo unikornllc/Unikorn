@@ -14,17 +14,17 @@ function makeRecipientViewRequest(name, email) {
 
 	viewRequest.email = email;
 	viewRequest.userName = name;
-	viewRequest.clientUserId = 1000;
+	//viewRequest.clientUserId = 1000;
 
 	return viewRequest;
 }
 
-function makeEnvelope(name, email, company, data) {
+function makeEnvelopeCompany(name, email, company, data) {
 	const env = new docusign.EnvelopeDefinition();
 	env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
 
 	const companyText = docusign.Text.constructFromObject({
-		tabLabel: "company_name", // Matches the template field
+		tabLabel: "company_name",
 		value: company,
 	});
 
@@ -32,7 +32,7 @@ function makeEnvelope(name, email, company, data) {
 		tabLabel: "date",
 		value: data.date,
 	});
-	// Create custom number tabs for price and equity
+
 	const priceNumber = docusign.Text.constructFromObject({
 		tabLabel: "price",
 		value: data.price.toString(),
@@ -43,7 +43,6 @@ function makeEnvelope(name, email, company, data) {
 		value: data.equity.toString(),
 	});
 
-	// Pull together the existing and new tabs in a Tabs object:
 	const tabs = docusign.Tabs.constructFromObject({
 		textTabs: [companyText, dateText],
 		numberTabs: [priceNumber, equityNumber],
@@ -53,12 +52,28 @@ function makeEnvelope(name, email, company, data) {
 		email: email,
 		name: name,
 		tabs: tabs,
-		clientUserId: 1000,
-		roleName: "Applicant",
+		//clientUserId: 1000,
+		roleName: "Applicant 1",
 	});
 	env.templateRoles = [signer1];
 	env.status = "sent";
 
+	return env;
+}
+
+function makeEnvelopeInvestors(investors) {
+	const env = new docusign.EnvelopeDefinition();
+	env.templateId = process.env.TEMPLATE_ID_INVESTORS_DOCUSIGN;
+	env.status = "sent";
+
+	const signers = investors.map((investor, index) => {
+		return docusign.TemplateRole.constructFromObject({
+			email: investor.email,
+			name: investor.name,
+			roleName: `Applicant ${index}`,
+		});
+	});
+	env.templateRoles = signers;
 	return env;
 }
 
@@ -90,11 +105,113 @@ async function checkDocuSignToken(req) {
 		req.session.expires_at = Date.now() + (results.body.expires_in - 60) * 1000;
 	}
 }
+
+docusignRouter.post("/docusigninvestor", async (req, res) => {
+	try {
+		const { raisingFundsId } = req.body;
+		await checkDocuSignToken(req);
+		const eventNotification = new docusign.EventNotification();
+		eventNotification.url =
+			"https://7326-156-213-95-133.ngrok-free.app/webhook";
+		eventNotification.loggingEnabled = "true";
+		eventNotification.requireAcknowledgment = "true";
+		eventNotification.format = "json";
+		eventNotification.envelopeEvents = [
+			// { envelopeEventStatusCode: "sent" },
+			// { envelopeEventStatusCode: "delivered" },
+			{ envelopeEventStatusCode: "completed" },
+			{ envelopeEventStatusCode: "declined" },
+			//{ envelopeEventStatusCode: "voided" },
+		];
+		eventNotification.recipientEvents = [
+			//{ recipientEventStatusCode: "Sent" },
+			//{ recipientEventStatusCode: "Delivered" },
+			{ recipientEventStatusCode: "Completed" },
+			{ recipientEventStatusCode: "Declined" },
+			//{ recipientEventStatusCode: "AutoResponded" },
+		];
+
+		const envelopesApi = getEnvelopeApi(req);
+		const completedRaisingFunds = await prisma.raising_Funds.findUnique({
+			where: { id: raisingFundsId },
+			include: {
+				fundraisers: {
+					include: {
+						investorUser: true,
+						investorCompany: true,
+					},
+				},
+			},
+		});
+
+		if (!completedRaisingFunds) {
+			return res.status(404).json({ message: "Raising funds not found" });
+		}
+		const totalRaised = completedRaisingFunds.fundraisers.reduce(
+			(sum, fundraiser) => sum + fundraiser.fundingAmount,
+			0,
+		);
+
+		const isComplete =
+			totalRaised >= completedRaisingFunds.fundingAmount ||
+			completedRaisingFunds.remainingPortions === 0;
+
+		if (!isComplete) {
+			return res
+				.status(400)
+				.json({ message: "Raising funds is not yet complete" });
+		}
+
+		const investors = completedRaisingFunds.fundraisers.map((fundraiser) => ({
+			name: fundraiser.investorUser?.name || fundraiser.investorCompany?.name,
+			email:
+				fundraiser.investorUser?.email || fundraiser.investorCompany?.email,
+		}));
+
+		if (investors.length === 0) {
+			return res
+				.status(400)
+				.json({ message: "No investors found for this raising fund" });
+		}
+
+		const envelope = makeEnvelopeInvestors(investors);
+
+		const results = await envelopesApi.createEnvelope(
+			process.env.ACCOUNT_ID_DOCUSIGN,
+			{
+				envelopeDefinition: envelope,
+			},
+		);
+
+		const recipientViews = await Promise.all(
+			investors.map(async (investor, index) => {
+				const viewRequest = makeRecipientViewRequest(
+					investor.name,
+					investor.email,
+					index + 1,
+				);
+				return envelopesApi.createRecipientView(
+					process.env.ACCOUNT_ID_DOCUSIGN,
+					results.envelopeId,
+					{ recipientViewRequest: viewRequest },
+				);
+			}),
+		);
+		res
+			.status(200)
+			.json({ redirectUrls: recipientViews.map((view) => view.url) });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error generating access token" });
+	}
+});
+
 docusignRouter.post("/docusign", async (req, res) => {
 	try {
 		await checkDocuSignToken(req);
 		const eventNotification = new docusign.EventNotification();
-		eventNotification.url = "https://6106-156-213-12-6.ngrok-free.app/webhook";
+		eventNotification.url =
+			"https://13a6-156-213-122-65.ngrok-free.app/webhook";
 		eventNotification.loggingEnabled = "true";
 		eventNotification.requireAcknowledgment = "true";
 		eventNotification.format = "json";
@@ -116,8 +233,24 @@ docusignRouter.post("/docusign", async (req, res) => {
 		const company = await prisma.company_Profile.findUnique({
 			where: { username: req.body.username },
 		});
+
+		if (!company) {
+			return res.status(404).json({ message: "Company not found" });
+		}
+		const existingFund = await prisma.raising_Funds.findFirst({
+			where: {
+				companyId: company.id,
+				status: { in: ["Pending", "Active"] },
+			},
+		});
+
+		if (existingFund) {
+			return res.status(400).json({
+				message: "Company already has a pending or active raising fund",
+			});
+		}
 		const envelopesApi = getEnvelopeApi(req);
-		const envelope = makeEnvelope(
+		const envelope = makeEnvelopeCompany(
 			req.body.name,
 			req.body.email,
 			req.body.company,
@@ -144,7 +277,6 @@ docusignRouter.post("/docusign", async (req, res) => {
 				company: { connect: { id: company.id } },
 			},
 		});
-		// console.log("envelope results", results);
 		const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
 		const recipientViewRequest = await envelopesApi.createRecipientView(
 			process.env.ACCOUNT_ID_DOCUSIGN,

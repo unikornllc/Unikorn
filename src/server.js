@@ -19,6 +19,7 @@ import {
 	confirmPassword,
 	checkEmail,
 	checkUsername,
+	checkUsernameAPI,
 } from "./middlewares/signup.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -27,6 +28,7 @@ import { createJWT } from "./auth.js";
 import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
+import docusignRouter from "./docusign.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -136,9 +138,15 @@ app.get("/auth/logout", function (req, res, next) {
 	});
 });
 
-app.post("/createUser", checkEmail, checkUsername, confirmPassword, createUser);
 app.post(
-	"/createCompany",
+	"/api/createUser",
+	checkEmail,
+	checkUsername,
+	confirmPassword,
+	createUser,
+);
+app.post(
+	"/api/createCompany",
 	checkEmail,
 	checkUsername,
 	confirmPassword,
@@ -162,6 +170,15 @@ import {
 	resetPasswordRequest,
 } from "./authentication/password_reset.js";
 
+app.post("/password-reset-request", resetPasswordRequest);
+app.post("/reset-password", resetPassword);
+
+app.get("/api/verifyUser", verifyUser);
+//app.post("/signIn", verifiedUser, signIn);
+app.get("/api/checkUsername", checkUsernameAPI);
+app.get("/api/checkEmail", checkEmail);
+app.get("/api/suggestUsername", suggestUsername);
+
 app.post(
 	"/signin",
 	verifyRefreshToken,
@@ -171,7 +188,7 @@ app.post(
 	verifyAccessToken,
 	generateAccessTokenIfNeeded,
 	(req, res) => {
-		res.status(200).json({ message: "Login Successful" });
+		res.status(200).json({ role: req.account.role, message: "Login Successful" });
 	},
 );
 
@@ -181,15 +198,6 @@ app.use(
 	verifyRefreshTokenAndGenerateAccessToken,
 	router,
 );
-
-app.post("/password-reset-request", resetPasswordRequest);
-app.post("/reset-password", resetPassword);
-
-app.get("/verifyUser", verifyUser);
-//app.post("/signIn", verifiedUser, signIn);
-app.get("/checkUsername", checkUsername);
-app.get("/checkEmail", checkEmail);
-app.get("/suggestUsername", suggestUsername);
 
 //app.use(protect, router);
 
