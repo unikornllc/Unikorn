@@ -17,10 +17,13 @@ export const getAdminMetrics = async (req, res) => {
         // const totalVerifiedCompanies = await prisma.company_Profile.count({
         //     where: { verified: true },
         // });
-        const totalTransactions = await prisma.transaction.count()
-        const totalUsers = await prisma.user.count()
-        const totalCompanies = await prisma.company_Profile.count()
-        const totalFundRaising = await prisma.raising_Funds.count()
+        const [totalTransactions, totalUsers, totalCompanies, totalFundRaising] = await prisma.$transaction([
+            prisma.transaction.count(),
+            prisma.user.count(),
+            prisma.company_Profile.count(),
+            prisma.raising_Funds.count()
+
+        ]);
 
         // res.json({
         //     totalTransactions,
