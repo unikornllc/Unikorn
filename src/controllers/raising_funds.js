@@ -1,6 +1,41 @@
 import prisma from "../db.js";
 import axios from "axios";
 
+export const getAllRaisingFunds = async (req, res) => {
+	try {
+		const raisingFunds = await prisma.raising_Funds.findMany({
+			include: {
+				company: true,
+				fundraisers: true,
+				investmentOffers: true,
+			}
+		});
+		res.status(200).json(raisingFunds);
+	} catch (error) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+export const getRaisingFundsById = async (req, res) => {
+	try {
+		const { raisingFundsId } = req.query;
+		const raisingFunds = await prisma.raising_Funds.findUnique({
+			where: { raisingFundsId },
+			include: {
+				company: true,
+				fundraisers: true,
+				investmentOffers: true,
+			},
+		})
+		if (!raisingFunds) {
+			return res.status(400).json({ error: 'Funding_Round not found' });
+		}
+		res.status(200).json(raisingFunds);
+	} catch (error) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
 export const getActiveRaisingFunds = async (req, res) => {
 	try {
 		const fundraisings = await prisma.raising_Funds.findMany({
@@ -213,7 +248,7 @@ export const cancelInvestment = async (req, res) => {
 				fundingAmount:
 					Math.abs(
 						fundraising.pricePerPortion * fundraiser.portions -
-							fundraiser.pricePerPortion * fundraiser.portions,
+						fundraiser.pricePerPortion * fundraiser.portions,
 					) + fundraising.fundingAmount,
 				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
 			};
@@ -653,8 +688,8 @@ export const acceptInvestmentOffer = async (req, res) => {
 						...(offer.investorType == "User"
 							? { investorUser: { connect: { id: offer.investorUserId } } }
 							: {
-									investorCompany: { connect: { id: offer.investorCompanyId } },
-								}),
+								investorCompany: { connect: { id: offer.investorCompanyId } },
+							}),
 					},
 				});
 			}
