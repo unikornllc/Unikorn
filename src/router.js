@@ -161,6 +161,8 @@ import {
 	getCompanyPendingRaisingFund,
 	getCompanyPastRaisingFunds,
 	getRaisingFundFundraisers,
+	getAllRaisingFunds,
+	getRaisingFundsById
 } from "./controllers/raising_funds.js";
 import {
 	depositWallet,
@@ -168,6 +170,21 @@ import {
 	withdrawWallet,
 } from "./controllers/wallet.js";
 import { logout } from "./authentication/logout.js";
+
+import {
+	getAllWallets,
+	getAllEntries,
+	getAllJournals,
+	getAllTransactions,
+	getEntryById,
+	getJournalById,
+	getTransactionById,
+	getWalletById,
+	getAllLedgerAccounts,
+	getLedgerAccountById,
+} from "./controllers/ledger.js"
+
+import { getAdminMetrics, getFundRaisingsFiltered, getJournalsFiltered, getTransactionsFiltered } from "./controllers/admin.js";
 
 const router = Router();
 
@@ -305,6 +322,7 @@ router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
 //raising_funds and investments offers
+
 router.get("/raisingFunds/active", getActiveRaisingFunds);
 router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
 router.get("/raisingFunds/company/pending", getCompanyPendingRaisingFund);
@@ -322,6 +340,31 @@ router.get("/investments/my", getMyInvestments);
 router.post("/investments/cancel", cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
 router.post("/investments/offer/cancel", cancelInvestmentOffer);
+
+router.get("getAllRaisingFunds", getAllRaisingFunds)
+router.get("getRaisingFundsById", getRaisingFundsById)
+
+// Wallet and transactions
+
+router.get('/getAllWallets', getAllWallets);
+router.get('/getWalletById', getWalletById);
+
+router.get('/getAllTransactions', getAllTransactions);
+router.get('/getTransactionById', getTransactionById);
+
+router.get('/getAllJournals', getAllJournals);
+router.get('/getJournalById', getJournalById);
+
+router.get('/getAllEntries', getAllEntries);
+router.get('/getEntryById', getEntryById);
+
+router.get('/getAllLedgerAccounts', getAllLedgerAccounts);
+router.get('/getLedgerAccountById', getLedgerAccountById);
+
+router.get('/admin/metrics', getAdminMetrics)
+router.get('/admin/fundraisings', getFundRaisingsFiltered);
+router.get('/admin/journals', getJournalsFiltered);
+router.get('/admin/transactions', getTransactionsFiltered);
 
 router.post("/logout", logout);
 
