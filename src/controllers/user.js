@@ -477,27 +477,50 @@ export async function suggestUsernamePassport(email, name) {
 
 export const followUser = async (req, res) => {
 	try {
-		const follow = await prisma.user.findUnique({
-			where: {
-				username: req.body.username,
-			},
-			select: { id: true },
-		});
-		const isAlreadyFollowing = await prisma.userFollowsUser.findFirst({
-			where: {
-				followerId: req.decodedUser.id,
-				followingId: follow.id,
-			},
-		});
+		let follow;
+		let isAlreadyFollowing;
+		if (req.body.isUser === true) {
+			follow = await prisma.user.findUnique({
+				where: {
+					username: req.body.username,
+				},
+				select: { id: true, followedByUsers: true },
+			});
+			isAlreadyFollowing = follow.followedByUsers.some((entry) =>
+				req.decodedUser.role === "User"
+					? entry.FolloweruserId === req.decodedUser.id
+					: entry.FollowercompanyId === req.decodedUser.id,
+			);
+		} else {
+			follow = await prisma.company_Profile.findUnique({
+				where: {
+					username: req.body.username,
+				},
+				select: { id: true, followedByCompanies: true },
+			});
+			isAlreadyFollowing = follow.followedByCompanies.some((entry) =>
+				req.decodedUser.role === "User"
+					? entry.FolloweruserId === req.decodedUser.id
+					: entry.FollowercompanyId === req.decodedUser.id,
+			);
+		}
+		if (!follow) {
+			res.status(400).json({ message: "User or company not found" });
+		}
 		if (isAlreadyFollowing) {
 			res.status(400).json({ message: "User already followed" });
 		} else {
-			await prisma.userFollowsUser.create({
+			await prisma.follow.create({
 				data: {
-					followerId: req.decodedUser.id,
-					followingId: follow.id,
+					...(req.body.isUser === true
+						? { FollowinguserId: follow.id }
+						: { FollowingcompanyId: follow.id }),
+					...(req.decodedUser.role === "User"
+						? { FolloweruserId: req.decodedUser.id }
+						: { FollowercompanyId: req.decodedUser.id }),
 				},
 			});
+
 			res.status(200).json({ message: "User followed successfully" });
 		}
 	} catch (e) {
@@ -508,18 +531,39 @@ export const followUser = async (req, res) => {
 
 export const isFollowingUser = async (req, res) => {
 	try {
-		const follow = await prisma.user.findUnique({
-			where: {
-				username: req.query.username,
-			},
-			select: { id: true },
-		});
-		const isFollowing = await prisma.userFollowsUser.findFirst({
-			where: {
-				followerId: req.decodedUser.id,
-				followingId: follow.id,
-			},
-		});
+		let follow;
+		if (req.query.isUser === "true") {
+			follow = await prisma.user.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followedByUsers: true,
+				},
+			});
+		} else {
+			follow = await prisma.company_Profile.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followedByCompanies: true,
+				},
+			});
+		}
+		if (!follow) {
+			res.status(400).json({ message: "User not found" });
+		}
+		const followedBy =
+			req.query.isUser === true
+				? follow.followedByUsers
+				: follow.followedByCompanies;
+
+		const isFollowing = followedBy.some((entry) =>
+			req.decodedUser.role === "User"
+				? entry.FolloweruserId === req.decodedUser.id
+				: entry.FollowercompanyId === req.decodedUser.id,
+		);
 		isFollowing
 			? res.status(200).json({ isFollowing: true })
 			: res.status(200).json({ isFollowing: false });
@@ -531,32 +575,54 @@ export const isFollowingUser = async (req, res) => {
 
 export const unfollowUser = async (req, res) => {
 	try {
-		const unfollow = await prisma.user.findUnique({
-			where: {
-				username: req.body.username,
-			},
-			select: { id: true },
-		});
-		const isFollowing = await prisma.userFollowsUser.findFirst({
-			where: {
-				followerId: req.decodedUser.id,
-				followingId: unfollow.id,
-			},
-		});
-		if (!isFollowing) {
-			res.status(200).json({ message: "User already not followed" });
-		} else {
-			await prisma.userFollowsUser.deleteMany({
-				where: {
-					followerId: req.decodedUser.id,
-					followingId: unfollow.id,
-				},
+		let unfollow;
+		let isFollowing;
+		if (req.body.isUser === true) {
+			unfollow = await prisma.user.findUnique({
+				where: { username: req.body.username },
+				select: { id: true, followedByUsers: true },
 			});
-			res.status(200).json({ message: "User unfollowed successfully" });
+			isFollowing = unfollow.followedByUsers.some((entry) =>
+				req.decodedUser.role === "User"
+					? entry.FolloweruserId === req.decodedUser.id
+					: entry.FollowercompanyId === req.decodedUser.id,
+			);
+		} else {
+			unfollow = await prisma.company_Profile.findUnique({
+				where: { username: req.body.username },
+				select: { id: true, followedByCompanies: true },
+			});
+			isFollowing = unfollow.followedByCompanies.some((entry) =>
+				req.decodedUser.role === "User"
+					? entry.FolloweruserId === req.decodedUser.id
+					: entry.FollowercompanyId === req.decodedUser.id,
+			);
 		}
+		if (!unfollow) {
+			return res.status(402).json({ message: "User or company not found" });
+		}
+
+		if (!isFollowing) {
+			return res.status(200).json({ message: "User already not followed" });
+		}
+
+		await prisma.follow.deleteMany({
+			where: {
+				...(req.body.isUser === true
+					? { FollowinguserId: unfollow.id }
+					: { FollowingcompanyId: unfollow.id }),
+				...(req.decodedUser.role === "User"
+					? { FolloweruserId: req.decodedUser.id }
+					: { FollowercompanyId: req.decodedUser.id }),
+			},
+		});
+		console.log("User unfollowed successfully");
+		return res
+			.status(200)
+			.json({ message: "User or company unfollowed successfully" });
 	} catch (error) {
 		console.error(error);
-		res.status(400).json({ message: "Error unfollowing user" });
+		res.status(400).json({ message: "Error unfollowing user or company" });
 	}
 };
 

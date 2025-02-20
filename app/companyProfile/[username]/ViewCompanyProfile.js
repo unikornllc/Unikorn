@@ -56,9 +56,10 @@ export default function ViewCompanyProfile({ company }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/followCompany`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
 					username: company.username,
+					isUser: false,
 				},
 				{
 					withCredentials: true,
@@ -76,9 +77,10 @@ export default function ViewCompanyProfile({ company }) {
 		try {
 			setLoading(true);
 			const follow = await axios.put(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowCompany`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
 					username: company.username,
+					isUser: false,
 				},
 				{
 					withCredentials: true,

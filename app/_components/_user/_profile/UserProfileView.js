@@ -26,6 +26,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
 					username: user.username,
+					isUser: true,
 				},
 				{
 					withCredentials: true,
@@ -46,6 +47,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
 					username: user.username,
+					isUser: true,
 				},
 				{
 					withCredentials: true,

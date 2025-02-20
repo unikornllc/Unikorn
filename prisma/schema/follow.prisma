@@ -1,27 +1,12 @@
-model UserFollowsUser {
-  id          String   @id @default(uuid())
-  followerId  String
-  followingId String
-  createdAt   DateTime @default(now())
-
-  follower  User @relation("UserFollows", fields: [followerId], references: [id])
-  following User @relation("UserFollowed", fields: [followingId], references: [id])
-
-  @@unique([followerId, followingId])
-  @@index([followerId], name: "follower_idx")
-  @@index([followingId], name: "following_idx")
-}
-
-model UserFollowsCompany {
-  id        String   @id @default(uuid())
-  userId    String
-  companyId String
-  createdAt DateTime @default(now())
-
-  user    User            @relation(fields: [userId], references: [id])
-  company Company_Profile @relation(fields: [companyId], references: [id])
-
-  @@unique([userId, companyId])
-  @@index([userId], name: "user_idx")
-  @@index([companyId], name: "company_idx")
+model Follow {
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now())
+  FolloweruserId      String?
+  FollowercompanyId   String?
+  FollowinguserId      String?
+  FollowingcompanyId   String?
+  userFollower    User?            @relation("UserFollower",fields: [FolloweruserId], references: [id])
+  companyFollower Company_Profile? @relation("CompanyFollower",fields: [FollowercompanyId], references: [id])
+  userFollowing    User?            @relation("UserFollowing",fields: [FollowinguserId], references: [id])
+  companyFollowing Company_Profile? @relation("CompanyFollowing",fields: [FollowingcompanyId], references: [id])
 }
