@@ -57,9 +57,8 @@ model User {
   sentMessages           Message[]                @relation("SentMessages")
   receivedMessages       Message[]                @relation("ReceivedMessages")
   user_file              User_File[]
-  followingUsers         UserFollowsUser[]        @relation("UserFollows")
-  followedByUsers        UserFollowsUser[]        @relation("UserFollowed")
-  followingCompanies     UserFollowsCompany[]
+  followingUsers         Follow[]                 @relation("UserFollower")
+  followedByUsers        Follow[]                 @relation("UserFollowing")
   calendly_integration   Calendly_Integration?
   tier                   Tier                     @default(Standard)
   logindevices           LoginDevices[]

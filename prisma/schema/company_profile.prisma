@@ -33,7 +33,8 @@ model Company_Profile {
   financials          Financial?
   activities          Activity[]
   company_file        Company_File[]
-  followers           UserFollowsCompany[]
+  followingCompanies  Follow[]              @relation("CompanyFollower")
+  followedByCompanies Follow[]              @relation("CompanyFollowing")
   logindevices        LoginDevices[]
   raising_Funds       Raising_Funds[]
   fundraiser          Fundraiser[]          @relation("CompanyInvestments")

@@ -42,8 +42,8 @@ export default async function CompanyProfile({ params }) {
 			try {
 				company.wallet = null;
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowingCompany`, {
-						params: { username: company.username },
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
+						params: { username: company.username, isUser: false },
 						headers: {
 							cookie: cookie || "",
 						},
