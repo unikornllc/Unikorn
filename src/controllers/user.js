@@ -677,29 +677,146 @@ export const deleteUser = async (req, res) => {
 
 export const getFollowing = async (req, res) => {
 	try {
-		const followers = await prisma.userFollowsUser.findMany({
-			where: {
-				followerId: req.decodedUser.id,
-			},
-			select: { following: true },
-		});
-		res.status(200).json(followers.map((f) => f.following.username));
+		let followers;
+		if (req.query.isUser === "true") {
+			followers = await prisma.user.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followingUsers: true,
+				},
+			});
+			if (followers.followingUsers.length === 0) {
+				return res.status(200).json({ users: [], companies: [] });
+			}
+		} else {
+			followers = await prisma.company_Profile.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followingCompanies: true,
+				},
+			});
+			if (followers.followingCompanies.length === 0) {
+				return res.status(200).json({ users: [], companies: [] });
+			}
+		}
+		if (!followers) {
+			return res.status(400).json({ message: "User or company not found" });
+		}
+
+		const followingIds = {
+			users: [],
+			companies: [],
+		};
+
+		if (req.query.isUser === "true") {
+			followers.followingUsers.forEach((follow) => {
+				if (follow.FollowinguserId) {
+					followingIds.users.push(follow.FollowinguserId);
+				} else if (follow.FollowingcompanyId) {
+					followingIds.companies.push(follow.FollowingcompanyId);
+				}
+			});
+		} else {
+			followers.followingCompanies.forEach((follow) => {
+				if (follow.FollowinguserId) {
+					followingIds.users.push(follow.FollowinguserId);
+				} else if (follow.FollowingcompanyId) {
+					followingIds.companies.push(follow.FollowingcompanyId);
+				}
+			});
+		}
+
+		const [followingUsers, followingCompanies] = await prisma.$transaction([
+			prisma.user.findMany({
+				where: { id: { in: followingIds.users } },
+				select: { username: true },
+			}),
+			prisma.company_Profile.findMany({
+				where: { id: { in: followingIds.companies } },
+				select: { username: true },
+			}),
+		]);
+
+		res
+			.status(200)
+			.json({ users: followingUsers, companies: followingCompanies });
 	} catch (e) {
 		console.error(e);
-		res.status(400).json({ message: "Error fetching followers" });
+		res
+			.status(400)
+			.json({ message: "Error fetching following users and companies" });
 	}
 };
 
 export const getFollowers = async (req, res) => {
 	try {
-		const followers = await prisma.userFollowsUser.findMany({
-			where: {
-				followingId: req.decodedUser.id,
-			},
-			select: { follower: true },
-		});
-		//console.log(followers.map((f) => f.follower.username));
-		res.status(200).json(followers.map((f) => f.follower.username));
+		let followers;
+		if (req.query.isUser === "true") {
+			followers = await prisma.user.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followedByUsers: true,
+				},
+			});
+			if (followers.followedByUsers.length === 0) {
+				return res.status(200).json({ users: [], companies: [] });
+			}
+		} else {
+			followers = await prisma.company_Profile.findUnique({
+				where: {
+					username: req.query.username,
+				},
+				select: {
+					followedByCompanies: true,
+				},
+			});
+			if (followers.followedByCompanies.length === 0) {
+				return res.status(200).json({ users: [], companies: [] });
+			}
+		}
+		if (!followers) {
+			return res.status(400).json({ message: "User or company not found" });
+		}
+		const followersId = {
+			users: [],
+			companies: [],
+		};
+		if (req.query.isUser === "true") {
+			followers.followedByUsers.forEach((follow) => {
+				if (follow.FolloweruserId) {
+					followersId.users.push(follow.FolloweruserId);
+				} else if (follow.FollowercompanyId) {
+					followersId.companies.push(follow.FollowercompanyId);
+				}
+			});
+		} else {
+			followers.followedByCompanies.forEach((follow) => {
+				if (follow.FolloweruserId) {
+					followersId.users.push(follow.FolloweruserId);
+				} else if (follow.FollowercompanyId) {
+					followersId.companies.push(follow.FollowercompanyId);
+				}
+			});
+		}
+		const [followerUsers, followerCompanies] = await prisma.$transaction([
+			prisma.user.findMany({
+				where: { id: { in: followersId.users } },
+				select: { username: true },
+			}),
+			prisma.company_Profile.findMany({
+				where: { id: { in: followersId.companies } },
+				select: { username: true },
+			}),
+		]);
+		res
+			.status(200)
+			.json({ users: followerUsers, companies: followerCompanies });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching followers" });
