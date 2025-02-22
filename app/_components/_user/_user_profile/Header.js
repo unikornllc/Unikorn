@@ -212,6 +212,7 @@ const Header = ({ user, editable }) => {
 						<span className="text-blue-500 inline-block ml-2">✔️</span>
 					)}
 				</h1>
+				<p className="text-gray-600">@{username}</p>
 			</div>
 			{editable && (
 				<Modal

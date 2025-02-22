@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/app/_components/_ui/Button"
+import { Input } from "@/app/_components/_ui/Input"
 import { Plus, X } from "lucide-react"
 
 export default function CompanyTeam({ company, isOwnProfile }) {

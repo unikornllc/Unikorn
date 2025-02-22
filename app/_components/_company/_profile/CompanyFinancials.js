@@ -5,6 +5,7 @@ import { Button } from "@/app/_components/_ui/Button"
 import { Input } from "@/app/_components/_ui/Input"
 import { Textarea } from "@/app/_components/_ui/Textarea"
 
+
 export default function CompanyFinancials({ company, isOwnProfile }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedFinancials, setEditedFinancials] = useState(company.financials || {})

@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/app/_utils/utils"
-import { useToast } from "@/app/_components/_ui/UseToast"
+import { useToast } from "@/app/_components/_hooks/useToast"
 import { ToastContainer } from "@/app/_components/_ui/Toast"
 
 const navItems = [

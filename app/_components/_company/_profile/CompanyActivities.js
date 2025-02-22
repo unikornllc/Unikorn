@@ -6,6 +6,7 @@ import { Input } from "@/app/_components/_ui/Input"
 import { Textarea } from "@/app/_components/_ui/Textarea"
 import { Plus, X } from "lucide-react"
 
+
 export default function CompanyActivities({ company, isOwnProfile }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedActivities, setEditedActivities] = useState(company.activities)

@@ -1,18 +1,35 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
-import { set } from "react-hook-form";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
+import { useUpdateItem } from "@/app/_components/_hooks/useUpdateItem";
 
 const Certifications = ({ username, certificationList, editable }) => {
 	const [certs, setCerts] = useState(certificationList);
 	const [addingCert, setAddingCert] = useState(false);
+	const [editingCertId, setEditingCertId] = useState(null);
+	const [loading, setLoading] = useState(false);
+	const [editData, setEditData] = useState({});
+
+	const { updateItem } = useUpdateItem();
+
+
 	const [newCert, setNewCert] = useState({
 		title: "",
 		institution: "",
 		completion_date: "",
 		focus_area: "",
 	});
-	const [loading, setLoading] = useState(false);
+
+	const formatDateForInput = (dateString) => {
+		if (!dateString) return '';
+		return new Date(dateString).toISOString().split('T')[0];
+	};
+
+	const handleEditClick = (cert) => {
+		setEditingCertId(cert.id);
+		setEditData(cert);
+	};
 
 	const addCertification = async () => {
 		try {
@@ -39,7 +56,6 @@ const Certifications = ({ username, certificationList, editable }) => {
 			setLoading(false);
 		}
 	};
-
 	const removeCertification = async (certId) => {
 		try {
 			setLoading(true);
@@ -57,25 +73,30 @@ const Certifications = ({ username, certificationList, editable }) => {
 			setLoading(false);
 		}
 	};
+	const updateCertification = async (certId) => {
+		try {
+			setLoading(true);
+			const updatedItem = await updateItem('certifications_Courses', certId, editData);
 
-	// useEffect(() => {
-	// 	const fetchUserCertifications = async () => {
-	// 		try {
-	// 			await axios
-	// 				.get(
-	// 					`${process.env.NEXT_PUBLIC_SERVER}/getAllCertificationsCourses`,
-	// 					{
-	// 						params: { username },
-	// 						withCredentials: true,
-	// 					},
-	// 				)
-	// 				.then((response) => setCerts(response.data.certificationsCourses));
-	// 		} catch (err) {
-	// 			console.error("Error fetching user Certifications:", err);
-	// 		}
-	// 	};
-	// 	fetchUserCertifications();
-	// }, []);
+			setCerts((prevCerts) =>
+				prevCerts.map((cert) =>
+					cert.id === certId ? updatedItem : cert
+				)
+			);
+
+			setEditingCertId(null);
+			setEditData({});
+		} catch (error) {
+			console.error("Error updating certification:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleCancelEdit = () => {
+		setEditingCertId(null);
+		setEditData({});
+	};
 
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
@@ -92,6 +113,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 					</button>
 				)}
 			</div>
+
 			{editable && addingCert && (
 				<div className="mb-4">
 					<input
@@ -112,7 +134,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 					/>
 					<input
 						type="date"
-						value={newCert.completion_date}
+						value={formatDateForInput(newCert.completion_date)}
 						onChange={(e) =>
 							setNewCert({ ...newCert, completion_date: e.target.value })
 						}
@@ -154,29 +176,89 @@ const Certifications = ({ username, certificationList, editable }) => {
 					</div>
 				</div>
 			)}
+
 			{certs &&
 				certs.map((cert) => (
-					<div key={cert.id} className="mb-6 flex justify-between items-start">
-						<div>
-							<h4 className="text-lg font-semibold text-textPrimary">
-								{cert.title}
-							</h4>
-							<p className="text-textSecondary">{cert.institution}</p>
-							<p className="text-sm text-gray-500">
-								Completed on{" "}
-								{new Date(cert.completion_date).toLocaleDateString()}
-							</p>
-							<p className="text-textSecondary mt-2">
-								Focus Area: {cert.focus_area}
-							</p>
-						</div>
-						{editable && (
-							<button
-								className="p-2 text-red-500 hover:text-red-700"
-								onClick={() => removeCertification(cert.id)}
-							>
-								<TrashIcon className="w-5 h-5" />
-							</button>
+					<div key={cert.id} className="mb-6">
+						{editingCertId === cert.id ? (
+							<div className="border p-4 rounded-lg">
+								<input
+									type="text"
+									value={editData.title}
+									onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+									className="border border-gray-300 p-2 rounded-md w-full mb-2"
+									placeholder="Title"
+								/>
+								<input
+									type="text"
+									value={editData.institution}
+									onChange={(e) => setEditData({ ...editData, institution: e.target.value })}
+									className="border border-gray-300 p-2 rounded-md w-full mb-2"
+									placeholder="Institution"
+								/>
+								<input
+									type="date"
+									value={formatDateForInput(editData.completion_date)}
+									onChange={(e) => setEditData({ ...editData, completion_date: e.target.value })}
+									className="border border-gray-300 p-2 rounded-md w-full mb-2"
+								/>
+								<input
+									type="text"
+									value={editData.focus_area}
+									onChange={(e) => setEditData({ ...editData, focus_area: e.target.value })}
+									className="border border-gray-300 p-2 rounded-md w-full mb-2"
+									placeholder="Focus Area"
+								/>
+								<div className="flex justify-between items-center">
+									<DeleteButton
+										onDelete={() => removeCertification(cert.id)}
+										itemType="Certification"
+										loading={loading}
+										size="small"
+										className="ml-2"
+									/>
+									<div className="flex space-x-2">
+										<button
+											className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+											onClick={handleCancelEdit}
+											disabled={loading}
+										>
+											Cancel
+										</button>
+										<button
+											className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+											onClick={() => updateCertification(cert.id)}
+											disabled={loading}
+										>
+											Save
+										</button>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div className="flex justify-between items-start">
+								<div>
+									<h4 className="text-lg font-semibold text-textPrimary">
+										{cert.title}
+									</h4>
+									<p className="text-textSecondary">{cert.institution}</p>
+									<p className="text-sm text-gray-500">
+										Completed on {" "}
+										{new Date(cert.completion_date).toLocaleDateString()}
+									</p>
+									<p className="text-textSecondary mt-2">
+										Focus Area: {cert.focus_area}
+									</p>
+								</div>
+								{editable && (
+									<button
+										className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+										onClick={() => handleEditClick(cert)}
+									>
+										<PencilIcon className="w-5 h-5 text-gray-600" />
+									</button>
+								)}
+							</div>
 						)}
 					</div>
 				))}
