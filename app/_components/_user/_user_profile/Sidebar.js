@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
-import { set } from "react-hook-form";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
+import { useUpdateItem } from "@/app/_components/_hooks/useUpdateItem";
 
 const Sidebar = ({
 	username,
@@ -34,11 +35,31 @@ const Sidebar = ({
 		X: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/X_icon_2.svg/1483px-X_icon_2.svg.png",
 		Meetup: "https://cdn-icons-png.flaticon.com/512/3984/3984399.png",
 	};
+
+	const [editingLanguageId, setEditingLanguageId] = useState(null);
+	const [editLanguageData, setEditLanguageData] = useState({
+		language: "",
+		proficiency: "Beginner"
+	});
+	const [editingInterestId, setEditingInterestId] = useState(null);
+	const [editInterestData, setEditInterestData] = useState("");
+
+	const [editingSocialId, setEditingSocialId] = useState(null);
+	const [editSocialData, setEditSocialData] = useState({
+		platform: "LinkedIn",
+		url: ""
+	});
+
 	const [loading, setLoading] = useState({
 		language: false,
 		interest: false,
 		socialMedia: false,
 	});
+
+	const { updateItem } = useUpdateItem();
+
+
+
 	const addLanguage = async () => {
 		try {
 			setLoading({ ...loading, language: true });
@@ -74,6 +95,36 @@ const Sidebar = ({
 			setUserLanguages(userLanguages.filter((lang) => lang.id !== languageId));
 		} catch (error) {
 			console.error("Error removing language:", error);
+		} finally {
+			setLoading({ ...loading, language: false });
+		}
+	};
+
+	const handleEditLanguageClick = (lang) => {
+		setEditingLanguageId(lang.id);
+		setEditLanguageData({
+			language: lang.language || "",
+			proficiency: lang.proficiency || "Beginner"
+		});
+	};
+
+
+	const updateLanguage = async (languageId) => {
+		try {
+			setLoading({ ...loading, language: true });
+
+			const updatedItem = await updateItem('language', languageId, editLanguageData);
+
+			setUserLanguages((prevLangs) =>
+				prevLangs.map((lang) =>
+					lang.id === languageId ? updatedItem : lang
+				)
+			);
+
+			setEditingLanguageId(null);
+			setEditLanguageData({ language: "", proficiency: "Beginner" });
+		} catch (error) {
+			console.error("Error updating language:", error);
 		} finally {
 			setLoading({ ...loading, language: false });
 		}
@@ -119,6 +170,31 @@ const Sidebar = ({
 			setLoading({ ...loading, interest: false });
 		}
 	};
+	const handleEditInterestClick = (interest) => {
+		setEditingInterestId(interest.id);
+		setEditInterestData(interest.name);
+	};
+
+	const updateInterest = async (interestId) => {
+		try {
+			setLoading({ ...loading, interest: true });
+			console.log(editInterestData);
+			const updatedItem = await updateItem('interest', interestId, { name: editInterestData });
+
+			setUserInterests((prevInterests) =>
+				prevInterests.map((interest) =>
+					interest.id === interestId ? updatedItem : interest
+				)
+			);
+
+			setEditingInterestId(null);
+			setEditInterestData("");
+		} catch (error) {
+			console.error("Error updating interest:", error);
+		} finally {
+			setLoading({ ...loading, interest: false });
+		}
+	};
 
 	const addSocialLink = async () => {
 		try {
@@ -159,6 +235,33 @@ const Sidebar = ({
 		}
 	};
 
+	const handleEditSocialClick = (social) => {
+		setEditingSocialId(social.id);
+		setEditSocialData({
+			platform: social.platform || "LinkedIn",
+			url: social.url || ""
+		});
+	};
+
+	const updateSocialLink = async (socialId) => {
+		try {
+			setLoading({ ...loading, socialMedia: true });
+			const updatedItem = await updateItem('social_Media', socialId, editSocialData);
+
+			setUserSocialLinks((prevLinks) =>
+				prevLinks.map((link) =>
+					link.id === socialId ? updatedItem : link
+				)
+			);
+
+			setEditingSocialId(null);
+			setEditSocialData({ platform: "LinkedIn", url: "" });
+		} catch (error) {
+			console.error("Error updating social media link:", error);
+		} finally {
+			setLoading({ ...loading, socialMedia: false });
+		}
+	};
 	// useEffect(() => {
 	// 	const fetchUserData = async () => {
 	// 		try {
@@ -246,21 +349,72 @@ const Sidebar = ({
 				<ul className="list-disc list-inside space-y-2">
 					{userLanguages &&
 						userLanguages.map((lang) => (
-							<li
-								key={lang.id}
-								className="text-textSecondary flex items-center justify-between"
-							>
-								<span>
-									{lang.language} - {lang.proficiency}
-								</span>
-								{editable && (
-									<button
-										className="p-2 text-red-500 hover:text-red-700"
-										onClick={() => removeLanguage(lang.id)}
-										disabled={loading.language}
-									>
-										<TrashIcon className="w-5 h-5" />
-									</button>
+							<li key={lang.id} className="list-none">
+								{editingLanguageId === lang.id ? (
+									<div className="border p-4 rounded-lg">
+										<input
+											type="text"
+											value={editLanguageData.language}
+											onChange={(e) =>
+												setEditLanguageData({ ...editLanguageData, language: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Language"
+										/>
+										<select
+											value={editLanguageData.proficiency}
+											onChange={(e) =>
+												setEditLanguageData({ ...editLanguageData, proficiency: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+										>
+											<option value="Beginner">Beginner</option>
+											<option value="Intermediate">Intermediate</option>
+											<option value="Proficient">Proficient</option>
+										</select>
+										<div className="flex justify-between items-center">
+											<DeleteButton
+												onDelete={() => removeLanguage(lang.id)}
+												itemType="Language"
+												loading={loading.language}
+												size="small"
+												className="ml-2"
+											/>
+											<div className="flex space-x-2">
+												<button
+													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+													onClick={() => {
+														setEditingLanguageId(null);
+														setEditLanguageData({ language: "", proficiency: "Beginner" });
+													}}
+													disabled={loading.language}
+												>
+													Cancel
+												</button>
+												<button
+													className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+													onClick={() => updateLanguage(lang.id)}
+													disabled={loading.language}
+												>
+													Save
+												</button>
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="flex items-center justify-between">
+										<span>
+											{lang.language} - {lang.proficiency}
+										</span>
+										{editable && (
+											<button
+												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+												onClick={() => handleEditLanguageClick(lang)}
+											>
+												<PencilIcon className="w-5 h-5 text-gray-600" />
+											</button>
+										)}
+									</div>
 								)}
 							</li>
 						))}
@@ -278,6 +432,7 @@ const Sidebar = ({
 						</button>
 					)}
 				</div>
+
 				{editable && addingInterest && (
 					<div className="mb-4 flex">
 						<input
@@ -305,22 +460,61 @@ const Sidebar = ({
 						</button>
 					</div>
 				)}
+
 				<div className="flex flex-wrap">
 					{userInterests &&
 						userInterests.map((interest) => (
-							<div
-								key={interest.id}
-								className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center"
-							>
-								<span>{interest.name}</span>
-								{editable && (
-									<button
-										className="ml-2 text-red-500 hover:text-red-700"
-										onClick={() => removeInterest(interest.id)}
-										disabled={loading.interest}
-									>
-										<TrashIcon className="w-4 h-4" />
-									</button>
+							<div key={interest.id}>
+								{editingInterestId === interest.id ? (
+									<div className="mb-2 flex items-center space-x-2">
+										<input
+											type="text"
+											value={editInterestData}
+											onChange={(e) => setEditInterestData(e.target.value)}
+											className="border border-gray-300 p-2 rounded-md"
+											placeholder="Interest"
+										/>
+										<div className="flex space-x-2">
+											<DeleteButton
+												onDelete={() => removeInterest(interest.id)}
+												itemType="Interest"
+												loading={loading.interest}
+												size="small"
+												className="ml-2"
+											/>
+											<button
+												className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+												onClick={() => {
+													setEditingInterestId(null);
+													setEditInterestData("");
+												}}
+												disabled={loading.interest}
+											>
+												Cancel
+											</button>
+											<button
+												className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+												onClick={() => updateInterest(interest.id)}
+												disabled={loading.interest}
+											>
+												Save
+											</button>
+										</div>
+									</div>
+								) : (
+									<div className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center">
+										<span>{interest.name}</span>
+										{editable && (
+											<div className="flex ml-2">
+												<button
+													className="p-1 rounded-full bg-gray-300 hover:bg-gray-400 mr-1"
+													onClick={() => handleEditInterestClick(interest)}
+												>
+													<PencilIcon className="w-3 h-3 text-gray-600" />
+												</button>
+											</div>
+										)}
+									</div>
 								)}
 							</div>
 						))}
@@ -329,9 +523,7 @@ const Sidebar = ({
 
 			<div className="bg-white p-6 rounded-lg shadow">
 				<div className="flex justify-between items-center mb-4">
-					<h3 className="text-xl font-semibold text-textPrimary">
-						Social Media
-					</h3>
+					<h3 className="text-xl font-semibold text-textPrimary">Social Media</h3>
 					{editable && (
 						<button
 							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
@@ -341,6 +533,7 @@ const Sidebar = ({
 						</button>
 					)}
 				</div>
+
 				{editable && addingSocialLink && (
 					<div className="mb-4">
 						<select
@@ -385,31 +578,88 @@ const Sidebar = ({
 						</div>
 					</div>
 				)}
+
 				<div className="space-y-2">
 					{userSocialLinks &&
 						userSocialLinks.map((link) => (
-							<div key={link.id} className="flex items-center justify-between">
-								<a
-									href={link.url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="flex items-center space-x-2 text-textSecondary hover:text-primary"
-								>
-									<img
-										src={platformIcons[`${link.platform}`]}
-										alt={link.platform}
-										className="w-6 h-6"
-									/>
-									<span>{link.platform}</span>
-								</a>
-								{editable && (
-									<button
-										className="p-2 text-red-500 hover:text-red-700"
-										onClick={() => removeSocialLink(link.id)}
-										disabled={loading.socialMedia}
-									>
-										<TrashIcon className="w-5 h-5" />
-									</button>
+							<div key={link.id}>
+								{editingSocialId === link.id ? (
+									<div className="border p-4 rounded-lg">
+										<select
+											value={editSocialData.platform}
+											onChange={(e) =>
+												setEditSocialData({ ...editSocialData, platform: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+										>
+											{platformOptions.map((platform) => (
+												<option key={platform} value={platform}>
+													{platform}
+												</option>
+											))}
+										</select>
+										<input
+											type="url"
+											value={editSocialData.url}
+											onChange={(e) =>
+												setEditSocialData({ ...editSocialData, url: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Profile URL"
+										/>
+										<div className="flex justify-between items-center">
+											<DeleteButton
+												onDelete={() => removeSocialLink(link.id)}
+												itemType="Social Media"
+												loading={loading.socialMedia}
+												size="small"
+												className="ml-2"
+											/>
+											<div className="flex space-x-2">
+												<button
+													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+													onClick={() => {
+														setEditingSocialId(null);
+														setEditSocialData({ platform: "LinkedIn", url: "" });
+													}}
+													disabled={loading.socialMedia}
+												>
+													Cancel
+												</button>
+												<button
+													className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+													onClick={() => updateSocialLink(link.id)}
+													disabled={loading.socialMedia}
+												>
+													Save
+												</button>
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="flex items-center justify-between">
+										<a
+											href={link.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="flex items-center space-x-2 text-textSecondary hover:text-primary"
+										>
+											<img
+												src={platformIcons[`${link.platform}`]}
+												alt={link.platform}
+												className="w-6 h-6"
+											/>
+											<span>{link.platform}</span>
+										</a>
+										{editable && (
+											<button
+												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+												onClick={() => handleEditSocialClick(link)}
+											>
+												<PencilIcon className="w-5 h-5 text-gray-600" />
+											</button>
+										)}
+									</div>
 								)}
 							</div>
 						))}

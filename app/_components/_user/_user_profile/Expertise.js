@@ -1,13 +1,31 @@
-import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
+import React, { useState } from "react";
+import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
-import { set } from "react-hook-form";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
+import { useUpdateItem } from "@/app/_components/_hooks/useUpdateItem";
 
 const Expertise = ({ username, expertiseList, editable }) => {
 	const [expertise, setExpertise] = useState(expertiseList);
 	const [newSkill, setNewSkill] = useState("");
 	const [addingSkill, setAddingSkill] = useState(false);
+	const [editingSkillId, setEditingSkillId] = useState(null);
+	const [editSkillData, setEditSkillData] = useState("");
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [itemToDelete, setItemToDelete] = useState(null);
 	const [loading, setLoading] = useState(false);
+
+	const { updateItem } = useUpdateItem();
+
+
+	const handleEditClick = (skill) => {
+		setEditingSkillId(skill.id);
+		setEditSkillData(skill.field);
+	};
+
+	const handleDeleteClick = (skill) => {
+		setItemToDelete(skill);
+		setShowDeleteDialog(true);
+	};
 
 	const addSkill = async () => {
 		try {
@@ -30,6 +48,26 @@ const Expertise = ({ username, expertiseList, editable }) => {
 		}
 	};
 
+	const updateSkill = async (skillId) => {
+		try {
+			setLoading(true);
+			const updatedItem = await updateItem('expertise', skillId, { field: editSkillData });
+
+			setExpertise((prevSkills) =>
+				prevSkills.map((skill) =>
+					skill.id === skillId ? updatedItem : skill
+				)
+			);
+
+			setEditingSkillId(null);
+			setEditSkillData("");
+		} catch (error) {
+			console.error("Error updating skill:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const removeSkill = async (skillId) => {
 		try {
 			setLoading(true);
@@ -41,28 +79,14 @@ const Expertise = ({ username, expertiseList, editable }) => {
 				},
 			);
 			setExpertise(expertise.filter((skill) => skill.id !== skillId));
+			// setShowDeleteDialog(false);
+			// setItemToDelete(null);
 		} catch (error) {
 			console.error("Error removing skill:", error);
 		} finally {
 			setLoading(false);
 		}
 	};
-
-	// useEffect(() => {
-	// 	const fetchUserExpertise = async () => {
-	// 		try {
-	// 			await axios
-	// 				.get(`${process.env.NEXT_PUBLIC_SERVER}/getAllExpertise`, {
-	// 					params: { username },
-	// 					withCredentials: true,
-	// 				})
-	// 				.then((response) => setExpertise(response.data.expertise));
-	// 		} catch (err) {
-	// 			console.error("Error fetching user Expertise:", err);
-	// 		}
-	// 	};
-	// 	fetchUserExpertise();
-	// }, []);
 
 	return (
 		<div className="bg-white p-6 rounded-lg shadow mb-6">
@@ -79,6 +103,7 @@ const Expertise = ({ username, expertiseList, editable }) => {
 					</button>
 				)}
 			</div>
+
 			{editable && addingSkill && (
 				<div className="mb-4 flex">
 					<input
@@ -107,22 +132,61 @@ const Expertise = ({ username, expertiseList, editable }) => {
 					</button>
 				</div>
 			)}
+
 			<div className="flex flex-wrap">
 				{expertise &&
 					expertise.map((exp) => (
-						<div
-							key={exp.id}
-							className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center"
-						>
-							<span>{exp.field}</span>
-							{editable && (
-								<button
-									className="ml-2 text-red-500 hover:text-red-700"
-									onClick={() => removeSkill(exp.id)}
-									disabled={loading}
-								>
-									<TrashIcon className="w-4 h-4" />
-								</button>
+						<div key={exp.id}>
+							{editingSkillId === exp.id ? (
+								<div className="mb-2 flex items-center space-x-2">
+									<input
+										type="text"
+										value={editSkillData}
+										onChange={(e) => setEditSkillData(e.target.value)}
+										className="border border-gray-300 p-2 rounded-md"
+										placeholder="Skill"
+									/>
+									<div className="flex space-x-2">
+										<DeleteButton
+											onDelete={() => removeSkill(exp.id)}
+											itemType="skill"
+											loading={loading}
+											size="small"
+											className="ml-2"
+										/>
+										<button
+											className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+											onClick={() => {
+												setEditingSkillId(null);
+												setEditSkillData("");
+											}}
+											disabled={loading}
+										>
+											Cancel
+										</button>
+										<button
+											className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+											onClick={() => updateSkill(exp.id)}
+											disabled={loading}
+										>
+											Save
+										</button>
+									</div>
+								</div>
+							) : (
+								<div className="bg-gray-200 text-gray-700 px-3 py-1 m-1 rounded-full flex items-center">
+									<span>{exp.field}</span>
+									{editable && (
+										<div className="flex ml-2">
+											<button
+												className="p-1 rounded-full bg-gray-300 hover:bg-gray-400 mr-1"
+												onClick={() => handleEditClick(exp)}
+											>
+												<PencilIcon className="w-3 h-3 text-gray-600" />
+											</button>
+										</div>
+									)}
+								</div>
 							)}
 						</div>
 					))}

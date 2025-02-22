@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/app/_components/_ui/Dialog"
 
+
 export default function CompanyHeader({ company, isOwnProfile }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedCompany, setEditedCompany] = useState(company)
@@ -28,7 +29,7 @@ export default function CompanyHeader({ company, isOwnProfile }) {
 
   return (
     <div className="relative">
-      <div className="h-48 bg-gray-200">
+      <div className="bg-gray-200">
         {company.coverImage && (
           <Image
             src={company.coverImage || "/placeholder.svg"}
@@ -38,7 +39,7 @@ export default function CompanyHeader({ company, isOwnProfile }) {
           />
         )}
       </div>
-      <div className="absolute bottom-0 left-8 transform translate-y-1/2">
+      <div className="absolute bottom-0 left-8 transform ">
         <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden">
           {company.profileImage ? (
             <Image

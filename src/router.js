@@ -46,14 +46,19 @@ import {
 	isCurrentUser,
 	updateUser,
 	signIn,
+	getTier,
+	updateTier,
+	updateUserItem,
+} from "./controllers/user.js";
+
+import {
 	followUser,
 	isFollowingUser,
 	unfollowUser,
 	getFollowers,
 	getFollowing,
-	getTier,
-	updateTier,
-} from "./controllers/user.js";
+} from "./controllers/follow.js";
+
 
 import {
 	createCertificationsCourses,
@@ -221,6 +226,7 @@ router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
 router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
+router.put("/updateUserItem", updateUserItem)
 router.put("/followUser", followUser);
 router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);

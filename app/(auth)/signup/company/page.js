@@ -4,10 +4,10 @@ import { useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { Button } from "../../../_components/_ui/Button";
-import { Input } from "../../../_components/_ui/Input";
-import { Label } from "../../../_components/_ui/Label";
-import { Textarea } from "../../../_components/_ui/Textarea";
+import { Button } from "@/app/_components/_ui/Button";
+import { Input } from "@/app/_components/_ui/Input";
+import { Label } from "@/app/_components/_ui/Label";
+import { Textarea } from "@/app/_components/_ui/Textarea";
 import {
 	Card,
 	CardContent,
@@ -15,17 +15,17 @@ import {
 	CardHeader,
 	CardTitle,
 	CardFooter,
-} from "../../../_components/_ui/Card";
-import { Switch } from "../../../_components/_ui/Switch";
+} from "@/app/_components/_ui/Card";
+import { Switch } from "@/app/_components/_ui/Switch";
 import {
 	Alert,
 	AlertDescription,
 	AlertTitle,
 	AlertCircle,
-} from "../../../_components/_ui/Alert";
-import { Separator } from "../../../_components/_ui/Separator";
+} from "@/app/_components/_ui/Alert";
+import { Separator } from "@/app/_components/_ui/Separator";
 import Link from "next/link";
-import Navbar from "../../../_components/_ui/Navbar";
+import Navbar from "@/app/_components/_ui/Navbar";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";

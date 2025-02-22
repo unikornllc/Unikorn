@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PlusIcon, TrashIcon, PencilIcon, } from "@heroicons/react/24/solid";
 import axios from "axios";
-import { set } from "react-hook-form";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
+import { Switch } from "@/app/_components/_ui/Switch";
+import { useUpdateItem } from "@/app/_components/_hooks/useUpdateItem";
 
 const Experience = ({
 	username,
@@ -32,6 +34,24 @@ const Experience = ({
 		role: "",
 		description: "",
 	});
+	const [editingCorporateId, setEditingCorporateId] = useState(null);
+	const [editingStartupId, setEditingStartupId] = useState(null);
+	const [editData, setEditData] = useState({
+		job_title: '',
+		company_name: '',
+		start_date: '',
+		end_date: '',
+		responsibilities: '',
+		// for startup
+		startup_name: '',
+		role: '',
+		description: '',
+	});
+
+	const { updateItem } = useUpdateItem();
+
+	const [isCurrentlyWorking, setIsCurrentlyWorking] = useState(false);
+	const [isEditCurrentlyWorking, setIsEditCurrentlyWorking] = useState(false);
 
 	const [loading, setLoading] = useState(false);
 
@@ -84,6 +104,41 @@ const Experience = ({
 			setLoading(false);
 		}
 	};
+	const updateCorporateExperience = async (experienceId) => {
+		try {
+			setLoading(true);
+			const experienceData = {
+				...editData,
+				end_date: isEditCurrentlyWorking ? null : editData.end_date,
+				id: experienceId,
+			};
+			// const response = await axios.put(
+			// 	`${process.env.NEXT_PUBLIC_SERVER}/api/updateCorporateExperience`,
+			// 	{
+			// 		username,
+			// 		...experienceData,
+			// 		id: experienceId,
+			// 	},
+			// 	{ withCredentials: true }
+			// );
+			const updatedItem = await updateItem('corporate_Experience', experienceId, experienceData);
+
+			setCorporateExperiences((prevExps) =>
+				prevExps.map((exp) =>
+					exp.id === experienceId ? updatedItem : exp
+				)
+			);
+
+			setEditingCorporateId(null);
+			setEditData({});
+			setIsEditCurrentlyWorking(false);
+		} catch (error) {
+			console.error("Error updating corporate experience:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 
 	const addStartupExperience = async () => {
 		try {
@@ -132,6 +187,81 @@ const Experience = ({
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const updateStartupExperience = async (experienceId) => {
+		try {
+			setLoading(true);
+			// const response = await axios.put(
+			// 	`${process.env.NEXT_PUBLIC_SERVER}/api/updateStartupExperience`,
+			// 	{
+			// 		username,
+			// 		...editData,
+			// 		id: experienceId,
+			// 	},
+			// 	{ withCredentials: true }
+			// );
+			const updatedItem = await updateItem('startup_Experience', experienceId, editData
+			);
+			setStartupExperiences((prevExps) =>
+				prevExps.map((exp) =>
+					exp.id === experienceId ? updatedItem : exp
+				)
+			);
+
+			setEditingStartupId(null);
+			setEditData({});
+		} catch (error) {
+			console.error("Error updating startup experience:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleEditClick = (exp, type) => {
+		if (type === 'corporate') {
+			setEditingCorporateId(exp.id);
+			setEditData({
+				job_title: exp.job_title || '',
+				company_name: exp.company_name || '',
+				start_date: exp.start_date || '',
+				end_date: exp.end_date || '',
+				responsibilities: exp.responsibilities || '',
+			});
+		} else {
+			setEditingStartupId(exp.id);
+			setEditData({
+				startup_name: exp.startup_name || '',
+				role: exp.role || '',
+				description: exp.description || '',
+			});
+		}
+	};
+	const handleCancelEdit = (type) => {
+		if (type === 'corporate') {
+			setEditingCorporateId(null);
+			setEditData({
+				job_title: '',
+				company_name: '',
+				start_date: '',
+				end_date: '',
+				responsibilities: '',
+			});
+			setIsEditCurrentlyWorking(false);
+		} else {
+			setEditingStartupId(null);
+			setEditData({
+				startup_name: '',
+				role: '',
+				description: '',
+			});
+		}
+	};
+
+
+	const formatDateForInput = (dateString) => {
+		if (!dateString) return '';
+		return new Date(dateString).toISOString().split('T')[0];
 	};
 
 	// useEffect(() => {
@@ -187,21 +317,19 @@ const Experience = ({
 			</div>
 			<div className="mb-4 border-b border-gray-200">
 				<button
-					className={`mr-4 pb-2 ${
-						activeTab === "Corporate"
-							? "border-b-2 border-primary text-primary font-semibold"
-							: "text-gray-600"
-					}`}
+					className={`mr-4 pb-2 ${activeTab === "Corporate"
+						? "border-b-2 border-primary text-primary font-semibold"
+						: "text-gray-600"
+						}`}
 					onClick={() => setActiveTab("Corporate")}
 				>
 					Corporate
 				</button>
 				<button
-					className={`pb-2 ${
-						activeTab === "Startup"
-							? "border-b-2 border-primary text-primary font-semibold"
-							: "text-gray-600"
-					}`}
+					className={`pb-2 ${activeTab === "Startup"
+						? "border-b-2 border-primary text-primary font-semibold"
+						: "text-gray-600"
+						}`}
 					onClick={() => setActiveTab("Startup")}
 				>
 					Startup
@@ -236,31 +364,52 @@ const Experience = ({
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
 								placeholder="Company Name"
 							/>
-							<div className="flex space-x-2 mb-2">
-								<input
-									type="date"
-									value={newCorporateExp.start_date}
-									onChange={(e) =>
-										setNewCorporateExp({
-											...newCorporateExp,
-											start_date: e.target.value,
-										})
-									}
-									className="border border-gray-300 p-2 rounded-md w-1/2"
-									placeholder="Start Date"
-								/>
-								<input
-									type="date"
-									value={newCorporateExp.end_date}
-									onChange={(e) =>
-										setNewCorporateExp({
-											...newCorporateExp,
-											end_date: e.target.value,
-										})
-									}
-									className="border border-gray-300 p-2 rounded-md w-1/2"
-									placeholder="End Date"
-								/>
+							<div className="flex flex-col space-y-2 mb-2">
+								<div className="flex items-center space-x-2">
+									<Switch
+										checked={isCurrentlyWorking}
+										onCheckedChange={(checked) => {
+											setIsCurrentlyWorking(checked);
+											if (checked) {
+												setNewCorporateExp({
+													...newCorporateExp,
+													end_date: '',
+												});
+											}
+										}}
+									/>
+									<label className="text-sm text-gray-600">
+										I am currently working here
+									</label>
+								</div>
+								<div className="flex space-x-2">
+									<input
+										type="date"
+										value={formatDateForInput(newCorporateExp.start_date)}
+										onChange={(e) =>
+											setNewCorporateExp({
+												...newCorporateExp,
+												start_date: e.target.value,
+											})
+										}
+										className="border border-gray-300 p-2 rounded-md w-1/2"
+										placeholder="Start Date"
+									/>
+									<input
+										type="date"
+										value={formatDateForInput(newCorporateExp.end_date)}
+										onChange={(e) =>
+											setNewCorporateExp({
+												...newCorporateExp,
+												end_date: e.target.value,
+											})
+										}
+										className="border border-gray-300 p-2 rounded-md w-1/2"
+										placeholder="End Date"
+										disabled={isCurrentlyWorking}
+									/>
+								</div>
+
 							</div>
 							<textarea
 								value={newCorporateExp.responsibilities}
@@ -301,38 +450,113 @@ const Experience = ({
 							</div>
 						</div>
 					)}
-					{corporateExperiences &&
-						corporateExperiences.map((exp, index) => (
-							<div
-								key={exp.id || `exp-${index}`}
-								className="mb-6 flex justify-between items-start"
-							>
-								<div>
-									<h4 className="text-lg font-semibold text-textPrimary">
-										{exp.job_title}
-									</h4>
-									<p className="text-textSecondary">{exp.company_name}</p>
-									<p className="text-sm text-gray-500">
-										{new Date(exp.start_date).toLocaleDateString()} -{" "}
-										{exp.end_date
-											? new Date(exp.end_date).toLocaleDateString()
-											: "Present"}
-									</p>
-									<p className="text-textSecondary mt-2">
-										{exp.responsibilities}
-									</p>
+					{corporateExperiences && corporateExperiences.map((exp, index) => (
+						<div key={exp.id || `exp-${index}`} className="mb-6">
+							{editingCorporateId === exp.id ? (
+								<div className="border p-4 rounded-lg">
+									<input
+										type="text"
+										value={editData.job_title || ''}
+										onChange={(e) => setEditData({ ...editData, job_title: e.target.value })}
+										className="border border-gray-300 p-2 rounded-md w-full mb-2"
+										placeholder="Job Title"
+									/>
+									<input
+										type="text"
+										value={editData.company_name}
+										onChange={(e) => setEditData({ ...editData, company_name: e.target.value })}
+										className="border border-gray-300 p-2 rounded-md w-full mb-2"
+										placeholder="Company Name"
+									/>
+									<div className="flex flex-col space-y-2 mb-2">
+										<div className="flex items-center space-x-2">
+											<Switch
+												checked={isEditCurrentlyWorking}
+												onCheckedChange={(checked) => {
+													setIsEditCurrentlyWorking(checked);
+													if (checked) {
+														setEditData({
+															...editData,
+															end_date: '',
+														});
+													}
+												}}
+											/>
+											<label className="text-sm text-gray-600">
+												I am currently working here
+											</label>
+										</div>
+										<div className="flex space-x-2">
+											<input
+												type="date"
+												value={formatDateForInput(editData.start_date) || ''}
+												onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
+												className="border border-gray-300 p-2 rounded-md w-1/2"
+											/>
+											<input
+												type="date"
+												value={formatDateForInput(editData.end_date) || ''}
+												onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
+												className="border border-gray-300 p-2 rounded-md w-1/2"
+												disabled={isEditCurrentlyWorking}
+											/>
+										</div>
+
+									</div>
+									<textarea
+										value={editData.responsibilities}
+										onChange={(e) => setEditData({ ...editData, responsibilities: e.target.value })}
+										className="border border-gray-300 p-2 rounded-md w-full mb-2"
+										rows={4}
+									/>
+									<div className="flex justify-between items-center">
+										<DeleteButton
+											onDelete={() => removeCorporateExperience(exp.id)}
+											itemType="Corporate Experience"
+											loading={loading}
+											size="small"
+											className="ml-2"
+										/>
+										<div className="flex space-x-2">
+											<button
+												className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+												onClick={() => setEditingCorporateId(null)}
+											>
+												Cancel
+											</button>
+											<button
+												className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+												onClick={() => updateCorporateExperience(exp.id)}
+												disabled={loading}
+											>
+												Save
+											</button>
+										</div>
+									</div>
 								</div>
-								{editable && (
-									<button
-										className="p-2 text-red-500 hover:text-red-700"
-										onClick={() => removeCorporateExperience(exp.id)}
-										disabled={loading}
-									>
-										<TrashIcon className="w-5 h-5" />
-									</button>
-								)}
-							</div>
-						))}
+							) : (
+								<div className="flex justify-between items-start">
+									<div>
+										<h4 className="text-lg font-semibold text-textPrimary">{exp.job_title}</h4>
+										<p className="text-textSecondary">{exp.company_name}</p>
+										<p className="text-sm text-gray-500">
+											{new Date(exp.start_date).toLocaleDateString()} - {" "}
+											{exp.end_date ? new Date(exp.end_date).toLocaleDateString() : "Present"}
+										</p>
+										<p className="text-textSecondary mt-2">{exp.responsibilities}</p>
+									</div>
+									{editable && (
+										<button
+											className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+											onClick={() => handleEditClick(exp, 'corporate')}
+										>
+											<PencilIcon className="w-5 h-5 text-gray-600" />
+										</button>
+									)}
+								</div>
+							)}
+						</div>
+					))}
 				</div>
 			)}
 			{activeTab === "Startup" && (
@@ -402,25 +626,79 @@ const Experience = ({
 					)}
 					{startupExperiences &&
 						startupExperiences.map((exp, index) => (
-							<div
-								key={exp.id || `exp-${index}`}
-								className="mb-6 flex justify-between items-start"
-							>
-								<div>
-									<h4 className="text-lg font-semibold text-textPrimary">
-										{exp.role}
-									</h4>
-									<p className="text-textSecondary">{exp.startup_name}</p>
-									<p className="text-textSecondary mt-2">{exp.description}</p>
-								</div>
-								{editable && (
-									<button
-										className="p-2 text-red-500 hover:text-red-700"
-										onClick={() => removeStartupExperience(exp.id)}
-										disabled={loading}
-									>
-										<TrashIcon className="w-5 h-5" />
-									</button>
+							<div key={exp.id || `exp-${index}`} className="mb-6">
+								{editingStartupId === exp.id ? (
+									<div className="border p-4 rounded-lg">
+										<input
+											type="text"
+											value={editData.role}
+											onChange={(e) =>
+												setEditData({ ...editData, role: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Role"
+										/>
+										<input
+											type="text"
+											value={editData.startup_name}
+											onChange={(e) =>
+												setEditData({ ...editData, startup_name: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Startup Name"
+										/>
+										<textarea
+											value={editData.description}
+											onChange={(e) =>
+												setEditData({ ...editData, description: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Description"
+											rows={4}
+										/>
+										<div className="flex justify-between items-center">
+											<DeleteButton
+												onDelete={() => removeStartupExperience(exp.id)}
+												itemType="Corporate Experience"
+												loading={loading}
+												size="small"
+												className="ml-2"
+											/>
+											<div className="flex space-x-2">
+												<button
+													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+													onClick={() => setEditingStartupId(null)}
+												>
+													Cancel
+												</button>
+												<button
+													className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+													onClick={() => updateStartupExperience(exp.id)}
+													disabled={loading}
+												>
+													Save
+												</button>
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="flex justify-between items-start">
+										<div>
+											<h4 className="text-lg font-semibold text-textPrimary">
+												{exp.role}
+											</h4>
+											<p className="text-textSecondary">{exp.startup_name}</p>
+											<p className="text-textSecondary mt-2">{exp.description}</p>
+										</div>
+										{editable && (
+											<button
+												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+												onClick={() => handleEditClick(exp, 'startup')}
+											>
+												<PencilIcon className="w-5 h-5 text-gray-600" />
+											</button>
+										)}
+									</div>
 								)}
 							</div>
 						))}

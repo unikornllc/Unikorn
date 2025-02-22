@@ -6,6 +6,7 @@ import { Input } from "@/app/_components/_ui/Input"
 import { Textarea } from "@/app/_components/_ui/Textarea"
 import { FileText, Trash2 } from "lucide-react"
 
+
 export default function CompanyFiles({ company, isOwnProfile }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedFiles, setEditedFiles] = useState(company.company_file)
@@ -56,7 +57,7 @@ export default function CompanyFiles({ company, isOwnProfile }) {
       </div>
       {isEditing && <Input type="file" onChange={handleFileUpload} className="mb-4" />}
       <ul className="space-y-2">
-        {editedFiles.map((file, index) => (
+        {editedFiles && editedFiles.map((file, index) => (
           <li key={index} className="flex items-center justify-between">
             <div className="flex items-center">
               <FileText size={20} className="mr-2" />
@@ -80,4 +81,5 @@ export default function CompanyFiles({ company, isOwnProfile }) {
     </div>
   )
 }
+
 

@@ -4,15 +4,16 @@ import { jwtVerify } from "jose";
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const routeRules = {
-	authRoutes: ["/", "/signin", "/signup/company", "/signup/user" , "/verifyUser"],
+	authRoutes: ["/", "/signin", "/signup/company", "/signup/user", "/verifyUser", "checkEmail"],
 	protectedUserRoutes: ["/user/home", "/user/profile", "/myInvestments"],
-	protectedCompanyRoutes: ["/company/home", "/company/profile", "/fundraising"],
+	protectedCompanyRoutes: ["/company/home", "/company/profile", "/company/fundraising"],
 	sharedRoutes: [
 		"/investments",
 		"/reset-password",
 		"/password-reset-request",
 		"/userChat",
 		"/text",
+		"/external-redirect"
 	],
 	dynamicRoutes: [
 		"/user/profile/",
@@ -79,8 +80,8 @@ export async function middleware(req) {
 			return withRoleResponse(NextResponse.next(), role);
 		}
 
-		return NextResponse.rewrite(new URL("/not-found", req.url));
-		// return withRoleResponse(NextResponse.next(), role)
+		// return NextResponse.rewrite(new URL("/not-found", req.url));
+		return withRoleResponse(NextResponse.next(), role)
 	} catch (error) {
 		return NextResponse.redirect(new URL("/signin", req.url));
 	}
