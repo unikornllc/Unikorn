@@ -18,12 +18,6 @@ export const createUser = async (req, res) => {
 				password: hashedPassword,
 				description: userData.description || "",
 				title: userData.title,
-				wallet: {
-					create: {
-						amount: 0.0,
-						onHold: 0.0,
-					},
-				},
 			},
 		});
 
@@ -88,14 +82,27 @@ export const verifyUser = async (req, res) => {
 		if (!user) {
 			return res.status(400).json({ error: "Invalid token" });
 		}
-		await prisma.user.update({
-			where: {
-				email: decoded.email,
-			},
-			data: {
-				verified: true,
-			},
-		});
+		await prisma.$transaction([
+			prisma.user.update({
+				where: {
+					email: decoded.email,
+				},
+				data: {
+					verified: true,
+				},
+			}),
+			prisma.wallet.create({
+				data: {
+					userId: user.id,
+				},
+			}),
+			prisma.ledgerAccount.create({
+				data: {
+					userId: user.id,
+					name: user.name,
+				},
+			}),
+		]);
 		res.status(200).send("Account successfully verified! You can now log in.");
 	} catch (error) {
 		console.log(error);
@@ -122,15 +129,15 @@ export const signIn = async (req, res) => {
 
 		const company = !user
 			? (await prisma.company_Profile.findUnique({
-				where: {
-					username: email,
-				},
-			})) ||
-			(await prisma.company_Profile.findUnique({
-				where: {
-					email: email,
-				},
-			}))
+					where: {
+						username: email,
+					},
+				})) ||
+				(await prisma.company_Profile.findUnique({
+					where: {
+						email: email,
+					},
+				}))
 			: null;
 
 		// If neither user nor company is found
@@ -228,13 +235,13 @@ export const getOneUser = async (req, res) => {
 			},
 			...(include
 				? {
-					include: Object.fromEntries(
-						Object.entries(include).map(([key, value]) => [
-							key,
-							value === "true",
-						]),
-					),
-				}
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
 				: {}),
 		});
 
@@ -270,13 +277,13 @@ export const getCurrentUser = async (req, res) => {
 			},
 			...(include
 				? {
-					include: Object.fromEntries(
-						Object.entries(include).map(([key, value]) => [
-							key,
-							value === "true",
-						]),
-					),
-				}
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
 				: {}),
 		});
 		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
@@ -351,7 +358,7 @@ export const updateUserItem = async (req, res) => {
 
 		if (!model || !id || !data) {
 			return res.status(400).json({
-				message: "Model type, item ID and update data are required."
+				message: "Model type, item ID and update data are required.",
 			});
 		}
 		const updatedItem = await prisma[capitalizeFirstLetter(model)].update({
@@ -361,14 +368,13 @@ export const updateUserItem = async (req, res) => {
 		// console.log(updatedItem)
 		if (!updatedItem) {
 			return res.status(401).json({
-				message: "Not authorized to update this item or item not found."
+				message: "Not authorized to update this item or item not found.",
 			});
 		}
 
 		res.status(200).json({
 			[model]: updatedItem,
 		});
-
 	} catch (error) {
 		console.error(`Error updating ${req.body.model}:`, error);
 		res.status(400).json({ message: `Error updating ${req.body.model}.` });
@@ -381,23 +387,23 @@ const capitalizeFirstLetter = (string) => {
 
 const sanitizeData = (model, data) => {
 	switch (model) {
-		case 'expertise':
+		case "expertise":
 			return {
 				field: data.field,
 			};
 
-		case 'education':
+		case "education":
 			return {
 				degree: data.degree,
 				institution: data.institution,
 			};
 
-		case 'interest':
+		case "interest":
 			return {
 				name: data.name,
 			};
 
-		case 'corporate_Experience':
+		case "corporate_Experience":
 			return {
 				job_title: data.job_title,
 				company_name: data.company_name,
@@ -406,14 +412,14 @@ const sanitizeData = (model, data) => {
 				responsibilities: data.responsibilities,
 			};
 
-		case 'startup_Experience':
+		case "startup_Experience":
 			return {
 				startup_name: data.startup_name,
 				role: data.role,
 				description: data.description,
 			};
 
-		case 'certifications_Courses':
+		case "certifications_Courses":
 			return {
 				title: data.title,
 				institution: data.institution,
@@ -421,25 +427,25 @@ const sanitizeData = (model, data) => {
 				focus_area: data.focus_area,
 			};
 
-			case 'interest':
-				return {
-					name: data.name,
-				};
+		case "interest":
+			return {
+				name: data.name,
+			};
 
-		case 'language':
+		case "language":
 			return {
 				language: data.language,
 				proficiency: data.proficiency,
 			};
 
-		case 'social_Media':
+		case "social_Media":
 			return {
 				platform: data.platform,
 				url: data.url,
 			};
 
 		default:
-			throw new Error('Invalid model type');
+			throw new Error("Invalid model type");
 	}
 };
 
@@ -573,8 +579,6 @@ export async function suggestUsernamePassport(email, name) {
 	return usernameSuggestions;
 }
 
-
-
 export const deleteUser = async (req, res) => {
 	try {
 		const id = req.query.userId;
@@ -623,7 +627,6 @@ export const deleteUser = async (req, res) => {
 // 		console.error(e);
 // 	}
 // };
-
 
 export const getTier = async (req, res) => {
 	try {
