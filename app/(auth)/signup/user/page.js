@@ -39,6 +39,7 @@ export default function UserSignUp() {
 		watch,
 		setError,
 		clearErrors,
+		setValue,
 	} = useForm();
 
 	const [usernameSuggestions, setUsernameSuggestions] = useState([]);
@@ -151,6 +152,7 @@ export default function UserSignUp() {
 		}
 
 		try {
+			console.log("formData:", formData);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createUser`,
 				{ formData },
@@ -272,10 +274,8 @@ export default function UserSignUp() {
 													key={index}
 													className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-indigo-700"
 													onClick={() => {
-														document.getElementById("username").value =
-															suggestion;
+														setValue("username", suggestion);
 														setUsernameSuggestions([]);
-														clearErrors("username");
 													}}
 												>
 													{suggestion}

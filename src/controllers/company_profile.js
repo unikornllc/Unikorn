@@ -6,30 +6,42 @@ export const createCompany = async (req, res) => {
 		const companyData = req.body.formData;
 		console.log(companyData);
 		const hashedPassword = await hashPassword(companyData.password);
-		const newCompany = await prisma.company_Profile.create({
-			data: {
-				name: companyData.name,
-				username: companyData.username,
-				email: companyData.email,
-				password: hashedPassword,
-				description: companyData.description,
-				website: companyData.website,
-				founded: new Date(companyData.founded),
-				type: companyData.type || "Public",
-				hqlocation: companyData.hqlocation,
-				industry: companyData.industry,
-				//hunter: companyData.hunter || false,
-				board_members: companyData.board_members || [],
-				advisors: companyData.advisors || [],
-				// founders: companyData.founders || [],
-				wallet: {
-					create: {
-						amount: 0.0,
-						onHold: 0.0,
-					},
+		const newCompany = await prisma.$transaction(async (tx) => {
+			const company = await tx.company_Profile.create({
+				data: {
+					name: companyData.name,
+					username: companyData.username,
+					email: companyData.email,
+					password: hashedPassword,
+					description: companyData.description,
+					website: companyData.website,
+					founded: new Date(companyData.founded),
+					type: companyData.type || "Public",
+					hqlocation: companyData.hqlocation,
+					industry: companyData.industry,
+					board_members: companyData.board_members || [],
+					advisors: companyData.advisors || [],
+					verified: true,
+					tier: companyData.tier,
 				},
-			},
+			});
+
+			await tx.wallet.create({
+				data: {
+					companyId: company.id,
+				},
+			});
+
+			await tx.ledgerAccount.create({
+				data: {
+					companyId: company.id,
+					name: company.name,
+				},
+			});
+
+			return company;
 		});
+
 		res.status(200).json({
 			message: "Company created successfully",
 			company: newCompany,
@@ -171,13 +183,13 @@ export const getOneCompanyProfile = async (req, res) => {
 			},
 			...(include
 				? {
-					include: Object.fromEntries(
-						Object.entries(include).map(([key, value]) => [
-							key,
-							value === "true",
-						]),
-					),
-				}
+						include: Object.fromEntries(
+							Object.entries(include).map(([key, value]) => [
+								key,
+								value === "true",
+							]),
+						),
+					}
 				: {}),
 		});
 

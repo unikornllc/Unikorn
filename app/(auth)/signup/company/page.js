@@ -40,6 +40,7 @@ export default function CompanySignUp() {
 		watch,
 		setError,
 		clearErrors,
+		setValue,
 	} = useForm();
 
 	const [usernameSuggestions, setUsernameSuggestions] = useState([]);
@@ -156,6 +157,8 @@ export default function CompanySignUp() {
 			// dataToSend.hunter == "on"
 			// 	? (dataToSend.hunter = "true")
 			// 	: (dataToSend.hunter = "false");
+			formData.tier = formData.hunter ? "Hunter" : "Holder";
+			formData.hunter = undefined;
 			formData.hunter = undefined;
 
 			const response = await axios.post(
@@ -276,8 +279,7 @@ export default function CompanySignUp() {
 													key={index}
 													className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-indigo-700"
 													onClick={() => {
-														document.getElementById("username").value =
-															suggestion;
+														setValue("username", suggestion);
 														setUsernameSuggestions([]);
 													}}
 												>
@@ -296,7 +298,6 @@ export default function CompanySignUp() {
 											id="password"
 											type="password"
 											{...register("password", {
-
 												// required: "Password is required",
 												// minLength: {
 												// 	value: 8,
