@@ -14,13 +14,13 @@ enum Degree {
   PhD
 }
 
-enum Language_Proficiency {
+enum LanguageProficiency {
   Beginner
   Intermediate
   Proficient
 }
 
-enum Social_Media_Platforms {
+enum SocialMediaPlatforms {
   LinkedIn
   X
   Meetup
@@ -31,42 +31,25 @@ enum Tier {
   Standard
 }
 
-enum Status {
-  pending
-  accepted
-  rejected
-}
-
 model User {
-  id                     String                   @id @default(uuid())
-  name                   String
-  username               String                   @unique
-  email                  String                   @unique
-  password               String
-  description            String                   @db.VarChar(300)
-  title                  Title                    @default(Mr)
-  verified               Boolean                  @default(false)
-  expertise              Expertise[]
-  education              Education[]
-  interest               Interest[]
-  corporate_experience   Corporate_Experience[]
-  startup_experience     Startup_Experience[]
-  certifications_courses Certifications_Courses[]
-  language               Language[]
-  social_media           Social_Media[]
-  sentMessages           Message[]                @relation("SentMessages")
-  receivedMessages       Message[]                @relation("ReceivedMessages")
-  user_file              User_File[]
-  followingUsers         Follow[]                 @relation("UserFollower")
-  followedByUsers        Follow[]                 @relation("UserFollowing")
-  calendly_integration   Calendly_Integration?
-  tier                   Tier                     @default(Standard)
-  logindevices           LoginDevices[]
-  fundraiser             Fundraiser[]             @relation("UserInvestments")
-  investmentOffers       InvestmentOffer[]        @relation("UserOffers")
-  wallet                 Wallet?                  @relation("Wallet")
-  Transaction            Transaction[]            @relation("Transaction")
-  LedgerAccount          LedgerAccount?           @relation("LedgerAccountUser")
+  id                    String                  @id @default(uuid())  @unique
+  account               Account                 @relation(fields: [id], references: [id])
+  name                  String
+  description           String                  @db.VarChar(600)
+  title                 Title                   @default(Mr)
+  tier                  Tier                    @default(Standard)
+  expertise             Expertise[]
+  education             Education[]
+  interest              Interest[]
+  corporateExperience   CorporateExperience[]
+  startupExperience     StartupExperience[]
+  certificationsCourses CertificationsCourses[]
+  language              Language[]
+  socialMedia           SocialMedia[]
+  userFile              UserFile[]
+  calendlyIntegration   CalendlyIntegration?
+  fundraiser            Fundraiser[]            @relation("UserInvestments")
+  investmentOffers      InvestmentOffer[]       @relation("UserOffers")
 }
 
 model Expertise {
@@ -91,63 +74,53 @@ model Interest {
   userId String
 }
 
-model Corporate_Experience {
+model CorporateExperience {
   id               String   @id @default(uuid())
-  job_title        String
-  company_name     String
-  start_date       DateTime
-  end_date         DateTime
+  jobTitle         String
+  companyName      String
+  startDate        DateTime
+  endDate          DateTime?
   responsibilities String
   user             User     @relation(fields: [userId], references: [id])
   userId           String
 }
 
-model Startup_Experience {
-  id           String @id @default(uuid())
-  startup_name String
-  role         String
-  description  String @db.VarChar(500)
-  user         User   @relation(fields: [userId], references: [id])
-  userId       String
-}
-
-model Certifications_Courses {
-  id              String   @id @default(uuid())
-  title           String
-  institution     String
-  completion_date DateTime
-  focus_area      String
-  user            User     @relation(fields: [userId], references: [id])
-  userId          String
-}
-
-model Language {
-  id          String               @id @default(uuid())
-  language    String
-  proficiency Language_Proficiency @default(Beginner)
-  user        User                 @relation(fields: [userId], references: [id])
+model StartupExperience {
+  id          String @id @default(uuid())
+  startupName String
+  role        String
+  description String @db.VarChar(500)
+  user        User   @relation(fields: [userId], references: [id])
   userId      String
 }
 
-model Social_Media {
-  id       String                 @id @default(uuid())
-  platform Social_Media_Platforms @default(X)
+model CertificationsCourses {
+  id             String   @id @default(uuid())
+  title          String
+  institution    String
+  completionDate DateTime
+  focusArea      String
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+}
+
+model Language {
+  id          String              @id @default(uuid())
+  language    String
+  proficiency LanguageProficiency @default(Beginner)
+  user        User                @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model SocialMedia {
+  id       String               @id @default(uuid())
+  platform SocialMediaPlatforms @default(X)
   url      String
-  user     User                   @relation(fields: [userId], references: [id])
+  user     User                 @relation(fields: [userId], references: [id])
   userId   String
 }
 
-model Message {
-  id         String   @id @default(uuid())
-  senderId   String
-  receiverId String
-  content    String
-  createdAt  DateTime @default(now())
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-}
-
-model User_File {
+model UserFile {
   id         String   @id @default(uuid())
   fileName   String
   filePath   String

@@ -36,7 +36,9 @@ export async function sendNewLoginNotification(email, ip, os, browser) {
 
 export const handleNewDevice = async (req, res, next) => {
 	try {
-	  if (!req.account) return next();
+	  if (!req.account){ 
+		return next();
+	  }
   
 	  const account = req.account;
 	  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -44,13 +46,9 @@ export const handleNewDevice = async (req, res, next) => {
 	  const parser = new UAParser(userAgent);
 	  const { os, browser } = parser.getResult();
   
-	  const accountFilter = account.role === "User" 
-		? { userId: account.id } 
-		: { companyId: account.id };
-  
 	  const existingDevice = await prisma.loginDevices.findFirst({
 		where: {
-		  ...accountFilter,
+		  id: account.id,
 		  OR: [
 			{ ip: ip },
 			{ browser: browser.name },
@@ -62,7 +60,7 @@ export const handleNewDevice = async (req, res, next) => {
 	  if (!existingDevice) {
 		await prisma.loginDevices.create({
 		  data: {
-			...accountFilter,
+			id: account.id,
 			ip,
 			browser: browser.name,
 			os: os.name,

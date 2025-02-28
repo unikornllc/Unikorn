@@ -2,24 +2,32 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function Verify() {
+	const searchParams = useSearchParams();
+	const token = searchParams.get("token");
 	const [message, setMessage] = useState("");
 	const [loading, setLoading] = useState(true);
+
 	useEffect(() => {
+		if (!token) {
+			setMessage("Invalid or missing token.");
+			setLoading(false);
+			return;
+		}
+
 		axios
-			.get(`${process.env.NEXT_PUBLIC_SERVER}/api/verifyUser`, {
+			.get(`${process.env.NEXT_PUBLIC_SERVER}/api/verifyAccount?token=${token}`, {
 				withCredentials: true,
 			})
 			.then((response) => setMessage(response.data))
 			.catch((error) =>
-				setMessage(error.response.data.error || "Verification failed."),
+				setMessage(error.response?.data?.error || "Verification failed."),
 			)
-			.finally(() => {
-				setLoading(false);
-			});
-	});
+			.finally(() => setLoading(false));
+	}, [token]);
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center bg-[#fff0db]">

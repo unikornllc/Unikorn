@@ -18,8 +18,8 @@ export default async function UserProfile() {
 		);
 		const user = res.data.user;
 
-		if (user && user.username) {
-			redirectPath = `/user/profile/${user.username}`;
+		if (user) {
+			redirectPath = `/user/profile/${user.account.username}`;
 		} else {
 			redirectPath = "/signin";
 		}

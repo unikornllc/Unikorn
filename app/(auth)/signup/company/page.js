@@ -30,10 +30,15 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import dynamic from "next/dynamic";
+const PhoneInput = dynamic(() => import("react-phone-input-2").then((mod) => mod.default), { ssr: false });
+import { Controller } from "react-hook-form";
+import "react-phone-input-2/lib/style.css";
 
 export default function CompanySignUp() {
 	const router = useRouter();
 	const {
+		control,
 		register,
 		handleSubmit,
 		formState: { errors },
@@ -162,8 +167,8 @@ export default function CompanySignUp() {
 			formData.hunter = undefined;
 
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/createCompany`,
-				{ formData },
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
+				{ formData,role: "Company" },
 				{
 					withCredentials: true,
 				},
@@ -289,6 +294,54 @@ export default function CompanySignUp() {
 										</ul>
 									)}
 								</div>
+								<div className="space-y-2">
+									<Label htmlFor="mobileNumber" className="text-indigo-900">
+										Mobile Number
+									</Label>
+									<Controller
+										name="mobileNumber"
+										control={control}
+										rules={{ required: "Mobile number is required" }}
+										render={({ field }) => (
+											<PhoneInput
+												country={"us"}
+												value={field.value}
+												onChange={(value) => field.onChange(value)}
+												placeholder="Enter mobile number"
+												inputStyle={{
+													width: "100%",
+													height: "40px",
+													fontSize: "16px",
+													borderRadius: "4px",
+													border: "1px solid #93c5fd",
+													paddingLeft: "60px",
+													outline: "none",
+													transition: "border 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+												}}
+												containerStyle={{
+													width: "100%",
+												}}
+												buttonStyle={{
+													border: "1px solid #93c5fd",
+													borderRight: "none",
+													backgroundColor: "#fff",
+													width: "55px",
+												}}
+												onFocus={(e) => {
+													e.target.style.border = "1px solid #6366f1";
+													e.target.style.boxShadow = "0 0 0 2px #6366f1";
+												}}
+												onBlur={(e) => {
+													e.target.style.border = "1px solid #93c5fd";
+													e.target.style.boxShadow = "none";
+												}}
+											/>
+										)}
+									/>
+									{errors.mobileNumber && (
+										<span className="text-red-500 text-sm">{errors.mobileNumber.message}</span>
+									)}
+								</div>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
 										<Label htmlFor="password" className="text-indigo-900">
@@ -376,12 +429,12 @@ export default function CompanySignUp() {
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="hqlocation" className="text-indigo-900">
+										<Label htmlFor="hqLocation" className="text-indigo-900">
 											HQ Location
 										</Label>
 										<Input
-											id="hqlocation"
-											{...register("hqlocation")}
+											id="hqLocation"
+											{...register("hqLocation")}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 									</div>

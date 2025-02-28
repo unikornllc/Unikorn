@@ -10,66 +10,6 @@ export const hashPassword = (password) => {
 	return bcrypt.hash(password, 10);
 };
 
-// export const verifyRefreshToken = async (req, res, next) => {
-// 	try {
-// 		const ssid = req.cookies["SID"];
-// 		if (!ssid) {
-// 			return next();
-// 		}
-// 		const sessions = await prisma.refreshTokenValid.findMany({
-// 			where: { sid: ssid },
-// 		});
-// 		if (!sessions || sessions.length === 0) {
-// 			return next();
-// 		}
-// 		const user = await prisma.user.findUnique({
-// 			where: { id: sessions[0].profileId },
-// 			include: { logindevices: true },
-// 		});
-// 		const company = !user
-// 			? await prisma.company_Profile.findUnique({
-// 					where: { id: sessions[0].profileId },
-// 					include: { logindevices: true },
-// 				})
-// 			: null;
-// 		if (!user && !company) {
-// 			return res.status(401).json({ message: "Invalid credentials." });
-// 		}
-// 		const account = user || company;
-// 		const linkedDevices = account.logindevices;
-
-// 		const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-// 		const userAgent = req.get("User-Agent");
-// 		const parser = new UAParser(userAgent);
-// 		const { os, browser } = parser.getResult();
-
-// 		let sessionValid = false;
-// 		for (const session of sessions) {
-// 			if (Date.now() > session.expire) {
-// 				await prisma.refreshTokenValid.delete({ where: { SID: session.sid } });
-// 				continue;
-// 			}
-// 			for (const device of linkedDevices) {
-// 				if (
-// 					device.ip === ip &&
-// 					device.os === os.name &&
-// 					device.browser === browser.name
-// 				) {
-// 					sessionValid = true;
-// 					break;
-// 				}
-// 			}
-// 		}
-// 		if (!sessionValid) {
-// 			return next();
-// 		}
-// 		res.sidVerified = true;
-// 		return next();
-// 	} catch (error) {
-// 		res.status(500).json({ message: "Server Error" });
-// 	}
-// };
-
 export const verifyBasicAccessToken = async (req, res, next) => {
 	try {
 		const bsid = req.cookies["BSID"];
@@ -77,7 +17,7 @@ export const verifyBasicAccessToken = async (req, res, next) => {
 			return next();
 		} else {
 			const decoded = jwt.verify(bsid, process.env.JWT_SECRET);
-			req.decodedUser = decoded;
+			req.account = decoded;
 			req.bsidVerified = true;
 			return next();
 		}
@@ -93,7 +33,7 @@ export const verifyPasswordResetToken = async (req, res, next) => {
 			generateBasicAccess;
 		} else {
 			const decoded = jwt.verify(token, process.env.JWT_SECRET);
-			req.decodedUser = decoded;
+			req.account = decoded;
 			return next();
 		}
 	} catch (error) {
@@ -125,26 +65,13 @@ export const verifyRefreshToken = async (req, res, next) => {
 		}
 
 		const profileId = session.profileId;
-		let account;
 
-		const user = await prisma.user.findUnique({
+		const account = await prisma.account.findUnique({
 			where: { id: profileId },
-			include: { logindevices: true },
+			include: { company: true, user: true, loginDevices: true },
 		});
-
-		if (user) {
-			account = { ...user, role: "User" };
-		} else {
-			const company = await prisma.company_Profile.findUnique({
-				where: { id: profileId },
-				include: { logindevices: true },
-			});
-			if (company) {
-				account = { ...company, role: "Company" };
-			} else {
-				req.refreshTokenValid = false;
-				return next();
-			}
+		if (!account) {
+			return res.status(401).json({ message: "Authentication required." });
 		}
 
 		req.account = account;
@@ -172,29 +99,19 @@ export const verifyCredentialsIfNoRefreshToken = async (req, res, next) => {
 				.json({ message: "Email and password are required." });
 		}
 
-		let account;
+		const isEmail = email.includes("@");
 
-		const user = await prisma.user.findFirst({
-			where: {
-				OR: [{ email }, { username: email }],
-			},
-			include: { logindevices: true },
-		});
+const account = await prisma.account.findUnique({
+	where: isEmail ? { email } : { username: email },
+	include: {
+		company: true,
+		user: true,
+		loginDevices: true,
+	},	
+});
 
-		if (user) {
-			account = { ...user, role: "User" };
-		} else {
-			const company = await prisma.company_Profile.findFirst({
-				where: {
-					OR: [{ email }, { username: email }],
-				},
-				include: { logindevices: true },
-			});
-			if (company) {
-				account = { ...company, role: "Company" };
-			} else {
-				return res.status(401).json({ message: "Invalid credentials." });
-			}
+		if (!account) {
+			return res.status(401).json({ message: "Invalid credentials." });
 		}
 
 		const isValidPassword = await comparePasswords(password, account.password);
@@ -202,7 +119,7 @@ export const verifyCredentialsIfNoRefreshToken = async (req, res, next) => {
 			return res.status(403).json({ message: "Invalid email or password." });
 		}
 
-		if (!account.verified) {
+		if (!account.emailVerified) {
 			return res.status(403).json({ message: "Verify your email first." });
 		}
 
@@ -249,11 +166,9 @@ export const verifyAccessTokenRoute = (req, res, next) => {
 		if (!bsid) {
 			return next();
 		}
-
 		const decoded = jwt.verify(bsid, process.env.JWT_SECRET);
-
-		req.decodedUser = decoded;
-		console.log(decodedUser);
+		req.account = decoded;
+		console.log(account);
 		return next();
 	} catch (error) {
 		return next();

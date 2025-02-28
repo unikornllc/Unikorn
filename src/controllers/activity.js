@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createActivity = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
+		const company = await prisma.company.findUnique({
 			where: { id: req.body.companyId },
 		});
 		const activity = await prisma.activity.create({
@@ -23,7 +23,7 @@ export const createActivity = async (req, res) => {
 
 export const getAllActivity = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
+		const company = await prisma.company.findUnique({
 			where: { id: req.body.companyId },
 		});
 		const activity = await prisma.activity.findMany({

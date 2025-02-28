@@ -21,7 +21,6 @@ const MyCompanyProfile = ({ company }) => {
 		date: "",
 	});
 
-
 	const handleUpdate = async (fieldName, fieldValue) => {
 		try {
 			const res = await axios.put(
@@ -49,7 +48,7 @@ const MyCompanyProfile = ({ company }) => {
 			}
 
 			const res = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/docusign`,
+				`${process.env.NEXT_PUBLIC_SERVER}/docusign`,
 				{
 					name: companyData.name,
 					email: companyData.email, // Ensure the company's email is available in the data

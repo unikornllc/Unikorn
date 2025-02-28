@@ -25,7 +25,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
-					username: user.username,
+					username: user.account.username,
 					isUser: true,
 				},
 				{
@@ -46,7 +46,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
-					username: user.username,
+					username: user.account.username,
 					isUser: true,
 				},
 				{
@@ -74,7 +74,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 		<div className="bg-secondary min-h-screen">
 			<Header
 				user={{
-					username: user.username,
+					username: user.account.username,
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
@@ -121,39 +121,39 @@ export default function EditableUserProfile({ user, editable = false }) {
 			</div>
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
-					{user.calendly_integration && (
+					{user.calendlyIntegration && (
 						<div className="bg-white p-6 rounded-lg shadow mb-6 relative">
 							<h3 className="text-2xl font-semibold text-textPrimary mb-4">
 								User's Schedules
 							</h3>
-							<CalendlySchedule username={user.username}></CalendlySchedule>
+							<CalendlySchedule username={user.account.username}></CalendlySchedule>
 						</div>
 					)}
 					<About
-						username={user.username}
+						username={user.account.username}
 						aboutList={{
 							description: user.description,
 						}}
 					/>
 					<Experience
-						username={user.username}
-						corporateExperienceList={user.corporate_experience}
-						startupExperienceList={user.startup_experience}
+						username={user.account.username}
+						corporateExperienceList={user.corporateExperience}
+						startupExperienceList={user.startupExperience}
 					/>
-					<Education username={user.username} educationList={user.education} />
-					<Expertise username={user.username} expertiseList={user.expertise} />
+					<Education username={user.account.username} educationList={user.education} />
+					<Expertise username={user.account.username} expertiseList={user.expertise} />
 					<Certifications
-						username={user.username}
-						certificationList={user.certifications_courses}
+						username={user.account.username}
+						certificationList={user.certificationsCourses}
 					/>
-					<Files username={user.username} />
+					<Files username={user.account.username} />
 				</div>
 				<div className="w-full lg:w-1/3 p-4">
 					<Sidebar
-						username={user.username}
+						username={user.account.username}
 						languageList={user.language}
 						interestList={user.interest}
-						socialMediaList={user.social_media}
+						socialMediaList={user.socialMedia}
 					/>
 				</div>
 			</div>

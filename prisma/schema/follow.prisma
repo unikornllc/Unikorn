@@ -1,12 +1,8 @@
 model Follow {
-  id                  String   @id @default(uuid())
-  createdAt           DateTime @default(now())
-  FolloweruserId      String?
-  FollowercompanyId   String?
-  FollowinguserId      String?
-  FollowingcompanyId   String?
-  userFollower    User?            @relation("UserFollower",fields: [FolloweruserId], references: [id])
-  companyFollower Company_Profile? @relation("CompanyFollower",fields: [FollowercompanyId], references: [id])
-  userFollowing    User?            @relation("UserFollowing",fields: [FollowinguserId], references: [id])
-  companyFollowing Company_Profile? @relation("CompanyFollowing",fields: [FollowingcompanyId], references: [id])
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  followerId  String?
+  followingId String?
+  follower    Account? @relation("follower", fields: [followerId], references: [id])
+  following   Account? @relation("following", fields: [followingId], references: [id])
 }

@@ -17,7 +17,7 @@ export const authorizeCalendly = async (req, res) => {
 
 		const calendlyAuthUrl = `https://auth.calendly.com/oauth/authorize?${params.toString()}`;
 		res.status(200).json({ redirectUrl: calendlyAuthUrl });
-		// res.cookie("calendly_oauth_user", req.decodedUser.id, {
+		// res.cookie("calendly_oauth_user", req.account.id, {
 		// 	httpOnly: true,
 		// 	secure: process.env.NODE_ENV === "production",
 		// 	sameSite: "strict",
@@ -66,8 +66,8 @@ export const callbackCalendly = async (req, res) => {
 		// console.log(userResponse.data.resource);
 		const calendlyOrgURI = userResponse.data.resource.current_organization;
 
-		await prisma.calendly_Integration.upsert({
-			where: { userId: req.decodedUser.id },
+		await prisma.calendlyIntegration.upsert({
+			where: { userId: req.account.id },
 			update: {
 				accessToken: access_token,
 				refreshToken: refresh_token,
@@ -78,7 +78,7 @@ export const callbackCalendly = async (req, res) => {
 				calendlyOrgURI,
 			},
 			create: {
-				userId: req.decodedUser.id,
+				userId: req.account.id,
 				accessToken: access_token,
 				refreshToken: refresh_token,
 				tokenType: token_type,
@@ -101,8 +101,8 @@ export const callbackCalendly = async (req, res) => {
 
 export const disconnectCalendly = async (req, res) => {
 	try {
-		const integration = await prisma.calendly_Integration.findUnique({
-			where: { userId: req.decodedUser.id },
+		const integration = await prisma.calendlyIntegration.findUnique({
+			where: { userId: req.account.id },
 		});
 
 		if (!integration) {
@@ -151,8 +151,8 @@ export const disconnectCalendly = async (req, res) => {
 			}
 		}
 
-		await prisma.calendly_Integration.delete({
-			where: { userId: req.decodedUser.id },
+		await prisma.calendlyIntegration.delete({
+			where: { userId: req.account.id },
 		});
 
 		res
@@ -170,8 +170,8 @@ export const updateCalendlySettings = async (req, res) => {
 	const { visibility, allowedIndustries, minYearsOfOperation, allowedRoles } =
 		req.body;
 	try {
-		await prisma.calendly_Integration.update({
-			where: { userId: req.decodedUser.id },
+		await prisma.calendlyIntegration.update({
+			where: { userId: req.account.id },
 			data: {
 				calendlyVisibility: visibility,
 				allowedIndustries,
@@ -190,25 +190,27 @@ export const updateCalendlySettings = async (req, res) => {
 			.json({ message: "Error updating Calendly integration settings" });
 	}
 };
+
+////////////////////////// Needs to be Tested //////////////////////////
 export const eventTypeCalendly = async (req, res) => {
 	try {
-		let id = req.decodedUser.id;
-		console.log(req.query.username);
+		let id = req.account.id;
 		if (req.query.username) {
 			const me = await prisma.user.findUnique({
 				where: {
-					id: req.decodedUser.id,
+					id: req.account.id,
 				},
 				select: { tier: true },
 			});
+			console.log(me);
 			if (me.tier === "Pro") {
-				const user = await prisma.user.findUnique({
+				const account = await prisma.account.findUnique({
 					where: {
 						username: req.query.username,
 					},
 					select: { id: true },
 				});
-				id = user.id;
+				id = account.id;
 			} else {
 				return res.status(200).json({ message: "Unauthorized" });
 			}
@@ -241,7 +243,7 @@ export const createEventTypeCalendly = async (req, res) => {
 	const { name, description, duration, ...otherData } = req.body;
 	try {
 		const data = await calendlyRequest(
-			req.decodedUser.id,
+			req.account.id,
 			{
 				method: "POST",
 				url: "https://api.calendly.com/event_types",
@@ -262,16 +264,16 @@ export const createEventTypeCalendly = async (req, res) => {
 };
 
 export const getSchedulingLinkCalendly = async (req, res) => {
-	let visitor = req.decodedUser;
+	let visitor = req.account;
 	const { username } = req.query;
 
 	try {
-		const profileUser = await prisma.user.findUnique({
-			where: { username },
-			include: { calendly_integration: true },
+		const profileUser = await prisma.user.findFirst({
+			where: { account:{username} },
+			include: { calendlyIntegration: true },
 		});
 
-		if (!profileUser || !profileUser.calendly_integration) {
+		if (!profileUser || !profileUser.calendlyIntegration) {
 			return res
 				.status(404)
 				.json({ message: "User or Calendly integration not found" });
@@ -292,7 +294,7 @@ export const getSchedulingLinkCalendly = async (req, res) => {
 };
 
 export async function calendlyRequest(userId, options, addUserLink = false) {
-	let integration = await prisma.calendly_Integration.findUnique({
+	let integration = await prisma.calendlyIntegration.findUnique({
 		where: { userId },
 	});
 
@@ -351,7 +353,7 @@ async function refreshAccessToken(userId, refreshToken) {
 			token_type,
 		} = tokenResponse.data;
 
-		const updatedIntegration = await prisma.calendly_Integration.update({
+		const updatedIntegration = await prisma.calendlyIntegration.update({
 			where: { userId },
 			data: {
 				accessToken: access_token,

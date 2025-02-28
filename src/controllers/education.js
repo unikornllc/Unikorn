@@ -3,15 +3,19 @@ import prisma from "../db.js";
 export const createEducation = async (req, res) => {
 	const degrees = ["NONE", "BA", "BSc", "MA", "MSc", "MBA", "PhD"];
 	try {
-		const user = await prisma.user.findUnique({
-			where: { username: req.body.username },
+		const user = await prisma.user.findFirst({
+			where: {
+				account: {
+					username: req.body.username,
+				},
+			},
 		});
 
 		if (!user) {
 			return res.status(400).json({ message: "User not found" });
 		}
 
-		if (user.id != req.decodedUser.id) {
+		if (user.id != req.account.id) {
 			return res
 				.status(401)
 				.json({ message: "Unauthorized to edit user data." });
@@ -51,9 +55,11 @@ export const getOneEducation = async (req, res) => {
 
 export const getAllEducation = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
-				username: req.query.username,
+				account: {
+					username: req.query.username,
+				},
 			},
 			include: {
 				education: true,
@@ -74,7 +80,7 @@ export const deleteOneEducation = async (req, res) => {
 	try {
 		const deleted = await prisma.education.delete({
 			where: {
-				userId: req.decodedUser.id,
+				userId: req.account.id,
 				id: req.query.educationId,
 			},
 		});

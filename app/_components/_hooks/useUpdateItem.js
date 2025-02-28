@@ -23,14 +23,14 @@ const validateData = (modelType, data) => {
             }
             break;
 
-        case 'corporate_Experience':
-            if (!data.job_title?.trim()) {
+        case 'corporateExperience':
+            if (!data.jobTitle?.trim()) {
                 errors.push('Job title is required');
             }
-            if (!data.company_name?.trim()) {
+            if (!data.companyName?.trim()) {
                 errors.push('Company name is required');
             }
-            if (!data.start_date) {
+            if (!data.startDate) {
                 errors.push('Start date is required');
             }
             if (!data.responsibilities?.trim()) {
@@ -38,8 +38,8 @@ const validateData = (modelType, data) => {
             }
             break;
 
-        case 'startup_Experience':
-            if (!data.startup_name?.trim()) {
+        case 'startupExperience':
+            if (!data.startupName?.trim()) {
                 errors.push('Startup name is required');
             }
             if (!data.role?.trim()) {
@@ -50,17 +50,17 @@ const validateData = (modelType, data) => {
             }
             break;
 
-        case 'certifications_Courses':
+        case 'certificationsCourses':
             if (!data.title?.trim()) {
                 errors.push('Title is required');
             }
             if (!data.institution?.trim()) {
                 errors.push('Institution is required');
             }
-            if (!data.completion_date) {
+            if (!data.completionDate) {
                 errors.push('Completion date is required');
             }
-            if (!data.focus_area?.trim()) {
+            if (!data.focusArea?.trim()) {
                 errors.push('Focus area is required');
             }
             break;
@@ -79,7 +79,7 @@ const validateData = (modelType, data) => {
                 errors.push('Interest Name is required');
             }
             break;
-        case 'social_Media':
+        case 'socialMedia':
             if (!data.platform) {
                 errors.push('Platform is required');
             }
@@ -119,11 +119,12 @@ export const useUpdateItem = () => {
 
     const updateItem = async (modelType, itemId, updateData) => {
         // Validate data first
+        console.log(updateData)
         const validationErrors = validateData(modelType, updateData);
         if (validationErrors.length > 0) {
             const errorMessage = validationErrors.map(error => `• ${error}`).join('\n');
             toast(errorMessage, 'error', 5000);
-            throw new Error('Validation failed');
+            throw new Error(errorMessage);
         }
 
         try {

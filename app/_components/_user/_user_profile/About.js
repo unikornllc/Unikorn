@@ -13,13 +13,13 @@ const About = ({ username, aboutList, editable }) => {
 			setLoading(true);
 			await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/updateUser`,
-				{ username, description: about.description },
+				{ description: about.description },
 				{
 					withCredentials: true,
 				},
 			);
 		} catch (error) {
-			console.error("Error removing certification:", error);
+			console.error("Error updating Description:", error);
 		} finally {
 			setLoading(false);
 		}

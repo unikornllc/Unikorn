@@ -8,13 +8,9 @@ import session from "express-session";
 import configurePassport from "./passport.js";
 import { protect } from "./auth.js";
 import {
-	createUser,
-	verifyUser,
-	signIn,
 	suggestUsername,
 } from "./controllers/user.js";
-import { createCompany } from "./controllers/company_profile.js";
-import { verifiedUser } from "./middlewares/verified_mail.js";
+import { verifiedUser } from "./middlewares/verifiedMail.js";
 import {
 	confirmPassword,
 	checkEmail,
@@ -29,6 +25,7 @@ import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
 import docusignRouter from "./docusign.js";
+import { verifyAccount , createAccount } from "./controllers/account.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -139,18 +136,11 @@ app.get("/auth/logout", function (req, res, next) {
 });
 
 app.post(
-	"/api/createUser",
+	"/api/createAccount",
 	checkEmail,
 	checkUsername,
 	confirmPassword,
-	createUser,
-);
-app.post(
-	"/api/createCompany",
-	checkEmail,
-	checkUsername,
-	confirmPassword,
-	createCompany,
+	createAccount,
 );
 
 import {
@@ -159,8 +149,8 @@ import {
 	verifyAccessToken,
 	verifyAccessTokenRoute,
 } from "./authentication/auth.js";
-import { handleNewDevice } from "./authentication/logindevice.js";
-import { generateRefreshTokenIfNeeded } from "./authentication/refreshtoken.js";
+import { handleNewDevice } from "./authentication/loginDevice.js";
+import { generateRefreshTokenIfNeeded } from "./authentication/refreshToken.js";
 import {
 	generateAccessTokenIfNeeded,
 	verifyRefreshTokenAndGenerateAccessToken,
@@ -168,12 +158,12 @@ import {
 import {
 	resetPassword,
 	resetPasswordRequest,
-} from "./authentication/password_reset.js";
+} from "./authentication/passwordReset.js";
 
 app.post("/password-reset-request", resetPasswordRequest);
 app.post("/reset-password", resetPassword);
 
-app.get("/api/verifyUser", verifyUser);
+app.get("/api/verifyAccount", verifyAccount);
 //app.post("/signIn", verifiedUser, signIn);
 app.get("/api/checkUsername", checkUsernameAPI);
 app.get("/api/checkEmail", checkEmail);
@@ -188,7 +178,9 @@ app.post(
 	verifyAccessToken,
 	generateAccessTokenIfNeeded,
 	(req, res) => {
-		res.status(200).json({ role: req.account.role, message: "Login Successful" });
+		res
+			.status(200)
+			.json({ role: req.account.role, message: "Login Successful" });
 	},
 );
 
@@ -200,8 +192,7 @@ app.use(
 );
 
 //app.use(protect, router);
-
-//app.use(router);
+app.use(docusignRouter);
 
 server.listen(3002, () => {
 	console.log("Server is running on port 3002");

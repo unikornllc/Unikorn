@@ -18,10 +18,10 @@ const Experience = ({
 	);
 	const [addingCorporateExp, setAddingCorporateExp] = useState(false);
 	const [newCorporateExp, setNewCorporateExp] = useState({
-		job_title: "",
-		company_name: "",
-		start_date: "",
-		end_date: "",
+		jobTitle: "",
+		companyName: "",
+		startDate: "",
+		endDate: "",
 		responsibilities: "",
 	});
 
@@ -30,20 +30,20 @@ const Experience = ({
 	);
 	const [addingStartupExp, setAddingStartupExp] = useState(false);
 	const [newStartupExp, setNewStartupExp] = useState({
-		startup_name: "",
+		startupName: "",
 		role: "",
 		description: "",
 	});
 	const [editingCorporateId, setEditingCorporateId] = useState(null);
 	const [editingStartupId, setEditingStartupId] = useState(null);
 	const [editData, setEditData] = useState({
-		job_title: '',
-		company_name: '',
-		start_date: '',
-		end_date: '',
+		jobTitle: '',
+		companyName: '',
+		startDate: '',
+		endDate: '',
 		responsibilities: '',
 		// for startup
-		startup_name: '',
+		startupName: '',
 		role: '',
 		description: '',
 	});
@@ -71,10 +71,10 @@ const Experience = ({
 				response.data.corporateExperience,
 			]);
 			setNewCorporateExp({
-				job_title: "",
-				company_name: "",
-				start_date: "",
-				end_date: "",
+				jobTitle: "",
+				companyName: "",
+				startDate: "",
+				endDate: "",
 				responsibilities: "",
 			});
 			setAddingCorporateExp(false);
@@ -109,7 +109,7 @@ const Experience = ({
 			setLoading(true);
 			const experienceData = {
 				...editData,
-				end_date: isEditCurrentlyWorking ? null : editData.end_date,
+				endDate: isEditCurrentlyWorking ? null : editData.endDate,
 				id: experienceId,
 			};
 			// const response = await axios.put(
@@ -121,7 +121,7 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('corporate_Experience', experienceId, experienceData);
+			const updatedItem = await updateItem('corporateExperience', experienceId, experienceData);
 
 			setCorporateExperiences((prevExps) =>
 				prevExps.map((exp) =>
@@ -157,7 +157,7 @@ const Experience = ({
 			]);
 			console.log();
 			setNewStartupExp({
-				startup_name: "",
+				startupName: "",
 				role: "",
 				description: "",
 			});
@@ -201,7 +201,7 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('startup_Experience', experienceId, editData
+			const updatedItem = await updateItem('startupExperience', experienceId, editData
 			);
 			setStartupExperiences((prevExps) =>
 				prevExps.map((exp) =>
@@ -222,16 +222,19 @@ const Experience = ({
 		if (type === 'corporate') {
 			setEditingCorporateId(exp.id);
 			setEditData({
-				job_title: exp.job_title || '',
-				company_name: exp.company_name || '',
-				start_date: exp.start_date || '',
-				end_date: exp.end_date || '',
+				jobTitle: exp.jobTitle || '',
+				companyName: exp.companyName || '',
+				startDate: exp.startDate || '',
+				endDate: exp.endDate || '',
 				responsibilities: exp.responsibilities || '',
 			});
+			if(!exp.endDate){
+				setIsEditCurrentlyWorking(true);
+			}
 		} else {
 			setEditingStartupId(exp.id);
 			setEditData({
-				startup_name: exp.startup_name || '',
+				startupName: exp.startupName || '',
 				role: exp.role || '',
 				description: exp.description || '',
 			});
@@ -241,17 +244,17 @@ const Experience = ({
 		if (type === 'corporate') {
 			setEditingCorporateId(null);
 			setEditData({
-				job_title: '',
-				company_name: '',
-				start_date: '',
-				end_date: '',
+				jobTitle: '',
+				companyName: '',
+				startDate: '',
+				endDate: '',
 				responsibilities: '',
 			});
 			setIsEditCurrentlyWorking(false);
 		} else {
 			setEditingStartupId(null);
 			setEditData({
-				startup_name: '',
+				startupName: '',
 				role: '',
 				description: '',
 			});
@@ -342,11 +345,11 @@ const Experience = ({
 						<div className="mb-6">
 							<input
 								type="text"
-								value={newCorporateExp.job_title}
+								value={newCorporateExp.jobTitle}
 								onChange={(e) =>
 									setNewCorporateExp({
 										...newCorporateExp,
-										job_title: e.target.value,
+										jobTitle: e.target.value,
 									})
 								}
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
@@ -354,11 +357,11 @@ const Experience = ({
 							/>
 							<input
 								type="text"
-								value={newCorporateExp.company_name}
+								value={newCorporateExp.companyName}
 								onChange={(e) =>
 									setNewCorporateExp({
 										...newCorporateExp,
-										company_name: e.target.value,
+										companyName: e.target.value,
 									})
 								}
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
@@ -373,7 +376,7 @@ const Experience = ({
 											if (checked) {
 												setNewCorporateExp({
 													...newCorporateExp,
-													end_date: '',
+													endDate: '',
 												});
 											}
 										}}
@@ -385,11 +388,11 @@ const Experience = ({
 								<div className="flex space-x-2">
 									<input
 										type="date"
-										value={formatDateForInput(newCorporateExp.start_date)}
+										value={formatDateForInput(newCorporateExp.startDate)}
 										onChange={(e) =>
 											setNewCorporateExp({
 												...newCorporateExp,
-												start_date: e.target.value,
+												startDate: e.target.value,
 											})
 										}
 										className="border border-gray-300 p-2 rounded-md w-1/2"
@@ -397,11 +400,11 @@ const Experience = ({
 									/>
 									<input
 										type="date"
-										value={formatDateForInput(newCorporateExp.end_date)}
+										value={formatDateForInput(newCorporateExp.endDate)}
 										onChange={(e) =>
 											setNewCorporateExp({
 												...newCorporateExp,
-												end_date: e.target.value,
+												endDate: e.target.value,
 											})
 										}
 										className="border border-gray-300 p-2 rounded-md w-1/2"
@@ -436,10 +439,10 @@ const Experience = ({
 									onClick={() => {
 										setAddingCorporateExp(false);
 										setNewCorporateExp({
-											job_title: "",
-											company_name: "",
-											start_date: "",
-											end_date: "",
+											jobTitle: "",
+											companyName: "",
+											startDate: "",
+											endDate: "",
 											responsibilities: "",
 										});
 									}}
@@ -456,15 +459,15 @@ const Experience = ({
 								<div className="border p-4 rounded-lg">
 									<input
 										type="text"
-										value={editData.job_title || ''}
-										onChange={(e) => setEditData({ ...editData, job_title: e.target.value })}
+										value={editData.jobTitle || ''}
+										onChange={(e) => setEditData({ ...editData, jobTitle: e.target.value })}
 										className="border border-gray-300 p-2 rounded-md w-full mb-2"
 										placeholder="Job Title"
 									/>
 									<input
 										type="text"
-										value={editData.company_name}
-										onChange={(e) => setEditData({ ...editData, company_name: e.target.value })}
+										value={editData.companyName}
+										onChange={(e) => setEditData({ ...editData, companyName: e.target.value })}
 										className="border border-gray-300 p-2 rounded-md w-full mb-2"
 										placeholder="Company Name"
 									/>
@@ -477,7 +480,7 @@ const Experience = ({
 													if (checked) {
 														setEditData({
 															...editData,
-															end_date: '',
+															endDate: '',
 														});
 													}
 												}}
@@ -489,14 +492,14 @@ const Experience = ({
 										<div className="flex space-x-2">
 											<input
 												type="date"
-												value={formatDateForInput(editData.start_date) || ''}
-												onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
+												value={formatDateForInput(editData.startDate) || ''}
+												onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
 												className="border border-gray-300 p-2 rounded-md w-1/2"
 											/>
 											<input
 												type="date"
-												value={formatDateForInput(editData.end_date) || ''}
-												onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
+												value={formatDateForInput(editData.endDate) || ''}
+												onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
 												className="border border-gray-300 p-2 rounded-md w-1/2"
 												disabled={isEditCurrentlyWorking}
 											/>
@@ -537,11 +540,11 @@ const Experience = ({
 							) : (
 								<div className="flex justify-between items-start">
 									<div>
-										<h4 className="text-lg font-semibold text-textPrimary">{exp.job_title}</h4>
-										<p className="text-textSecondary">{exp.company_name}</p>
+										<h4 className="text-lg font-semibold text-textPrimary">{exp.jobTitle}</h4>
+										<p className="text-textSecondary">{exp.companyName}</p>
 										<p className="text-sm text-gray-500">
-											{new Date(exp.start_date).toLocaleDateString()} - {" "}
-											{exp.end_date ? new Date(exp.end_date).toLocaleDateString() : "Present"}
+											{new Date(exp.startDate).toLocaleDateString()} - {" "}
+											{exp.endDate ? new Date(exp.endDate).toLocaleDateString() : "Present"}
 										</p>
 										<p className="text-textSecondary mt-2">{exp.responsibilities}</p>
 									</div>
@@ -577,11 +580,11 @@ const Experience = ({
 							/>
 							<input
 								type="text"
-								value={newStartupExp.startup_name}
+								value={newStartupExp.startupName}
 								onChange={(e) =>
 									setNewStartupExp({
 										...newStartupExp,
-										startup_name: e.target.value,
+										startupName: e.target.value,
 									})
 								}
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
@@ -612,7 +615,7 @@ const Experience = ({
 									onClick={() => {
 										setAddingStartupExp(false);
 										setNewStartupExp({
-											startup_name: "",
+											startupName: "",
 											role: "",
 											description: "",
 										});
@@ -640,9 +643,9 @@ const Experience = ({
 										/>
 										<input
 											type="text"
-											value={editData.startup_name}
+											value={editData.startupName}
 											onChange={(e) =>
-												setEditData({ ...editData, startup_name: e.target.value })
+												setEditData({ ...editData, startupName: e.target.value })
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Startup Name"
@@ -687,7 +690,7 @@ const Experience = ({
 											<h4 className="text-lg font-semibold text-textPrimary">
 												{exp.role}
 											</h4>
-											<p className="text-textSecondary">{exp.startup_name}</p>
+											<p className="text-textSecondary">{exp.startupName}</p>
 											<p className="text-textSecondary mt-2">{exp.description}</p>
 										</div>
 										{editable && (

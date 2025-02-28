@@ -19,16 +19,14 @@ model TokenBlacklist {
 }
 
 model LoginDevices {
-  id        String           @id @default(uuid())
+  id        String  @id @default(uuid())
   ip        String
   browser   String
   os        String
-  userId    String?
-  companyId String?
-  user      User?            @relation(fields: [userId], references: [id])
-  company   Company_Profile? @relation(fields: [companyId], references: [id])
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id])
 
-  @@unique([ip, browser, os, userId, companyId])
+  @@unique([ip, browser, os, accountId])
 }
 
 model BlacklistedPasswordToken {

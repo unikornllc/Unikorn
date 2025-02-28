@@ -17,8 +17,8 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const [newCert, setNewCert] = useState({
 		title: "",
 		institution: "",
-		completion_date: "",
-		focus_area: "",
+		completionDate: "",
+		focusArea: "",
 	});
 
 	const formatDateForInput = (dateString) => {
@@ -46,8 +46,8 @@ const Certifications = ({ username, certificationList, editable }) => {
 			setNewCert({
 				title: "",
 				institution: "",
-				completion_date: "",
-				focus_area: "",
+				completionDate: "",
+				focusArea: "",
 			});
 			setAddingCert(false);
 		} catch (error) {
@@ -76,7 +76,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const updateCertification = async (certId) => {
 		try {
 			setLoading(true);
-			const updatedItem = await updateItem('certifications_Courses', certId, editData);
+			const updatedItem = await updateItem('certificationsCourses', certId, editData);
 
 			setCerts((prevCerts) =>
 				prevCerts.map((cert) =>
@@ -134,18 +134,18 @@ const Certifications = ({ username, certificationList, editable }) => {
 					/>
 					<input
 						type="date"
-						value={formatDateForInput(newCert.completion_date)}
+						value={formatDateForInput(newCert.completionDate)}
 						onChange={(e) =>
-							setNewCert({ ...newCert, completion_date: e.target.value })
+							setNewCert({ ...newCert, completionDate: e.target.value })
 						}
 						className="border border-gray-300 p-2 rounded-md w-full mb-2"
 						placeholder="Completion Date"
 					/>
 					<input
 						type="text"
-						value={newCert.focus_area}
+						value={newCert.focusArea}
 						onChange={(e) =>
-							setNewCert({ ...newCert, focus_area: e.target.value })
+							setNewCert({ ...newCert, focusArea: e.target.value })
 						}
 						className="border border-gray-300 p-2 rounded-md w-full mb-2"
 						placeholder="Focus Area"
@@ -165,8 +165,8 @@ const Certifications = ({ username, certificationList, editable }) => {
 								setNewCert({
 									title: "",
 									institution: "",
-									completion_date: "",
-									focus_area: "",
+									completionDate: "",
+									focusArea: "",
 								});
 							}}
 							disabled={loading}
@@ -198,14 +198,14 @@ const Certifications = ({ username, certificationList, editable }) => {
 								/>
 								<input
 									type="date"
-									value={formatDateForInput(editData.completion_date)}
-									onChange={(e) => setEditData({ ...editData, completion_date: e.target.value })}
+									value={formatDateForInput(editData.completionDate)}
+									onChange={(e) => setEditData({ ...editData, completionDate: e.target.value })}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 								/>
 								<input
 									type="text"
-									value={editData.focus_area}
-									onChange={(e) => setEditData({ ...editData, focus_area: e.target.value })}
+									value={editData.focusArea}
+									onChange={(e) => setEditData({ ...editData, focusArea: e.target.value })}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 									placeholder="Focus Area"
 								/>
@@ -244,10 +244,10 @@ const Certifications = ({ username, certificationList, editable }) => {
 									<p className="text-textSecondary">{cert.institution}</p>
 									<p className="text-sm text-gray-500">
 										Completed on {" "}
-										{new Date(cert.completion_date).toLocaleDateString()}
+										{new Date(cert.completionDate).toLocaleDateString()}
 									</p>
 									<p className="text-textSecondary mt-2">
-										Focus Area: {cert.focus_area}
+										Focus Area: {cert.focusArea}
 									</p>
 								</div>
 								{editable && (

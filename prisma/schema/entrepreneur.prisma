@@ -1,3 +1,0 @@
-model Entrepreneur {
-  id String @id @default(uuid())
-}

@@ -37,13 +37,12 @@ export const fetchUserData = async (username) => {
             expertise: true,
             education: true,
             interest: true,
-            corporate_experience: true,
-            startup_experience: true,
-            certifications_courses: true,
+            corporateExperience: true,
+            startupExperience: true,
+            certificationsCourses: true,
             language: true,
-            social_media: true,
-            calendly_integration: true,
-            wallet: true,
+            socialMedia: true,
+            calendlyIntegration: true,
             fundraiser: true,
         };
         const response = await axios.get(
@@ -64,12 +63,11 @@ export const fetchCompanyData = async (username) => {
     try {
         const include = {
             founders: true,
-            key_employees: true,
-            product_information: true,
+            keyEmployees: true,
+            productInformation: true,
             financials: true,
             activities: true,
-            raising_Funds: true,
-            wallet: true,
+            raisingFunds: true,
         };
         const response = await axios.get(
             `${API_BASE_URL}/getOneCompanyProfile`,

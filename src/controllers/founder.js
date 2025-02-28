@@ -17,7 +17,12 @@ export const getAllFounder = async (req, res) => {
 	try {
 		const founder = await prisma.founder.findMany({
 			where: {
-				companyId: req.body.companyId,
+				account: {
+					username: req.query.username,
+				},
+			},
+			include: {
+				founders: true,
 			},
 		});
 		res.json({ data: founder });
@@ -25,11 +30,12 @@ export const getAllFounder = async (req, res) => {
 		res.status(400);
 	}
 };
+
 export const createFounder = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
-			where: {
-				id: req.body.companyId,
+		const company = await prisma.company.findFirst({
+			account: {
+				username: req.body.username,
 			},
 		});
 		if (!company) {
@@ -40,7 +46,7 @@ export const createFounder = async (req, res) => {
 				name: req.body.name,
 				role: req.body.role,
 				crunch_base_link: req.body.crunch_base_link,
-				company: { connect: { id: req.body.companyId } },
+				company: { connect: { id: company.id } },
 			},
 		});
 		res.status(200).json({ data: founder });

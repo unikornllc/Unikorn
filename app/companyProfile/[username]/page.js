@@ -11,11 +11,11 @@ export default async function CompanyProfile({ params }) {
 
 	const include = {
 		founders: true,
-		key_employees: true,
-		product_information: true,
+		keyEmployees: true,
+		productInformation: true,
 		financials: true,
 		activities: true,
-		raising_Funds: true,
+		raisingFunds: true,
 		wallet: true,
 	};
 

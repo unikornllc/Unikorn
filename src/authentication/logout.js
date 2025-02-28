@@ -8,9 +8,11 @@ export const logout = async (req, res) => {
 		const userAgent = req.get("User-Agent") || "";
 		const parser = new UAParser(userAgent);
 		const { os, browser } = parser.getResult();
+
 		const profile = await prisma.refreshTokenValid.findFirst({
 			where: { sid },
 		});
+		
 		await prisma.refreshTokenValid.deleteMany({
 			where: {
 				profileId: profile.profileId,
@@ -19,9 +21,11 @@ export const logout = async (req, res) => {
 				os: os.name,
 			},
 		});
+
 		res.clearCookie("SID");
 		res.clearCookie("BSID");
 		res.clearCookie("connect.sid");
+		
 		res.status(200).json({ message: "Logout Successful" });
 	} catch (error) {
 		res.status(500).json({ message: "Server Error" });
