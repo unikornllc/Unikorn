@@ -85,7 +85,7 @@ import {
 	updateCompanyProfile,
 	getCompanyTier,
 	getCurrentCompany,
-} from "./controllers/company.js";
+} from "./controllers/companyProfile.js";
 
 import {
 	createKeyEmployee,
@@ -162,7 +162,7 @@ import {
 } from "./controllers/raisingFunds.js";
 import {
 	depositWallet,
-	getUserWallet,
+	getWallet,
 	withdrawWallet,
 } from "./controllers/wallet.js";
 import { logout } from "./authentication/logout.js";
@@ -220,7 +220,7 @@ router.get("/getAllUsers", getAllUser);
 router.get("/getOneUser", getOneUser);
 router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
-router.delete("/deleteUser", deleteUser);
+// router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
 router.put("/updateUserItem", updateUserItem);
 router.put("/followUser", followUser);
@@ -232,7 +232,7 @@ router.put("/updateTier", updateTier);
 //wallet
 router.put("/depositWallet", depositWallet);
 router.put("/widthrawWallet", withdrawWallet);
-router.get("/getUserWallet", getUserWallet);
+router.get("/getWallet", getWallet);
 
 //get followers and following returns an array of usernames
 router.get("/getFollowers", getFollowers);

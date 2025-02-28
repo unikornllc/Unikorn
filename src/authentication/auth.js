@@ -99,12 +99,16 @@ export const verifyCredentialsIfNoRefreshToken = async (req, res, next) => {
 				.json({ message: "Email and password are required." });
 		}
 
-		const account = await prisma.account.findUnique({
-			where: {
-				OR: [{ email }, { username: email }],
-			},
-			include: { company: true, user: true, loginDevices: true },
-		});
+		const isEmail = email.includes("@");
+
+const account = await prisma.account.findUnique({
+	where: isEmail ? { email } : { username: email },
+	include: {
+		company: true,
+		user: true,
+		loginDevices: true,
+	},	
+});
 
 		if (!account) {
 			return res.status(401).json({ message: "Invalid credentials." });

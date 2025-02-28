@@ -246,7 +246,7 @@ const Sidebar = ({
 	const updateSocialLink = async (socialId) => {
 		try {
 			setLoading({ ...loading, socialMedia: true });
-			const updatedItem = await updateItem('social_Media', socialId, editSocialData);
+			const updatedItem = await updateItem('socialMedia', socialId, editSocialData);
 
 			setUserSocialLinks((prevLinks) =>
 				prevLinks.map((link) =>

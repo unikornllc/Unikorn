@@ -5,7 +5,7 @@ export const createCertificationsCourses = async (req, res) => {
 		if(req.account.role !== 'User') {
 			return res.status(401).json({ message: "You are not authorized to create CertificationsCourses" });
 		}
-		const certificationsCourses = await prisma.certifications_Courses.create({
+		const certificationsCourses = await prisma.certificationsCourses.create({
 			data: {
 				title: req.body.title,
 				institution: req.body.institution,
@@ -29,7 +29,7 @@ export const createCertificationsCourses = async (req, res) => {
 
 export const getOneCertificationsCourses = async (req, res) => {
 	try {
-		const CertificationsCourses = await prisma.certifications_Courses.findFirst(
+		const CertificationsCourses = await prisma.certificationsCourses.findFirst(
 			{
 				where: {
 					id: req.query.certificationsCourseId,
@@ -48,7 +48,7 @@ export const getOneCertificationsCourses = async (req, res) => {
 
 export const getAllCertificationsCourses = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

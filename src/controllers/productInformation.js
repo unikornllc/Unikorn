@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createProductInformation = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
 				account: {
 					username: req.query.username,
@@ -31,7 +31,7 @@ export const createProductInformation = async (req, res) => {
 
 export const getAllProductInformation = async (req, res) => {
 	try {
-		const product_information = await prisma.company.findUnique({
+		const product_information = await prisma.company.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

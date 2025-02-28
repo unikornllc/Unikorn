@@ -33,7 +33,7 @@ export const getAllFounder = async (req, res) => {
 
 export const createFounder = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			account: {
 				username: req.body.username,
 			},

@@ -268,8 +268,8 @@ export const getSchedulingLinkCalendly = async (req, res) => {
 	const { username } = req.query;
 
 	try {
-		const profileUser = await prisma.user.findUnique({
-			where: { username },
+		const profileUser = await prisma.user.findFirst({
+			where: { account:{username} },
 			include: { calendlyIntegration: true },
 		});
 

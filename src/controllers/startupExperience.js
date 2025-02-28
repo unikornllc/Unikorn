@@ -2,35 +2,24 @@ import prisma from "../db.js";
 
 export const createStartupExperience = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				account: {
-					username: req.body.username,
-				},
-			},
-		});
-
-		if (!user) {
-			return res.status(400).json({ message: "User not found" });
-		}
-
-		if (user.id != req.account.id) {
+		if (!req.account?.id) {
 			return res
 				.status(401)
 				.json({ message: "Unauthorized to edit user data." });
 		}
 		const startupExperience = await prisma.startupExperience.create({
 			data: {
-				startupName: req.body.startup_name,
+				startupName: req.body.startupName,
 				role: req.body.role,
 				description: req.body.description,
-				user: { connect: { id: user.id } },
+				user: { connect: { id: req.account.id } },
 			},
 		});
 		res.status(200).json({
 			startupExperience: (({ userId, ...safe }) => safe)(startupExperience),
 		});
 	} catch (e) {
+		console.error(e);
 		res.status(400).json({ message: "Error creating StartupExperience" });
 	}
 };
@@ -52,7 +41,7 @@ export const getOneStartupExperience = async (req, res) => {
 
 export const getAllStartupExperience = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

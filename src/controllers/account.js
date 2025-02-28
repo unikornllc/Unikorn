@@ -10,7 +10,7 @@ export const createAccount = async (req, res) => {
 		const role = req.body.role;
 		const hashedPassword = await hashPassword(data.password);
 
-		await prisma.account.create({
+		const account = await prisma.account.create({
 			data: {
 				username: data.username,
 				email: data.email,
@@ -22,10 +22,10 @@ export const createAccount = async (req, res) => {
 				},
 				ledgerAccount: {
 					create: {
-						name: data.name, 
+						name: data.name,
 					},
 				},
-				user: role === "User" ? { 
+				user: role === "User" ? {
 					create: {
 						name: data.name,
 						description: data.description || "",
@@ -45,7 +45,7 @@ export const createAccount = async (req, res) => {
 				} : undefined,
 			},
 		});
-		await sendVerifyEmail(data.email);
+		await sendVerifyEmail(data.email, account.id);
 
 		res.status(200).json({ message: "created successfully" });
 	} catch (error) {
@@ -63,8 +63,8 @@ function generateVerifyToken(accountId) {
 	return { token, jti };
 }
 
-const sendVerifyEmail = async (email) => {
-	const { token } = generateVerifyToken(account.id);
+const sendVerifyEmail = async (email, accountId) => {
+	const { token } = generateVerifyToken(accountId);
 	const verificationLink = `${process.env.FRONTEND}/verifyAccount?token=${token}`;
 	const transporter = NodeMailer.createTransport({
 		service: "gmail",
@@ -82,7 +82,9 @@ const sendVerifyEmail = async (email) => {
 };
 
 export const verifyAccount = async (req, res) => {
-	const { token } = req.body;
+	const { token } = req.query;
+	console.log(req.query);
+
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		const { sub: accountId, jti } = decoded;

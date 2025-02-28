@@ -34,7 +34,7 @@ function withRoleResponse(response, role) {
 export async function middleware(req) {
 	const token = req.cookies.get("BSID")?.value;
 	const pathname = req.nextUrl.pathname;
-
+	
 	if (
 		pathname.startsWith("/_next/") ||
 		pathname.startsWith("/static/") ||
@@ -53,7 +53,6 @@ export async function middleware(req) {
 	try {
 		const { payload } = await jwtVerify(token, secretKey);
 		const role = payload.role;
-
 		if (routeRules.authRoutes.includes(pathname) || pathname == "/home") {
 			return withRoleResponse(
 				NextResponse.redirect(

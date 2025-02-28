@@ -11,7 +11,7 @@ enum CompanyTier {
 }
 
 model Company {
-  id                 String               @id @default(uuid())
+  id                 String               @id @default(uuid())  @unique
   account            Account              @relation(fields: [id], references: [id])
   name               String
   description        String               @db.VarChar(600)

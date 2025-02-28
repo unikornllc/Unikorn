@@ -32,11 +32,12 @@ enum Tier {
 }
 
 model User {
-  id                    String                  @id @default(uuid())
+  id                    String                  @id @default(uuid())  @unique
   account               Account                 @relation(fields: [id], references: [id])
   name                  String
   description           String                  @db.VarChar(600)
   title                 Title                   @default(Mr)
+  tier                  Tier                    @default(Standard)
   expertise             Expertise[]
   education             Education[]
   interest              Interest[]
@@ -47,7 +48,6 @@ model User {
   socialMedia           SocialMedia[]
   userFile              UserFile[]
   calendlyIntegration   CalendlyIntegration?
-  tier                  Tier                    @default(Standard)
   fundraiser            Fundraiser[]            @relation("UserInvestments")
   investmentOffers      InvestmentOffer[]       @relation("UserOffers")
 }
@@ -79,7 +79,7 @@ model CorporateExperience {
   jobTitle         String
   companyName      String
   startDate        DateTime
-  endDate          DateTime
+  endDate          DateTime?
   responsibilities String
   user             User     @relation(fields: [userId], references: [id])
   userId           String

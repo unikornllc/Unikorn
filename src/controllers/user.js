@@ -47,20 +47,25 @@ export const getOneUser = async (req, res) => {
 				.json({ message: "Username is required to update the user." });
 		}
 
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: { username },
 			},
-			...(include
-				? {
-						include: Object.fromEntries(
+			include: {
+				account: {
+					select: { username: true },
+				},
+				...(include
+					? {
+						...Object.fromEntries(
 							Object.entries(include).map(([key, value]) => [
 								key,
 								value === "true",
 							]),
 						),
 					}
-				: {}),
+					: {}),
+			},
 		});
 
 		if (!user) {
@@ -68,13 +73,7 @@ export const getOneUser = async (req, res) => {
 		}
 		const isCurrentUser = user.id === req.account.id;
 
-		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
-
-		if (!isCurrentUser) {
-			delete safeUser.email;
-		}
-
-		const cleanedUser = removeUserIds(safeUser);
+		const cleanedUser = removeUserIds(user);
 
 		res.status(200).json({
 			isCurrentUser,
@@ -93,19 +92,28 @@ export const getCurrentUser = async (req, res) => {
 			where: {
 				id: req.account.id,
 			},
-			...(include
-				? {
-						include: Object.fromEntries(
+			include: {
+				account: {
+					select: { username: true },
+				},
+				...(include
+					? {
+						...Object.fromEntries(
 							Object.entries(include).map(([key, value]) => [
 								key,
 								value === "true",
 							]),
 						),
 					}
-				: {}),
+					: {}),
+			},
 		});
-		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
-		res.status(200).json({ user: safeUser });
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		const cleanedUser = removeUserIds(user);
+
+		res.status(200).json({ user: cleanedUser });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching user" });
@@ -114,7 +122,7 @@ export const getCurrentUser = async (req, res) => {
 export const isCurrentUser = async (req, res) => {
 	try {
 		let isCurrentUser = false;
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: { username: req.query.username },
 			},
@@ -146,26 +154,19 @@ export const suggestUsername = async (req, res) => {
 
 export const updateUser = async (req, res) => {
 	try {
-		const { username, ...updateData } = req.body;
-
-		if (!username) {
-			return res
-				.status(400)
-				.json({ message: "Username is required to update the user." });
-		}
-
+		const {...updateData } = req.body;
+		
 		const updatedUser = await prisma.user.update({
 			where: {
 				id: req.account.id,
-				account: { username },
 			},
 			data: updateData,
 		});
 		res.status(200).json({
-			user: (({ verified, id, password, email, ...safe }) => safe)(updatedUser),
+			user: (({  id, ...safe }) => safe)(updatedUser),
 		});
 	} catch (error) {
-		// console.error("Error updating user:", error);
+		console.error("Error updating user:", error);
 		res.status(400).json({ message: "Error updating user." });
 	}
 };

@@ -3,7 +3,7 @@ import prisma from "../db.js";
 export const createEducation = async (req, res) => {
 	const degrees = ["NONE", "BA", "BSc", "MA", "MSc", "MBA", "PhD"];
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.body.username,
@@ -55,7 +55,7 @@ export const getOneEducation = async (req, res) => {
 
 export const getAllEducation = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

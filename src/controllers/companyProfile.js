@@ -44,9 +44,12 @@ export const deleteCompany = async (req, res) => {
 export const isCurrentCompany = async (req, res) => {
 	try {
 		let isCurrentCompany = false;
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
+				
 			},
 		});
 		if (req.cookies.userId && company.id && req.cookies.userId == company.id) {
@@ -66,16 +69,21 @@ export const getCurrentCompany = async (req, res) => {
 			where: {
 				id: req.account.id,
 			},
-			...(include
-				? {
-						include: Object.fromEntries(
+			include: {
+				account: {
+					select: { username: true },
+				},
+				...(include
+					? {
+						...Object.fromEntries(
 							Object.entries(include).map(([key, value]) => [
 								key,
 								value === "true",
 							]),
 						),
 					}
-				: {}),
+					: {}),
+			},
 		});
 		const safe = (({ verified, id, password, ...rest }) => rest)(company);
 		res.status(200).json({ company: safe });
@@ -118,22 +126,27 @@ export const getOneCompanyProfile = async (req, res) => {
 				.json({ message: "Provide a correct a username to login." });
 		}
 
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
 				account: {
 					username,
 				},
 			},
-			...(include
-				? {
-						include: Object.fromEntries(
+			include: {
+				account: {
+					select: { username: true },
+				},
+				...(include? {
+						...Object.fromEntries(
 							Object.entries(include).map(([key, value]) => [
 								key,
 								value === "true",
 							]),
 						),
 					}
-				: {}),
+					: {}),
+			}
+
 		});
 
 		if (!company) {

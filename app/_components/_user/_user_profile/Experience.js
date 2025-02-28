@@ -121,7 +121,7 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('corporate_Experience', experienceId, experienceData);
+			const updatedItem = await updateItem('corporateExperience', experienceId, experienceData);
 
 			setCorporateExperiences((prevExps) =>
 				prevExps.map((exp) =>
@@ -201,7 +201,7 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('startup_Experience', experienceId, editData
+			const updatedItem = await updateItem('startupExperience', experienceId, editData
 			);
 			setStartupExperiences((prevExps) =>
 				prevExps.map((exp) =>
@@ -228,6 +228,9 @@ const Experience = ({
 				endDate: exp.endDate || '',
 				responsibilities: exp.responsibilities || '',
 			});
+			if(!exp.endDate){
+				setIsEditCurrentlyWorking(true);
+			}
 		} else {
 			setEditingStartupId(exp.id);
 			setEditData({

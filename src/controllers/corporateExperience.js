@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createCorporateExperience = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: { account: { username: req.body.username } },
 		});
 
@@ -20,7 +20,7 @@ export const createCorporateExperience = async (req, res) => {
 				jobTitle: req.body.jobTitle,
 				companyName: req.body.companyName,
 				startDate: new Date(req.body.startDate),
-				endDate: new Date(req.body.endDate),
+				endDate: req.body.endDate? new Date(req.body.endDate) : undefined,
 				responsibilities: req.body.responsibilities,
 				user: { connect: { id: user.id } },
 			},
@@ -29,6 +29,7 @@ export const createCorporateExperience = async (req, res) => {
 			corporateExperience: (({ userId, ...safe }) => safe)(corporateExperience),
 		});
 	} catch (e) {
+		console.error(e)
 		res.status(400).json({ message: "Error creating CorporateExperience" });
 	}
 };
@@ -50,7 +51,7 @@ export const getOneCorporateExperience = async (req, res) => {
 
 export const getAllCorporateExperience = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

@@ -15,7 +15,7 @@ export default function ProfileCard({ profile, isCompany }) {
                         <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <h2 className="text-xl font-semibold text-indigo-900">{profile.name}</h2>
-                    <p className="text-sm text-indigo-600">@{profile.username}</p>
+                    <p className="text-sm text-indigo-600">@{profile.account.username}</p>
                     <p className="mt-2 text-center text-gray-600">{profile.description}</p>
                     <div className="mt-4 flex justify-center space-x-2">
                         <Button variant="outline" onClick={() => {

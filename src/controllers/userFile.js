@@ -60,9 +60,12 @@ export const uploadUserFile = async (req, res) => {
 
 export const getUserFile = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
+				
 			},
 		});
 
@@ -71,7 +74,7 @@ export const getUserFile = async (req, res) => {
 		}
 		const file = await prisma.userFile.findUnique({
 			where: {
-				fileNameUserId: {
+				fileName_userId: {
 					userId: user.id,
 					fileName: req.query.fileName,
 				},
@@ -98,9 +101,11 @@ export const getUserFile = async (req, res) => {
 
 export const getAllUserFile = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
 			},
 			include: {
 				userFile: true,

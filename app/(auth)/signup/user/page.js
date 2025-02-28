@@ -29,10 +29,15 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import dynamic from "next/dynamic";
+const PhoneInput = dynamic(() => import("react-phone-input-2").then((mod) => mod.default), { ssr: false });
+import "react-phone-input-2/lib/style.css";
+import { Controller } from "react-hook-form";
 
 export default function UserSignUp() {
 	const router = useRouter();
 	const {
+		control,
 		register,
 		handleSubmit,
 		formState: { errors },
@@ -155,7 +160,7 @@ export default function UserSignUp() {
 			console.log("formData:", formData);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData ,role: "User"},
+				{ formData, role: "User" },
 				{
 					withCredentials: true,
 				},
@@ -282,6 +287,54 @@ export default function UserSignUp() {
 												</li>
 											))}
 										</ul>
+									)}
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="mobileNumber" className="text-indigo-900">
+										Mobile Number
+									</Label>
+									<Controller
+										name="mobileNumber"
+										control={control}
+										rules={{ required: "Mobile number is required" }}
+										render={({ field }) => (
+											<PhoneInput
+												country={"us"}
+												value={field.value}
+												onChange={(value) => field.onChange(value)}
+												placeholder="Enter mobile number"
+												inputStyle={{
+													width: "100%",
+													height: "40px",
+													fontSize: "16px",
+													borderRadius: "4px",
+													border: "1px solid #93c5fd",
+													paddingLeft: "60px",
+													outline: "none",
+													transition: "border 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+												}}
+												containerStyle={{
+													width: "100%",
+												}}
+												buttonStyle={{
+													border: "1px solid #93c5fd",
+													borderRight: "none",
+													backgroundColor: "#fff",
+													width: "55px",
+												}}
+												onFocus={(e) => {
+													e.target.style.border = "1px solid #6366f1";
+													e.target.style.boxShadow = "0 0 0 2px #6366f1";
+												}}
+												onBlur={(e) => {
+													e.target.style.border = "1px solid #93c5fd";
+													e.target.style.boxShadow = "none";
+												}}
+											/>
+										)}
+									/>
+									{errors.mobileNumber && (
+										<span className="text-red-500 text-sm">{errors.mobileNumber.message}</span>
 									)}
 								</div>
 								<div className="grid grid-cols-2 gap-4">

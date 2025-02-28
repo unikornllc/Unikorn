@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createSocialMedia = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.body.username,
@@ -53,7 +53,7 @@ export const getOneSocialMedia = async (req, res) => {
 
 export const getAllSocialMedia = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

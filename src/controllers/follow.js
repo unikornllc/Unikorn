@@ -123,9 +123,12 @@ export const followUser = async (req, res) => {
 
 export const isFollowingUser = async (req, res) => {
 	try {
-		const follow = await prisma.company.findUnique({
+		const follow = await prisma.company.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
+				
 			},
 			select: {
 				followedBy: true,
@@ -183,9 +186,12 @@ export const unfollowUser = async (req, res) => {
 
 export const isFollowingCompany = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
+				
 			},
 			select: {
 				id: true,
@@ -209,9 +215,12 @@ export const isFollowingCompany = async (req, res) => {
 
 export const followCompany = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
-				username: req.body.username,
+				account:{
+					username: req.body.username,
+				}
+				
 			},
 			select: {
 				id: true,
@@ -232,9 +241,11 @@ export const followCompany = async (req, res) => {
 
 export const unfollowCompany = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
-				username: req.body.username,
+				account:{
+					username: req.body.username,
+				}
 			},
 			select: {
 				id: true,

@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createInterest = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.body.username,
@@ -50,7 +50,7 @@ export const getOneInterest = async (req, res) => {
 };
 export const getAllInterest = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

@@ -66,7 +66,7 @@ export const checkUsername = async (req, res, next) => {
 			},
 		});
 
-		if (!existingUsername.length) {
+		if (!existingUsername) {
 			next();
 		} else {
 			return res.status(400).json({ message: "Username is already taken." });
@@ -102,8 +102,8 @@ export const checkUsernameAPI = async (req, res, next) => {
 				username: username,
 			},
 		});
-		console.log(!existingUsername.length);
-		if (!existingUsername.length) {
+		console.log(existingUsername);
+		if (!existingUsername) {
 			return res
 				.status(200)
 				.json({ valid: true, message: "Username is available." });

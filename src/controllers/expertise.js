@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createExpertise = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.body.username,
@@ -53,7 +53,7 @@ export const getOneExpertise = async (req, res) => {
 
 export const getAllExpertise = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

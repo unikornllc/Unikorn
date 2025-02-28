@@ -119,11 +119,12 @@ export const useUpdateItem = () => {
 
     const updateItem = async (modelType, itemId, updateData) => {
         // Validate data first
+        console.log(updateData)
         const validationErrors = validateData(modelType, updateData);
         if (validationErrors.length > 0) {
             const errorMessage = validationErrors.map(error => `• ${error}`).join('\n');
             toast(errorMessage, 'error', 5000);
-            throw new Error('Validation failed');
+            throw new Error(errorMessage);
         }
 
         try {

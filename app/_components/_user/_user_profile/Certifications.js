@@ -76,7 +76,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const updateCertification = async (certId) => {
 		try {
 			setLoading(true);
-			const updatedItem = await updateItem('certifications_Courses', certId, editData);
+			const updatedItem = await updateItem('certificationsCourses', certId, editData);
 
 			setCerts((prevCerts) =>
 				prevCerts.map((cert) =>

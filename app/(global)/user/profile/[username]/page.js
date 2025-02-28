@@ -13,13 +13,13 @@ export default async function UserProfile({ params }) {
 		expertise: true,
 		education: true,
 		interest: true,
-		corporate_experience: true,
-		startup_experience: true,
-		certifications_courses: true,
+		corporateExperience: true,
+		startupExperience: true,
+		certificationsCourses: true,
 		language: true,
-		social_media: true,
-		calendly_integration: true,
-		wallet: true,
+		socialMedia: true,
+		calendlyIntegration: true,
+		// wallet: true,
 	};
 
 	try {

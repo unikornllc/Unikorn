@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createKeyEmployee = async (req, res) => {
 	try {
-		const company = await prisma.company.findUnique({
+		const company = await prisma.company.findFirst({
 			where: {
 				account: {
 					username: req.query.username,

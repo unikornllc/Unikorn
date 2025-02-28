@@ -2,7 +2,7 @@ import prisma from "../db.js";
 
 export const createLanguage = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
 				account: {
 					username: req.body.username,
@@ -53,9 +53,12 @@ export const getOneLanguage = async (req, res) => {
 
 export const getAllLanguage = async (req, res) => {
 	try {
-		const user = await prisma.user.findUnique({
+		const user = await prisma.user.findFirst({
 			where: {
-				username: req.query.username,
+				account:{
+					username: req.query.username,
+				}
+				
 			},
 			include: {
 				language: true,
