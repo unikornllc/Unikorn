@@ -2,8 +2,12 @@ import prisma from "../db.js";
 
 export const createFinancial = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
-			where: { id: req.body.companyId },
+		const company = await prisma.company.findUnique({
+			where: {
+				account: {
+					username: req.body.username,
+				},
+			},
 		});
 		const financial = await prisma.financial.create({
 			data: {
@@ -11,7 +15,7 @@ export const createFinancial = async (req, res) => {
 				investors: req.body.investors,
 				total_funding_amount: 0,
 				company: {
-					connect: { id: req.body.companyId },
+					connect: { id: company.id },
 				},
 			},
 		});
@@ -25,42 +29,18 @@ export const createFinancial = async (req, res) => {
 
 export const getAllFinancial = async (req, res) => {
 	try {
-		const company = await prisma.company_Profile.findUnique({
-			where: { id: req.body.companyId },
-		});
-		const financial = await prisma.financial.findMany({
+		const financial = await prisma.company.findUnique({
 			where: {
-				companyId: req.body.companyId,
+				account: {
+					username: req.query.username,
+				},
+			},
+			include: {
+				financials: true,
 			},
 		});
 		res.status(200).json({ data: financial });
 	} catch (e) {
 		res.status(400).send("Failed to retrieve");
-	}
-};
-
-export const getOneFinancial = async (req, res) => {
-	try {
-		const financial = await prisma.financial.findMany({
-			where: {
-				id: req.body.financialId,
-			},
-		});
-		res.status(200).json({ data: financial });
-	} catch (e) {
-		res.status(400).send("Failed to retrieve");
-	}
-};
-
-export const deleteOneFinancial = async (req, res) => {
-	try {
-		const financial = await prisma.financial.delete({
-			where: {
-				id: req.body.financialId,
-			},
-		});
-		res.status(200).send("Deleted successfully");
-	} catch (e) {
-		res.status(400).send("Failed to delete");
 	}
 };

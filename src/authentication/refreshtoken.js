@@ -3,7 +3,7 @@ import { UAParser } from "ua-parser-js";
 import prisma from "../db.js";
 import { comparePasswords } from "../auth.js";
 import NodeMailer from "nodemailer";
-import { sendNewLoginNotification } from "./logindevice.js";
+import { sendNewLoginNotification } from "./loginDevice.js";
 
 const refreshCookieOptions = {
 	httpOnly: true, // TODO: Change to true
@@ -23,36 +23,23 @@ export const generateRefreshToken = async (req, res, next) => {
 				.status(400)
 				.json({ message: "Email and password are required." });
 		}
-		const user =
-			(await prisma.user.findUnique({
-				where: { email },
-				include: { logindevices },
-			})) ||
-			(await prisma.user.findUnique({
-				where: { username: email },
-				include: { logindevices },
-			}));
-		const company = !user
-			? (await prisma.company_Profile.findUnique({
-				where: { username: email, include: { logindevices } },
-			})) ||
-			(await prisma.company_Profile.findUnique({
-				where: { email },
-				include: { logindevices },
-			}))
-			: null;
-		if (!user && !company) {
-			return res.status(401).json({ message: "Invalid credentials." });
+
+		const account = await prisma.account.findUnique({
+			where: { OR: [{ email: email }, { username: email }] },
+			include: { company: true, user: true, loginDevices: true },
+		});
+		if (!account) {
+			return res.status(401).json({ message: "Authentication required." });
 		}
-		const account = user || company;
+
 		const isValid = await comparePasswords(password, account.password);
 		if (!isValid) {
 			return res.status(403).json({ message: "Invalid email or password." });
 		}
-		if (!account.verified) {
+		if (!account.emailVerified) {
 			return res.status(403).json({ message: "Verify Email" });
 		}
-		let token = crypto.randomBytes(128).toString("hex");
+		const token = crypto.randomBytes(128).toString("hex");
 		const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 		const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -62,15 +49,14 @@ export const generateRefreshToken = async (req, res, next) => {
 
 		const existingDevice = account.loginDevices?.some(
 			(device) =>
-				device.ip === ip &&
-				device.os === os.name &&
+				device.ip === ip ||
+				device.os === os.name ||
 				device.browser === browser.name,
 		);
 		if (!existingDevice) {
 			await prisma.loginDevices.create({
 				data: {
-					userId: user ? account.id : null,
-					companyId: company ? account.id : null,
+					accountId: account.id,
 					ip,
 					browser: browser.name,
 					os: os.name,
@@ -108,7 +94,7 @@ export const generateRefreshToken = async (req, res, next) => {
 				ip,
 				browser: browser.name,
 				os: os.name,
-				role: user ? "User" : "Company",
+				role: (String)(account.role),
 			},
 		});
 		res.sidVerified = true;
@@ -144,23 +130,21 @@ export const generateRefreshTokenIfNeeded = async (req, res, next) => {
 
 		const loginDevices = await prisma.loginDevices.findMany({
 			where: {
-				userId: account.role === "User" ? account.id : undefined,
-				companyId: account.role === "Company" ? account.id : undefined,
+				accountId: account.id
 			},
 		});
 
-		const existingDevice = loginDevices.some(
+		const existingDevice = loginDevices?.some(
 			(device) =>
-				device.ip === ip &&
-				device.os === os.name &&
+				device.ip === ip ||
+				device.os === os.name ||
 				device.browser === browser.name,
 		);
 
 		if (!existingDevice) {
 			await prisma.loginDevices.create({
 				data: {
-					userId: account.role === "User" ? account.id : null,
-					companyId: account.role === "Company" ? account.id : null,
+					accountId: account.id,
 					ip,
 					browser: browser.name,
 					os: os.name,

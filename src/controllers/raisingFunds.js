@@ -3,12 +3,12 @@ import axios from "axios";
 
 export const getAllRaisingFunds = async (req, res) => {
 	try {
-		const raisingFunds = await prisma.raising_Funds.findMany({
+		const raisingFunds = await prisma.raisingFunds.findMany({
 			include: {
 				company: true,
 				fundraisers: true,
 				investmentOffers: true,
-			}
+			},
 		});
 		res.status(200).json(raisingFunds);
 	} catch (error) {
@@ -19,16 +19,16 @@ export const getAllRaisingFunds = async (req, res) => {
 export const getRaisingFundsById = async (req, res) => {
 	try {
 		const { raisingFundsId } = req.query;
-		const raisingFunds = await prisma.raising_Funds.findUnique({
+		const raisingFunds = await prisma.raisingFunds.findUnique({
 			where: { raisingFundsId },
 			include: {
 				company: true,
 				fundraisers: true,
 				investmentOffers: true,
 			},
-		})
+		});
 		if (!raisingFunds) {
-			return res.status(400).json({ error: 'Funding_Round not found' });
+			return res.status(400).json({ error: "Funding Round not found" });
 		}
 		res.status(200).json(raisingFunds);
 	} catch (error) {
@@ -38,7 +38,7 @@ export const getRaisingFundsById = async (req, res) => {
 
 export const getActiveRaisingFunds = async (req, res) => {
 	try {
-		const fundraisings = await prisma.raising_Funds.findMany({
+		const fundraisings = await prisma.raisingFunds.findMany({
 			where: { status: "Active" },
 			include: {
 				company: true,
@@ -72,14 +72,18 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 	try {
 		let param;
 		if (req.query.username) {
-			param = { username: req.query.username };
+			param = {
+				account: {
+					username: req.query.username,
+				},
+			};
 		} else {
-			if (req.decodedUser.role != "Company") {
+			if (req.account.role != "Company") {
 				return res.status(401).json({ message: "Unauthorized action" });
 			}
-			param = { id: req.decodedUser.id };
+			param = { id: req.account.id };
 		}
-		const fundraising = await prisma.raising_Funds.findFirst({
+		const fundraising = await prisma.raisingFunds.findFirst({
 			where: { status: "Active", company: param },
 			include: {
 				company: true,
@@ -102,7 +106,7 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 		res.status(200).json({
 			activeFundraising: {
 				id: fundraising.id,
-				companyUsername: fundraising.company.username,
+				companyUsername: req.query.username,
 				companyName: fundraising.company.name,
 				portionAmount: fundraising.fundingAmount / fundraising.totalPortions,
 				portionEquity: fundraising.equityPercentage / fundraising.totalPortions,
@@ -120,14 +124,16 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 
 export const getCompanyPendingRaisingFund = async (req, res) => {
 	try {
-		if (req.decodedUser.role != "Company") {
+		if (req.account.role != "Company") {
 			return res.status(401).json({ message: "Unauthorized action" });
 		}
 
-		const fundraising = await prisma.raising_Funds.findFirst({
-			where: { status: "Pending", company: { id: req.decodedUser.id } },
+		const fundraising = await prisma.raisingFunds.findFirst({
+			where: { status: "Pending", company: { id: req.account.id } },
 			include: {
-				company: true,
+				company: {
+					select: { name: true, account: { select: { username: true } } },
+				},
 			},
 		});
 
@@ -136,7 +142,7 @@ export const getCompanyPendingRaisingFund = async (req, res) => {
 		}
 		res.status(200).json({
 			pendingFundraising: {
-				companyUsername: fundraising.company.username,
+				companyUsername: fundraising.company.account.username,
 				companyName: fundraising.company.name,
 				...fundraising,
 			},
@@ -149,16 +155,16 @@ export const getCompanyPendingRaisingFund = async (req, res) => {
 
 export const getCompanyPastRaisingFunds = async (req, res) => {
 	try {
-		if (req.decodedUser.role != "Company") {
+		if (req.account.role != "Company") {
 			return res.status(401).json({ message: "Unauthorized action" });
 		}
 
-		const pastFundraisings = await prisma.raising_Funds.findMany({
+		const pastFundraisings = await prisma.raisingFunds.findMany({
 			where: {
 				status: {
 					notIn: ["Pending", "Active"],
 				},
-				company: { id: req.decodedUser.id },
+				company: { id: req.account.id },
 			},
 			include: {
 				company: true,
@@ -182,14 +188,14 @@ export const getRaisingFundFundraisers = async (req, res) => {
 		if (!raisingFundsId) {
 			return res.status(400).json({ message: "Missing required fields" });
 		}
-		if (req.decodedUser.role != "Company") {
+		if (req.account.role != "Company") {
 			return res.status(401).json({ message: "Unauthorized action" });
 		}
 		const fundraisers = await prisma.fundraiser.findMany({
 			where: {
 				raisingFundsId,
 				raisingFunds: {
-					companyId: req.decodedUser.id,
+					companyId: req.account.id,
 				},
 			},
 			include: {
@@ -211,8 +217,8 @@ export const getRaisingFundFundraisers = async (req, res) => {
 export const cancelInvestment = async (req, res) => {
 	const { fundraiserId } = req.body;
 
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
+	const investorType = req.account.role;
+	const investorId = req.account.id;
 
 	try {
 		const fundraiser = await prisma.fundraiser.findUnique({
@@ -236,7 +242,7 @@ export const cancelInvestment = async (req, res) => {
 			return res.status(400).json({ message: "Cannot cancel this Investment" });
 		}
 		await prisma.$transaction(async (prisma) => {
-			const fundraising = await prisma.raising_Funds.findUnique({
+			const fundraising = await prisma.raisingFunds.findUnique({
 				where: { id: fundraiser.raisingFundsId },
 			});
 			if (fundraising.status != "Active") {
@@ -248,13 +254,13 @@ export const cancelInvestment = async (req, res) => {
 				fundingAmount:
 					Math.abs(
 						fundraising.pricePerPortion * fundraiser.portions -
-						fundraiser.pricePerPortion * fundraiser.portions,
+							fundraiser.pricePerPortion * fundraiser.portions,
 					) + fundraising.fundingAmount,
 				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
 			};
 
-			await prisma.userWallet.update({
-				where: { userId: investorId },
+			await prisma.wallet.update({
+				where: { accountId: investorId },
 				data: {
 					amount: { increment: fundraiser.fundingAmount * 0.95 },
 					onHold: { decrement: fundraiser.fundingAmount },
@@ -265,7 +271,7 @@ export const cancelInvestment = async (req, res) => {
 				where: { id: fundraiserId },
 			});
 
-			await prisma.raising_Funds.update({
+			await prisma.raisingFunds.update({
 				where: { id: fundraiser.raisingFundsId },
 				data: dataToUpdate,
 			});
@@ -278,10 +284,10 @@ export const cancelInvestment = async (req, res) => {
 };
 export const investAtFixedPrice = async (req, res) => {
 	const { raisingFundsId, portions } = req.body;
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
-	const walletBalance = await prisma.userWallet.findUnique({
-		where: { userId: investorId },
+	const investorType = req.account.role;
+	const investorId = req.account.id;
+	const walletBalance = await prisma.wallet.findUnique({
+		where: { accountId: investorId },
 	}).amount;
 
 	if (!raisingFundsId || !portions) {
@@ -289,7 +295,7 @@ export const investAtFixedPrice = async (req, res) => {
 	}
 
 	try {
-		const fundraising = await prisma.raising_Funds.findUnique({
+		const fundraising = await prisma.raisingFunds.findUnique({
 			where: { id: raisingFundsId },
 		});
 
@@ -356,7 +362,7 @@ export const investAtFixedPrice = async (req, res) => {
 					},
 				});
 			}
-			const newRaisingFunds = await prisma.raising_Funds.update({
+			const newRaisingFunds = await prisma.raisingFunds.update({
 				where: { id: raisingFundsId },
 				data: { remainingPortions: { decrement: portions } },
 			});
@@ -374,15 +380,15 @@ export const investAtFixedPrice = async (req, res) => {
 				},
 			});
 			//this here only holds the money till they all sign the contracts
-			await prisma.userWallet.update({
-				where: { userId: investorId },
+			await prisma.wallet.update({
+				where: { accountId: investorId },
 				data: {
 					amount: { decrement: fundingAmount },
 					onHold: { increment: fundingAmount },
 				},
 			});
 			// if (newRaisingFunds.remainingPortions == 0) {
-			// 	await prisma.raising_Funds.update({
+			// 	await prisma.raisingFunds.update({
 			// 		where: { id: raisingFundsId },
 			// 		data: {
 			// 			status: "Completed",
@@ -392,7 +398,7 @@ export const investAtFixedPrice = async (req, res) => {
 			// 	throw new Error("Invalid remaining portions");
 			// }
 		});
-		const updatedFundraising = await prisma.raising_Funds.findUnique({
+		const updatedFundraising = await prisma.raisingFunds.findUnique({
 			where: { id: raisingFundsId },
 			include: {
 				fundraisers: { include: { investorUser: true, investorCompany: true } },
@@ -423,19 +429,19 @@ export const investAtFixedPrice = async (req, res) => {
 
 export const makeInvestmentOffer = async (req, res) => {
 	const { raisingFundsId, portions, offeredPricePerPortion } = req.body;
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
+	const investorType = req.account.role;
+	const investorId = req.account.id;
 
 	if (!raisingFundsId || !portions || !offeredPricePerPortion) {
 		return res.status(400).json({ message: "Missing required fields" });
 	}
 
 	try {
-		const walletBalance = await prisma.userWallet.findUnique({
-			where: { userId: investorId },
+		const walletBalance = await prisma.wallet.findUnique({
+			where: { accountId: investorId },
 		}).amount;
 
-		const fundraising = await prisma.raising_Funds.findUnique({
+		const fundraising = await prisma.raisingFunds.findUnique({
 			where: { id: raisingFundsId },
 		});
 
@@ -482,8 +488,8 @@ export const makeInvestmentOffer = async (req, res) => {
 				connect: { id: investorId },
 			};
 		}
-		await prisma.userWallet.update({
-			where: { userId: investorId },
+		await prisma.wallet.update({
+			where: { accountId: investorId },
 			data: {
 				amount: { decrement: totalOfferedPrice },
 				onHold: { increment: totalOfferedPrice },
@@ -499,8 +505,8 @@ export const makeInvestmentOffer = async (req, res) => {
 };
 
 export const getMyInvestments = async (req, res) => {
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
+	const investorType = req.account.role;
+	const investorId = req.account.id;
 
 	try {
 		const investments = await prisma.fundraiser.findMany({
@@ -528,10 +534,10 @@ export const getMyInvestments = async (req, res) => {
 
 // export const getMyFundraiserData = async (req, res) => {
 // 	try {
-// 		if (req.decodedUser.role == "User") {
+// 		if (req.account.role == "User") {
 // 			const user = await prisma.user.findUnique({
 // 				where: {
-// 					id: req.decodedUser.id,
+// 					id: req.account.id,
 // 				},
 // 				include: {
 // 					fundraiser: true,
@@ -539,9 +545,9 @@ export const getMyInvestments = async (req, res) => {
 // 			});
 // 			res.status(200).json({ fundraiser: user.fundraiser });
 // 		} else {
-// 			const company = await prisma.company_Profile.findUnique({
+// 			const company = await prisma.company.findUnique({
 // 				where: {
-// 					username: req.decodedUser.id,
+// 					username: req.account.id,
 // 				},
 // 				include: {
 // 					fundraiser: true,
@@ -555,8 +561,8 @@ export const getMyInvestments = async (req, res) => {
 // };
 
 export const getMyInvestmentOffers = async (req, res) => {
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
+	const investorType = req.account.role;
+	const investorId = req.account.id;
 
 	try {
 		const offers = await prisma.investmentOffer.findMany({
@@ -586,7 +592,7 @@ export const getMyInvestmentOffers = async (req, res) => {
 };
 
 export const getFundingInvestmentOffers = async (req, res) => {
-	if (req.decodedUser.role != "Company") {
+	if (req.account.role != "Company") {
 		return res
 			.status(401)
 			.json({ message: "Only companies can view investment offers" });
@@ -596,7 +602,7 @@ export const getFundingInvestmentOffers = async (req, res) => {
 		const offers = await prisma.investmentOffer.findMany({
 			where: {
 				raisingFunds: {
-					companyId: req.decodedUser.id,
+					companyId: req.account.id,
 					status: "Active",
 				},
 			},
@@ -614,7 +620,7 @@ export const getFundingInvestmentOffers = async (req, res) => {
 	}
 };
 export const acceptInvestmentOffer = async (req, res) => {
-	if (req.decodedUser.role != "Company") {
+	if (req.account.role != "Company") {
 		return res
 			.status(401)
 			.json({ message: "Only companies can accept investment offers" });
@@ -632,7 +638,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 			return res.status(404).json({ message: "Offer not found" });
 		}
 
-		if (offer.raisingFunds.companyId != req.decodedUser.id) {
+		if (offer.raisingFunds.companyId != req.account.id) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
@@ -688,13 +694,13 @@ export const acceptInvestmentOffer = async (req, res) => {
 						...(offer.investorType == "User"
 							? { investorUser: { connect: { id: offer.investorUserId } } }
 							: {
-								investorCompany: { connect: { id: offer.investorCompanyId } },
-							}),
+									investorCompany: { connect: { id: offer.investorCompanyId } },
+								}),
 					},
 				});
 			}
 
-			const newRaisingFunds = await prisma.raising_Funds.update({
+			const newRaisingFunds = await prisma.raisingFunds.update({
 				where: { id: offer.raisingFundsId },
 				data: {
 					remainingPortions: { decrement: offer.portions },
@@ -718,8 +724,8 @@ export const acceptInvestmentOffer = async (req, res) => {
 				},
 			});
 
-			await prisma.userWallet.update({
-				where: { userId: offer.investorUserId },
+			await prisma.wallet.update({
+				where: { accountId: offer.investorUserId },
 				data: {
 					amount: { decrement: offer.totalOfferedPrice },
 					onHold: { increment: offer.totalOfferedPrice },
@@ -727,7 +733,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 			});
 
 			if (newRaisingFunds.remainingPortions == 0) {
-				await prisma.raising_Funds.update({
+				await prisma.raisingFunds.update({
 					where: { id: offer.raisingFundsId },
 					data: {
 						status: "Completed",
@@ -746,7 +752,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 };
 
 export const rejectInvestmentOffer = async (req, res) => {
-	if (req.decodedUser.role != "Company") {
+	if (req.account.role != "Company") {
 		return res
 			.status(401)
 			.json({ message: "Only companies can view investment offers" });
@@ -764,7 +770,7 @@ export const rejectInvestmentOffer = async (req, res) => {
 			return res.status(404).json({ message: "Offer not found" });
 		}
 
-		if (offer.raisingFunds.companyId != req.decodedUser.id) {
+		if (offer.raisingFunds.companyId != req.account.id) {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
@@ -772,8 +778,8 @@ export const rejectInvestmentOffer = async (req, res) => {
 			return res.status(400).json({ message: "Cannot reject this offer" });
 		}
 
-		await prisma.userWallet.update({
-			where: { userId: offer.investorUserId },
+		await prisma.wallet.update({
+			where: { accountId: offer.investorUserId },
 			data: {
 				amount: { increment: offer.totalOfferedPrice },
 				onHold: { decrement: offer.totalOfferedPrice },
@@ -795,8 +801,8 @@ export const rejectInvestmentOffer = async (req, res) => {
 export const cancelInvestmentOffer = async (req, res) => {
 	const { offerId } = req.body;
 
-	const investorType = req.decodedUser.role;
-	const investorId = req.decodedUser.id;
+	const investorType = req.account.role;
+	const investorId = req.account.id;
 
 	try {
 		const offer = await prisma.investmentOffer.findUnique({
@@ -833,15 +839,15 @@ export const cancelInvestmentOffer = async (req, res) => {
 };
 
 export const cancelRaisingFunds = async (req, res) => {
-	const companyId = req.decodedUser.id;
-	const userRole = req.decodedUser.role;
+	const companyId = req.account.id;
+	const userRole = req.account.role;
 	const { id } = req.body.fundingData;
 	try {
 		if (userRole != "Company") {
 			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
-		const raisingFunds = await prisma.raising_Funds.findUnique({
+		const raisingFunds = await prisma.raisingFunds.findUnique({
 			where: {
 				id: id,
 				companyId: companyId,
@@ -876,7 +882,7 @@ export const cancelRaisingFunds = async (req, res) => {
 					.json({ message: "No active raising funds found" });
 			}
 
-			await prisma.raising_Funds.update({
+			await prisma.raisingFunds.update({
 				where: { id: id },
 				data: { status: "Failed" },
 			});
@@ -896,16 +902,16 @@ export const deleteOneFundingRound = async (req, res) => {
 		const financial = await prisma.financial.findUnique({
 			where: { id: req.body.financialId },
 		});
-		const fundingRound = await prisma.funding_Round.delete({
+		const fundingRound = await prisma.fundingRound.delete({
 			where: {
 				id: req.body.fundingRoundId,
 			},
 		});
 		const updatedTotalFundingAmount =
-			financial.total_funding_amount - req.body.funding_amount;
+			financial.totalFundingAmount - req.body.funding_amount;
 		await prisma.financial.update({
 			where: { id: req.body.financialId },
-			data: { total_funding_amount: updatedTotalFundingAmount },
+			data: { totalFundingAmount: updatedTotalFundingAmount },
 		});
 		res.status(200).send("Deleted successfully");
 	} catch (e) {

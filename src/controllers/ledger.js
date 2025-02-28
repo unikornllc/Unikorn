@@ -1,7 +1,5 @@
 import prisma from "../db.js";
 
-
-
 export const getAllLedgerAccounts = async (req, res) => {
     try {
         const ledgerAccounts = await prisma.ledgerAccount.findMany({
@@ -26,8 +24,6 @@ export const getLedgerAccountById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-
 
 export const getAllWallets = async (req, res) => {
     try {
@@ -127,4 +123,3 @@ export const getEntryById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-

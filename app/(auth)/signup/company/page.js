@@ -162,8 +162,8 @@ export default function CompanySignUp() {
 			formData.hunter = undefined;
 
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/createCompany`,
-				{ formData },
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
+				{ formData,role: "Company" },
 				{
 					withCredentials: true,
 				},
@@ -376,12 +376,12 @@ export default function CompanySignUp() {
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="hqlocation" className="text-indigo-900">
+										<Label htmlFor="hqLocation" className="text-indigo-900">
 											HQ Location
 										</Label>
 										<Input
-											id="hqlocation"
-											{...register("hqlocation")}
+											id="hqLocation"
+											{...register("hqLocation")}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 									</div>

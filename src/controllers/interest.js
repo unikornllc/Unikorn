@@ -3,14 +3,18 @@ import prisma from "../db.js";
 export const createInterest = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
-			where: { username: req.body.username },
+			where: {
+				account: {
+					username: req.body.username,
+				},
+			},
 		});
 
 		if (!user) {
 			return res.status(400).json({ message: "User not found" });
 		}
 
-		if (user.id != req.decodedUser.id) {
+		if (user.id != req.account.id) {
 			return res
 				.status(401)
 				.json({ message: "Unauthorized to edit user data." });
@@ -48,7 +52,9 @@ export const getAllInterest = async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
-				username: req.query.username,
+				account: {
+					username: req.query.username,
+				},
 			},
 			include: {
 				interest: true,
@@ -69,7 +75,7 @@ export const deleteInterest = async (req, res) => {
 	try {
 		const deleted = await prisma.interest.delete({
 			where: {
-				userId: req.decodedUser.id,
+				userId: req.account.id,
 				id: req.query.interestId,
 			},
 		});

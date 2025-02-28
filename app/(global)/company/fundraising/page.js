@@ -47,6 +47,7 @@ export default function CompanyDashboard() {
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
 				{ withCredentials: true },
 			);
+			
 			setActiveFundraising(activeResponse.data.activeFundraising);
 
 			// Fetch pending fundraising
@@ -435,7 +436,7 @@ export default function CompanyDashboard() {
 			)}
 
 			{/* Past Fundraisings */}
-			{pastFundraisings.length > 0 && (
+			{pastFundraisings && pastFundraisings.length > 0 && (
 				<Box>
 					<Typography variant="h5" gutterBottom>
 						Past Fundraisings

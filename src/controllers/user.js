@@ -1,187 +1,5 @@
 import prisma from "../db.js";
-import NodeMailer from "nodemailer";
-import jwt from "jsonwebtoken";
-import { comparePasswords } from "../auth.js";
-import { hashPassword } from "../auth.js";
-import { createJWT } from "../auth.js";
 import { generateUsername } from "unique-username-generator";
-
-export const createUser = async (req, res) => {
-	try {
-		const userData = req.body.formData;
-		const hashedPassword = await hashPassword(userData.password);
-		const newUser = await prisma.user.create({
-			data: {
-				name: userData.name,
-				username: userData.username,
-				email: userData.email,
-				password: hashedPassword,
-				description: userData.description || "",
-				title: userData.title,
-			},
-		});
-
-		const email = userData.email;
-		const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-			expiresIn: "1h",
-		});
-
-		res.cookie("token", token, {
-			httpOnly: false,
-			secure: false,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: "lax",
-		});
-
-		res.cookie("userId", newUser.id, {
-			httpOnly: false,
-			secure: false,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: "strict",
-		});
-
-		const transporter = NodeMailer.createTransport({
-			service: "gmail",
-			auth: {
-				user: "unikorn2025@gmail.com",
-				pass: "sihs kadv vsdb yeqn",
-			},
-		});
-
-		const verificationLink = `${process.env.FRONTEND}/verifyUser`;
-		await transporter.sendMail({
-			from: "unikorn2025@gmail.com",
-			to: email,
-			subject: "Verify Your Email",
-			html: `<p>Click <a href="${verificationLink}">here</a> to verify your email.</p>`,
-		});
-
-		res.status(200).json({
-			message: "User created successfully",
-			user: newUser,
-		});
-	} catch (error) {
-		console.error("Error creating user:", error);
-
-		res.status(400).json({
-			message: "Error creating user",
-			error: error.message,
-		});
-	}
-};
-
-export const verifyUser = async (req, res) => {
-	const token = req.cookies["token"];
-	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		const user = await prisma.user.findUnique({
-			where: {
-				email: decoded.email,
-			},
-		});
-		if (!user) {
-			return res.status(400).json({ error: "Invalid token" });
-		}
-		await prisma.$transaction([
-			prisma.user.update({
-				where: {
-					email: decoded.email,
-				},
-				data: {
-					verified: true,
-				},
-			}),
-			prisma.wallet.create({
-				data: {
-					userId: user.id,
-				},
-			}),
-			prisma.ledgerAccount.create({
-				data: {
-					userId: user.id,
-					name: user.name,
-				},
-			}),
-		]);
-		res.status(200).send("Account successfully verified! You can now log in.");
-	} catch (error) {
-		console.log(error);
-		res.status(400).json({ error: "Invalid or expired token" });
-	}
-};
-
-export const signIn = async (req, res) => {
-	try {
-		const { email, password } = req.body;
-
-		// Find the user or company
-		const user =
-			(await prisma.user.findUnique({
-				where: {
-					email: email,
-				},
-			})) ||
-			(await prisma.user.findUnique({
-				where: {
-					username: email,
-				},
-			}));
-
-		const company = !user
-			? (await prisma.company_Profile.findUnique({
-					where: {
-						username: email,
-					},
-				})) ||
-				(await prisma.company_Profile.findUnique({
-					where: {
-						email: email,
-					},
-				}))
-			: null;
-
-		// If neither user nor company is found
-		if (!user && !company) {
-			return res
-				.status(400)
-				.json({ message: "Error signing in: Invalid credentials." });
-		}
-
-		// Validate password
-		const account = user || company;
-		const isValid = await comparePasswords(password, account.password);
-		if (!isValid) {
-			return res.status(401).json({ message: "Invalid password." });
-		}
-
-		// Create JWT token
-		const token = createJWT({
-			id: account.id,
-			role: user ? "User" : "Company",
-		});
-
-		// Set cookies
-		res.cookie("token", token, {
-			httpOnly: false,
-			secure: false,
-			sameSite: "Lax",
-			maxAge: 24 * 60 * 60 * 1000, // 1 day
-		});
-
-		res.cookie("userId", account.id, {
-			httpOnly: false,
-			secure: false,
-			sameSite: "Lax",
-			maxAge: 24 * 60 * 60 * 1000, // 1 day
-		});
-
-		// Successful login response
-		res.status(200).json({ message: "Login successful" });
-	} catch (error) {
-		console.error("Error during sign-in:", error);
-		res.status(500).json({ message: "An error occurred while signing in." });
-	}
-};
 
 export const getAllUser = async (req, res) => {
 	try {
@@ -231,7 +49,7 @@ export const getOneUser = async (req, res) => {
 
 		const user = await prisma.user.findUnique({
 			where: {
-				username,
+				account: { username },
 			},
 			...(include
 				? {
@@ -248,7 +66,7 @@ export const getOneUser = async (req, res) => {
 		if (!user) {
 			return res.status(400).json({ message: "User not found" });
 		}
-		const isCurrentUser = user.id === req.decodedUser.id;
+		const isCurrentUser = user.id === req.account.id;
 
 		const safeUser = (({ verified, id, password, ...rest }) => rest)(user);
 
@@ -273,7 +91,7 @@ export const getCurrentUser = async (req, res) => {
 		const { include } = req.query;
 		const user = await prisma.user.findUnique({
 			where: {
-				id: req.decodedUser.id,
+				id: req.account.id,
 			},
 			...(include
 				? {
@@ -298,10 +116,10 @@ export const isCurrentUser = async (req, res) => {
 		let isCurrentUser = false;
 		const user = await prisma.user.findUnique({
 			where: {
-				username: req.query.username,
+				account: { username: req.query.username },
 			},
 		});
-		if (req.decodedUser.id && user.id && req.decodedUser.id == user.id) {
+		if (req.account.id && user.id && req.account.id == user.id) {
 			isCurrentUser = true;
 		}
 		res.status(200).json({ user, isCurrentUser });
@@ -338,8 +156,8 @@ export const updateUser = async (req, res) => {
 
 		const updatedUser = await prisma.user.update({
 			where: {
-				id: req.decodedUser.id,
-				username: username,
+				id: req.account.id,
+				account: { username },
 			},
 			data: updateData,
 		});
@@ -362,7 +180,7 @@ export const updateUserItem = async (req, res) => {
 			});
 		}
 		const updatedItem = await prisma[capitalizeFirstLetter(model)].update({
-			where: { id, user: { id: req.decodedUser.id } },
+			where: { id, user: { id: req.account.id } },
 			data: sanitizeData(model, data),
 		});
 		// console.log(updatedItem)
@@ -403,28 +221,28 @@ const sanitizeData = (model, data) => {
 				name: data.name,
 			};
 
-		case "corporate_Experience":
+		case "corporateExperience":
 			return {
-				job_title: data.job_title,
-				company_name: data.company_name,
-				start_date: new Date(data.start_date),
-				end_date: data.end_date ? new Date(data.end_date) : null,
+				jobTitle: data.jobTitle,
+				companyName: data.companyName,
+				startDate: new Date(data.startDate),
+				endDate: data.end_date ? new Date(data.endDate) : null,
 				responsibilities: data.responsibilities,
 			};
 
-		case "startup_Experience":
+		case "startupExperience":
 			return {
-				startup_name: data.startup_name,
+				startupName: data.startupName,
 				role: data.role,
 				description: data.description,
 			};
 
-		case "certifications_Courses":
+		case "certificationsCourses":
 			return {
 				title: data.title,
 				institution: data.institution,
-				completion_date: new Date(data.completion_date),
-				focus_area: data.focus_area,
+				completionDate: new Date(data.completionDate),
+				focusArea: data.focus_area,
 			};
 
 		case "interest":
@@ -438,7 +256,7 @@ const sanitizeData = (model, data) => {
 				proficiency: data.proficiency,
 			};
 
-		case "social_Media":
+		case "socialMedia":
 			return {
 				platform: data.platform,
 				url: data.url,
@@ -521,13 +339,11 @@ export async function suggestUsernamePassport(email, name) {
 			}
 			potentialUsername = ensureMinLength(potentialUsername);
 
-			const userExists = await prisma.user.findUnique({
+			const accountExists = await prisma.account.findUnique({
 				where: { username: potentialUsername },
 			});
-			const companyExists = await prisma.company_Profile.findUnique({
-				where: { username: potentialUsername },
-			});
-			if (!userExists && !companyExists) {
+
+			if (!accountExists) {
 				isUnique = true;
 				username = potentialUsername;
 			} else {
@@ -561,16 +377,12 @@ export async function suggestUsernamePassport(email, name) {
 			.substring(0, MAX_USERNAME_LENGTH);
 		trimmedRandomUsername = ensureMinLength(trimmedRandomUsername);
 
-		const userExists = await prisma.user.findUnique({
-			where: { username: trimmedRandomUsername },
-		});
-		const companyExists = await prisma.company_Profile.findUnique({
-			where: { username: trimmedRandomUsername },
+		const accountExists = await prisma.account.findUnique({
+			where: { username: potentialUsername },
 		});
 
 		if (
-			!userExists &&
-			!companyExists &&
+			!accountExists &&
 			!usernameSuggestions.includes(trimmedRandomUsername)
 		) {
 			usernameSuggestions.push(trimmedRandomUsername);
@@ -579,24 +391,24 @@ export async function suggestUsernamePassport(email, name) {
 	return usernameSuggestions;
 }
 
-export const deleteUser = async (req, res) => {
-	try {
-		const id = req.query.userId;
-		await prisma.social_Media.deleteMany({ where: { userId: id } });
-		await prisma.interest.deleteMany({ where: { userId: id } });
-		await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
-		await prisma.expertise.deleteMany({ where: { userId: id } });
-		await prisma.education.deleteMany({ where: { userId: id } });
-		await prisma.language.deleteMany({ where: { userId: id } });
-		await prisma.startup_Experience.deleteMany({ where: { userId: id } });
-		await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
-		const user = await prisma.user.delete({ where: { id: id } });
-		res.status(200).json(user);
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error deleting user" });
-	}
-};
+// export const deleteUser = async (req, res) => {
+// 	try {
+// 		const id = req.query.userId;
+// 		await prisma.social_Media.deleteMany({ where: { userId: id } });
+// 		await prisma.interest.deleteMany({ where: { userId: id } });
+// 		await prisma.corporate_Experience.deleteMany({ where: { userId: id } });
+// 		await prisma.expertise.deleteMany({ where: { userId: id } });
+// 		await prisma.education.deleteMany({ where: { userId: id } });
+// 		await prisma.language.deleteMany({ where: { userId: id } });
+// 		await prisma.startup_Experience.deleteMany({ where: { userId: id } });
+// 		await prisma.certifications_Courses.deleteMany({ where: { userId: id } });
+// 		const user = await prisma.user.delete({ where: { id: id } });
+// 		res.status(200).json(user);
+// 	} catch (e) {
+// 		console.error(e);
+// 		res.status(400).json({ message: "Error deleting user" });
+// 	}
+// };
 
 // export const suggestUsername = async (req, res) => {
 // 	try {
@@ -630,10 +442,10 @@ export const deleteUser = async (req, res) => {
 
 export const getTier = async (req, res) => {
 	try {
-		if (req.decodedUser.role === "User") {
+		if (req.account.role === "User") {
 			const user = await prisma.user.findUnique({
 				where: {
-					id: req.decodedUser.id,
+					id: req.account.id,
 				},
 				select: {
 					tier: true,
@@ -641,9 +453,9 @@ export const getTier = async (req, res) => {
 			});
 			res.status(200).json({ tier: user.tier });
 		} else {
-			const company = await prisma.company_Profile.findUnique({
+			const company = await prisma.company.findUnique({
 				where: {
-					id: req.decodedUser.id,
+					id: req.account.id,
 				},
 				select: {
 					tier: true,
@@ -661,7 +473,7 @@ export const updateTier = async (req, res) => {
 	try {
 		const updatedTier = await prisma.user.update({
 			where: {
-				id: req.decodedUser.id,
+				id: req.account.id,
 			},
 			data: {
 				tier: req.body.tier,

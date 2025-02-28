@@ -154,8 +154,8 @@ export default function UserSignUp() {
 		try {
 			console.log("formData:", formData);
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/createUser`,
-				{ formData },
+				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
+				{ formData ,role: "User"},
 				{
 					withCredentials: true,
 				},

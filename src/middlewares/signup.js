@@ -27,17 +27,12 @@ export const checkEmail = async (req, res, next) => {
 	try {
 		//console.log(req.body.formData);
 		const email = req.body.formData.email;
-		const userEmail = await prisma.user.findFirst({
+		const accountEmail = await prisma.account.findFirst({
 			where: {
 				email: email,
 			},
 		});
-		const companyEmail = await prisma.company_Profile.findFirst({
-			where: {
-				email: email,
-			},
-		});
-		if (userEmail == null && companyEmail == null) {
+		if (accountEmail == null) {
 			next();
 		} else {
 			res.status(400).json(req.body.formData);
@@ -65,15 +60,12 @@ export const checkUsername = async (req, res, next) => {
 			});
 		}
 
-		const existingUsername = await prisma.$queryRaw`
-			SELECT username FROM (
-				SELECT username FROM "User"
-				UNION ALL
-				SELECT username FROM "Company_Profile"
-			) AS combined
-			WHERE username = ${username}
-			LIMIT 1
-		`;
+		const existingUsername = await prisma.account.findFirst({
+			where: {
+				username: username,
+			},
+		});
+
 		if (!existingUsername.length) {
 			next();
 		} else {
@@ -105,15 +97,11 @@ export const checkUsernameAPI = async (req, res, next) => {
 			});
 		}
 
-		const existingUsername = await prisma.$queryRaw`
-			SELECT username FROM (
-				SELECT username FROM "User"
-				UNION ALL
-				SELECT username FROM "Company_Profile"
-			) AS combined
-			WHERE username = ${username}
-			LIMIT 1
-		`;
+		const existingUsername = await prisma.account.findFirst({
+			where: {
+				username: username,
+			},
+		});
 		console.log(!existingUsername.length);
 		if (!existingUsername.length) {
 			return res

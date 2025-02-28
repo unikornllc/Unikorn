@@ -98,7 +98,7 @@ async function checkDocuSignToken(req) {
 			process.env.INTEGRATION_KEY,
 			process.env.USER_ID_DOCUSIGN,
 			"openid, signature",
-			fs.readFileSync(path.join("./src", "private.key")),
+			fs.readFileSync(path.join("private.key")),
 			3600,
 		);
 		req.session.access_token = results.body.access_token;
@@ -230,7 +230,7 @@ docusignRouter.post("/docusign", async (req, res) => {
 			//{ recipientEventStatusCode: "AutoResponded" },
 		];
 
-		const company = await prisma.company_Profile.findUnique({
+		const company = await prisma.company.findUnique({
 			where: { username: req.body.username },
 		});
 

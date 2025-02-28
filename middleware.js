@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const routeRules = {
-	authRoutes: ["/", "/signin", "/signup/company", "/signup/user", "/verifyUser", "checkEmail"],
+	authRoutes: ["/", "/signin", "/signup/company", "/signup/user", "/verifyAccount", "/checkEmail"],
 	protectedUserRoutes: ["/user/home", "/user/profile", "/myInvestments"],
 	protectedCompanyRoutes: ["/company/home", "/company/profile", "/company/fundraising"],
 	sharedRoutes: [

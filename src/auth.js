@@ -29,7 +29,7 @@ export const protect = (req, res, next) => {
 			return;
 		}
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-		req.decodedUser = decoded;
+		req.account = decoded;
 		next();
 	} catch (e) {
 		console.error(e);

@@ -1,0 +1,22 @@
+enum AccountType {
+  User
+  Company
+}
+
+model Account {
+  id            String         @id @unique @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  mobileNumber  String         @unique
+  emailVerified Boolean        @default(false)
+  role          AccountType
+  company       Company?
+  user          User?
+  loginDevices  LoginDevices[]
+  wallet        Wallet?        @relation("Wallet")
+  ledgerAccount LedgerAccount? @relation("LedgerAccount")
+  transaction   Transaction[]  @relation("Transaction")
+  following     Follow[]       @relation("follower")
+  followedBy    Follow[]       @relation("following")
+}

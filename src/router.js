@@ -13,14 +13,14 @@ import {
 	getOneCorporateExperience,
 	createCorporateExperience,
 	deleteCorporateExperience,
-} from "./controllers/corporate_experience.js";
+} from "./controllers/corporateExperience.js";
 
 import {
 	getAllStartupExperience,
 	getOneStartupExperience,
 	createStartupExperience,
 	deleteStartupExperience,
-} from "./controllers/startup_experience.js";
+} from "./controllers/startupExperience.js";
 
 import {
 	createExpertise,
@@ -37,15 +37,11 @@ import {
 } from "./controllers/education.js";
 
 import {
-	createUser,
-	verifyUser,
-	deleteUser,
 	getAllUser,
 	getOneUser,
 	getCurrentUser,
 	isCurrentUser,
 	updateUser,
-	signIn,
 	getTier,
 	updateTier,
 	updateUserItem,
@@ -57,15 +53,18 @@ import {
 	unfollowUser,
 	getFollowers,
 	getFollowing,
+	followCompany,
+	unfollowCompany,
+	isFollowingCompany,
+	getFollowingCompanies,
 } from "./controllers/follow.js";
-
 
 import {
 	createCertificationsCourses,
 	getAllCertificationsCourses,
 	getOneCertificationsCourses,
 	deleteCertificationsCourses,
-} from "./controllers/certifications_courses.js";
+} from "./controllers/certificationsCourses.js";
 import {
 	createLanguage,
 	getAllLanguage,
@@ -77,28 +76,23 @@ import {
 	getAllSocialMedia,
 	getOneSocialMedia,
 	deleteSocialMedia,
-} from "./controllers/social_media.js";
+} from "./controllers/socialMedia.js";
 import {
-	createCompany,
 	getAllCompanies,
 	deleteCompany,
 	isCurrentCompany,
 	getOneCompanyProfile,
 	updateCompanyProfile,
-	followCompany,
-	unfollowCompany,
-	isFollowingCompany,
-	getFollowingCompanies,
 	getCompanyTier,
 	getCurrentCompany,
-} from "./controllers/company_profile.js";
+} from "./controllers/company.js";
 
 import {
 	createKeyEmployee,
 	getAllKeyEmployee,
 	getOneKeyEmployee,
 	deleteKeyEmployee,
-} from "./controllers/key_employees.js";
+} from "./controllers/keyEmployees.js";
 
 import {
 	createFounder,
@@ -110,21 +104,19 @@ import {
 import {
 	createFinancial,
 	getAllFinancial,
-	getOneFinancial,
-	deleteOneFinancial,
 } from "./controllers/financial.js";
 import {
 	createFundingRound,
 	deleteOneFundingRound,
 	getAllFundingRound,
 	getOneFundingRound,
-} from "./controllers/funding_round.js";
+} from "./controllers/fundingRound.js";
 import {
 	createProductInformation,
 	deleteOneProductInformation,
 	getAllProductInformation,
 	getOneProductInformation,
-} from "./controllers/product_information.js";
+} from "./controllers/productInformation.js";
 import {
 	createActivity,
 	deleteOneActivity,
@@ -137,7 +129,7 @@ import {
 	getAllUserFile,
 	getUserFile,
 	deleteUserFile,
-} from "./controllers/user_file.js";
+} from "./controllers/userFile.js";
 
 import {
 	authorizeCalendly,
@@ -149,7 +141,6 @@ import {
 	updateCalendlySettings,
 } from "./controllers/calendly.js";
 
-import { verifiedUser } from "./middlewares/verified_mail.js";
 import {
 	getCompanyActiveRaisingFund,
 	getActiveRaisingFunds,
@@ -167,8 +158,8 @@ import {
 	getCompanyPastRaisingFunds,
 	getRaisingFundFundraisers,
 	getAllRaisingFunds,
-	getRaisingFundsById
-} from "./controllers/raising_funds.js";
+	getRaisingFundsById,
+} from "./controllers/raisingFunds.js";
 import {
 	depositWallet,
 	getUserWallet,
@@ -187,9 +178,14 @@ import {
 	getWalletById,
 	getAllLedgerAccounts,
 	getLedgerAccountById,
-} from "./controllers/ledger.js"
+} from "./controllers/ledger.js";
 
-import { getAdminMetrics, getFundRaisingsFiltered, getJournalsFiltered, getTransactionsFiltered } from "./controllers/admin.js";
+import {
+	getAdminMetrics,
+	getFundRaisingsFiltered,
+	getJournalsFiltered,
+	getTransactionsFiltered,
+} from "./controllers/admin.js";
 
 const router = Router();
 
@@ -226,7 +222,7 @@ router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
 router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
-router.put("/updateUserItem", updateUserItem)
+router.put("/updateUserItem", updateUserItem);
 router.put("/followUser", followUser);
 router.get("/isFollowing", isFollowingUser);
 router.put("/unfollowUser", unfollowUser);
@@ -261,7 +257,6 @@ router.get("/getOneSocialMedia", getOneSocialMedia);
 router.delete("/deleteSocialMedia", deleteSocialMedia);
 
 //company
-router.post("/createCompany", createCompany);
 router.get("/getAllCompany", getAllCompanies);
 router.delete("/deleteCompany", deleteCompany);
 router.get("/isCurrentCompany", isCurrentCompany);
@@ -271,7 +266,7 @@ router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
 router.get("/getCompanyTier", getCompanyTier);
-router.get("/getCurrentCompany", getCurrentCompany)
+router.get("/getCurrentCompany", getCurrentCompany);
 
 //get all companies that the user is following
 //returns an array of usernames
@@ -292,8 +287,6 @@ router.delete("/deleteFounder", deleteFounder);
 //financial
 router.post("/createFinancial", createFinancial);
 router.get("/getAllFinancial", getAllFinancial);
-router.get("/getOneFinancial", getOneFinancial);
-router.delete("/deleteFinancial", deleteOneFinancial);
 
 //funding_round
 router.post("/createFundingRound", createFundingRound);
@@ -347,30 +340,30 @@ router.post("/investments/cancel", cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
 router.post("/investments/offer/cancel", cancelInvestmentOffer);
 
-router.get("getAllRaisingFunds", getAllRaisingFunds)
-router.get("getRaisingFundsById", getRaisingFundsById)
+router.get("getAllRaisingFunds", getAllRaisingFunds);
+router.get("getRaisingFundsById", getRaisingFundsById);
 
 // Wallet and transactions
 
-router.get('/getAllWallets', getAllWallets);
-router.get('/getWalletById', getWalletById);
+router.get("/getAllWallets", getAllWallets);
+router.get("/getWalletById", getWalletById);
 
-router.get('/getAllTransactions', getAllTransactions);
-router.get('/getTransactionById', getTransactionById);
+router.get("/getAllTransactions", getAllTransactions);
+router.get("/getTransactionById", getTransactionById);
 
-router.get('/getAllJournals', getAllJournals);
-router.get('/getJournalById', getJournalById);
+router.get("/getAllJournals", getAllJournals);
+router.get("/getJournalById", getJournalById);
 
-router.get('/getAllEntries', getAllEntries);
-router.get('/getEntryById', getEntryById);
+router.get("/getAllEntries", getAllEntries);
+router.get("/getEntryById", getEntryById);
 
-router.get('/getAllLedgerAccounts', getAllLedgerAccounts);
-router.get('/getLedgerAccountById', getLedgerAccountById);
+router.get("/getAllLedgerAccounts", getAllLedgerAccounts);
+router.get("/getLedgerAccountById", getLedgerAccountById);
 
-router.get('/admin/metrics', getAdminMetrics)
-router.get('/admin/fundraisings', getFundRaisingsFiltered);
-router.get('/admin/journals', getJournalsFiltered);
-router.get('/admin/transactions', getTransactionsFiltered);
+router.get("/admin/metrics", getAdminMetrics);
+router.get("/admin/fundraisings", getFundRaisingsFiltered);
+router.get("/admin/journals", getJournalsFiltered);
+router.get("/admin/transactions", getTransactionsFiltered);
 
 router.post("/logout", logout);
 

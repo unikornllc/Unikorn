@@ -2,73 +2,41 @@ import prisma from "../db.js";
 
 export const getFollowing = async (req, res) => {
 	try {
-		let followers;
-		if (req.query.isUser === "true") {
-			followers = await prisma.user.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followingUsers: true,
-				},
-			});
-			if (followers.followingUsers.length === 0) {
-				return res.status(200).json({ users: [], companies: [] });
+		const account = await prisma.account.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			include: {
+				following: { account: true },
+			},
+			select: {
+				following: { select:{ account: { select: {username: true , role: true}}}},
 			}
-		} else {
-			followers = await prisma.company_Profile.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followingCompanies: true,
-				},
-			});
-			if (followers.followingCompanies.length === 0) {
-				return res.status(200).json({ users: [], companies: [] });
-			}
+		});
+		if (account.following.length === 0) {
+			return res.status(200).json({ users: [], companies: [] });
 		}
-		if (!followers) {
+
+		if (!account) {
 			return res.status(400).json({ message: "User or company not found" });
 		}
 
-		const followingIds = {
+		const following = {
 			users: [],
 			companies: [],
 		};
 
-		if (req.query.isUser === "true") {
-			followers.followingUsers.forEach((follow) => {
-				if (follow.FollowinguserId) {
-					followingIds.users.push(follow.FollowinguserId);
-				} else if (follow.FollowingcompanyId) {
-					followingIds.companies.push(follow.FollowingcompanyId);
-				}
-			});
-		} else {
-			followers.followingCompanies.forEach((follow) => {
-				if (follow.FollowinguserId) {
-					followingIds.users.push(follow.FollowinguserId);
-				} else if (follow.FollowingcompanyId) {
-					followingIds.companies.push(follow.FollowingcompanyId);
-				}
-			});
-		}
-
-		const [followingUsers, followingCompanies] = await prisma.$transaction([
-			prisma.user.findMany({
-				where: { id: { in: followingIds.users } },
-				select: { username: true },
-			}),
-			prisma.company_Profile.findMany({
-				where: { id: { in: followingIds.companies } },
-				select: { username: true },
-			}),
-		]);
+		account.following.forEach((follow) => {
+			if (follow.account.role === "User") {
+				following.users.push(follow.account.username);
+			} else{
+				following.companies.push(follow.account.username);
+			}
+		});
 
 		res
 			.status(200)
-			.json({ users: followingUsers, companies: followingCompanies });
+			.json({...following});
 	} catch (e) {
 		console.error(e);
 		res
@@ -79,69 +47,41 @@ export const getFollowing = async (req, res) => {
 
 export const getFollowers = async (req, res) => {
 	try {
-		let followers;
-		if (req.query.isUser === "true") {
-			followers = await prisma.user.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followedByUsers: true,
-				},
-			});
-			if (followers.followedByUsers.length === 0) {
-				return res.status(200).json({ users: [], companies: [] });
+		const account = await prisma.account.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			include: {
+				followedBy: { account: true },
+			},
+			select: {
+				followedBy :{ select:{ account: { select: {username: true , role: true}}}},
 			}
-		} else {
-			followers = await prisma.company_Profile.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followedByCompanies: true,
-				},
-			});
-			if (followers.followedByCompanies.length === 0) {
-				return res.status(200).json({ users: [], companies: [] });
-			}
+		});
+		if (account.followedBy.length === 0) {
+			return res.status(200).json({ users: [], companies: [] });
 		}
-		if (!followers) {
+
+		if (!account) {
 			return res.status(400).json({ message: "User or company not found" });
 		}
-		const followersId = {
+
+		const followedBy = {
 			users: [],
 			companies: [],
 		};
-		if (req.query.isUser === "true") {
-			followers.followedByUsers.forEach((follow) => {
-				if (follow.FolloweruserId) {
-					followersId.users.push(follow.FolloweruserId);
-				} else if (follow.FollowercompanyId) {
-					followersId.companies.push(follow.FollowercompanyId);
-				}
-			});
-		} else {
-			followers.followedByCompanies.forEach((follow) => {
-				if (follow.FolloweruserId) {
-					followersId.users.push(follow.FolloweruserId);
-				} else if (follow.FollowercompanyId) {
-					followersId.companies.push(follow.FollowercompanyId);
-				}
-			});
-		}
-		const [followerUsers, followerCompanies] = await prisma.$transaction([
-			prisma.user.findMany({
-				where: { id: { in: followersId.users } },
-				select: { username: true },
-			}),
-			prisma.company_Profile.findMany({
-				where: { id: { in: followersId.companies } },
-				select: { username: true },
-			}),
-		]);
+
+		account.followedBy.forEach((follow) => {
+			if (follow.account.role === "User") {
+				followedBy.users.push(follow.account.username);
+			} else{
+				followedBy.companies.push(follow.account.username);
+			}
+		});
+
 		res
 			.status(200)
-			.json({ users: followerUsers, companies: followerCompanies });
+			.json({...followedBy});
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching followers" });
@@ -150,47 +90,26 @@ export const getFollowers = async (req, res) => {
 
 export const followUser = async (req, res) => {
 	try {
-		let follow;
-		let isAlreadyFollowing;
-		if (req.body.isUser === true) {
-			follow = await prisma.user.findUnique({
-				where: {
-					username: req.body.username,
+		const follow = await prisma.account.findUnique({
+			where: {
+				username: req.body.username,
 				},
-				select: { id: true, followedByUsers: true },
+				select: { id: true, followedBy: true },
 			});
-			isAlreadyFollowing = follow.followedByUsers.some((entry) =>
-				req.decodedUser.role === "User"
-					? entry.FolloweruserId === req.decodedUser.id
-					: entry.FollowercompanyId === req.decodedUser.id,
-			);
-		} else {
-			follow = await prisma.company_Profile.findUnique({
-				where: {
-					username: req.body.username,
-				},
-				select: { id: true, followedByCompanies: true },
-			});
-			isAlreadyFollowing = follow.followedByCompanies.some((entry) =>
-				req.decodedUser.role === "User"
-					? entry.FolloweruserId === req.decodedUser.id
-					: entry.FollowercompanyId === req.decodedUser.id,
-			);
-		}
+		
 		if (!follow) {
 			res.status(400).json({ message: "User or company not found" });
 		}
+		const isAlreadyFollowing = follow.followedBy.some((entry) =>
+			entry.followerId === req.account.id
+		);
 		if (isAlreadyFollowing) {
 			res.status(400).json({ message: "User already followed" });
 		} else {
 			await prisma.follow.create({
 				data: {
-					...(req.body.isUser === true
-						? { FollowinguserId: follow.id }
-						: { FollowingcompanyId: follow.id }),
-					...(req.decodedUser.role === "User"
-						? { FolloweruserId: req.decodedUser.id }
-						: { FollowercompanyId: req.decodedUser.id }),
+					followerId: req.account.id,
+					followingId: follow.id,
 				},
 			});
 
@@ -204,38 +123,19 @@ export const followUser = async (req, res) => {
 
 export const isFollowingUser = async (req, res) => {
 	try {
-		let follow;
-		if (req.query.isUser === "true") {
-			follow = await prisma.user.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followedByUsers: true,
-				},
-			});
-		} else {
-			follow = await prisma.company_Profile.findUnique({
-				where: {
-					username: req.query.username,
-				},
-				select: {
-					followedByCompanies: true,
-				},
-			});
-		}
+		const follow = await prisma.company.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			select: {
+				followedBy: true,
+			},
+		});
 		if (!follow) {
 			res.status(400).json({ message: "User not found" });
 		}
-		const followedBy =
-			req.query.isUser === true
-				? follow.followedByUsers
-				: follow.followedByCompanies;
-
 		const isFollowing = followedBy.some((entry) =>
-			req.decodedUser.role === "User"
-				? entry.FolloweruserId === req.decodedUser.id
-				: entry.FollowercompanyId === req.decodedUser.id,
+			entry.followerId === req.account.id
 		);
 		isFollowing
 			? res.status(200).json({ isFollowing: true })
@@ -248,32 +148,17 @@ export const isFollowingUser = async (req, res) => {
 
 export const unfollowUser = async (req, res) => {
 	try {
-		let unfollow;
-		let isFollowing;
-		if (req.body.isUser === true) {
-			unfollow = await prisma.user.findUnique({
+		const unfollow = await prisma.account.findUnique({
 				where: { username: req.body.username },
-				select: { id: true, followedByUsers: true },
+				select: { id: true, followedBy: true },
 			});
-			isFollowing = unfollow.followedByUsers.some((entry) =>
-				req.decodedUser.role === "User"
-					? entry.FolloweruserId === req.decodedUser.id
-					: entry.FollowercompanyId === req.decodedUser.id,
-			);
-		} else {
-			unfollow = await prisma.company_Profile.findUnique({
-				where: { username: req.body.username },
-				select: { id: true, followedByCompanies: true },
-			});
-			isFollowing = unfollow.followedByCompanies.some((entry) =>
-				req.decodedUser.role === "User"
-					? entry.FolloweruserId === req.decodedUser.id
-					: entry.FollowercompanyId === req.decodedUser.id,
-			);
-		}
+	
 		if (!unfollow) {
 			return res.status(402).json({ message: "User or company not found" });
 		}
+		const isFollowing = unfollow.followedBy.some((entry) =>
+			entry.followerId === req.account.id
+		);
 
 		if (!isFollowing) {
 			return res.status(200).json({ message: "User already not followed" });
@@ -281,12 +166,8 @@ export const unfollowUser = async (req, res) => {
 
 		await prisma.follow.deleteMany({
 			where: {
-				...(req.body.isUser === true
-					? { FollowinguserId: unfollow.id }
-					: { FollowingcompanyId: unfollow.id }),
-				...(req.decodedUser.role === "User"
-					? { FolloweruserId: req.decodedUser.id }
-					: { FollowercompanyId: req.decodedUser.id }),
+				followerId: req.account.id,
+				followingId: unfollow.id,
 			},
 		});
 		console.log("User unfollowed successfully");
@@ -296,5 +177,95 @@ export const unfollowUser = async (req, res) => {
 	} catch (error) {
 		console.error(error);
 		res.status(400).json({ message: "Error unfollowing user or company" });
+	}
+};
+
+
+export const isFollowingCompany = async (req, res) => {
+	try {
+		const company = await prisma.company.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		const isFollowing = await prisma.userFollowsCompany.findFirst({
+			where: {
+				companyId: company.id,
+				userId: req.account.id,
+			},
+		});
+
+		isFollowing
+			? res.status(200).json({ isFollowing: true })
+			: res.status(200).json({ isFollowing: false });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching Profile" });
+	}
+};
+
+export const followCompany = async (req, res) => {
+	try {
+		const company = await prisma.company.findUnique({
+			where: {
+				username: req.body.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		await prisma.userFollowsCompany.create({
+			data: {
+				companyId: company.id,
+				userId: req.account.id,
+			},
+		});
+		res.status(200).json({ message: "Company followed successfully" });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error following company" });
+	}
+};
+
+export const unfollowCompany = async (req, res) => {
+	try {
+		const company = await prisma.company.findUnique({
+			where: {
+				username: req.body.username,
+			},
+			select: {
+				id: true,
+			},
+		});
+		await prisma.userFollowsCompany.deleteMany({
+			where: {
+				companyId: company.id,
+				userId: req.account.id,
+			},
+		});
+		res.status(200).json({ message: "Company unfollowed successfully" });
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error unfollowing company" });
+	}
+};
+
+export const getFollowingCompanies = async (req, res) => {
+	try {
+		const followingCompanies = await prisma.userFollowsCompany.findMany({
+			where: {
+				userId: req.account.id,
+			},
+			select: {
+				company: true,
+			},
+		});
+		res.status(200).json(followingCompanies.map((c) => c.company.username));
+	} catch (e) {
+		console.error(e);
+		res.status(400).json({ message: "Error fetching following companies" });
 	}
 };

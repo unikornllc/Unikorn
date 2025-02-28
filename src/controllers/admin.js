@@ -14,14 +14,14 @@ export const getAdminMetrics = async (req, res) => {
         //     where: { verified: true },
         // });
 
-        // const totalVerifiedCompanies = await prisma.company_Profile.count({
+        // const totalVerifiedCompanies = await prisma.company.count({
         //     where: { verified: true },
         // });
         const [totalTransactions, totalUsers, totalCompanies, totalFundRaising] = await prisma.$transaction([
             prisma.transaction.count(),
             prisma.user.count(),
-            prisma.company_Profile.count(),
-            prisma.raising_Funds.count()
+            prisma.company.count(),
+            prisma.raisingFunds.count()
 
         ]);
 
@@ -73,14 +73,14 @@ export const getFundRaisingsFiltered = async (req, res) => {
         console.log("Final query:", whereClause);
 
         const [fundRaisings, total] = await prisma.$transaction([
-            prisma.raising_Funds.findMany({
+            prisma.raisingFunds.findMany({
                 where: whereClause,
                 skip,
                 take,
                 orderBy: { date: 'desc' },
                 include: { company: true, journal: true, investmentOffers: true },
             }),
-            prisma.raising_Funds.count({ where: whereClause }),
+            prisma.raisingFunds.count({ where: whereClause }),
         ]);
 
         res.json({ fundRaisings, total });

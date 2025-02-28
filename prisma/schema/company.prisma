@@ -1,0 +1,82 @@
+enum CompanyType {
+  Profit
+  NonProfit
+  Private
+  Public
+}
+
+enum CompanyTier {
+  Hunter
+  Holder
+}
+
+model Company {
+  id                 String               @id @default(uuid())
+  account            Account              @relation(fields: [id], references: [id])
+  name               String
+  description        String               @db.VarChar(600)
+  website            String
+  founded            DateTime
+  type               CompanyType          @default(Public)
+  hqLocation         String
+  industry           String
+  verified           Boolean              @default(false)
+  tier               CompanyTier          @default(Holder)
+  boardMembers       String[]
+  advisors           String[]
+  founders           Founder[]
+  keyEmployees       KeyEmployees[]
+  productInformation ProductInformation[]
+  financials         Financial?
+  activities         Activity[]
+  companyFile        CompanyFile[]
+  raisingFunds       RaisingFunds[]
+  fundraiser         Fundraiser[]         @relation("CompanyInvestments")
+  investmentOffers   InvestmentOffer[]    @relation("CompanyOffers")
+}
+
+model Founder {
+  id             String  @id @default(uuid())
+  name           String
+  role           String
+  crunchBaseLink String
+  company        Company @relation(fields: [companyId], references: [id])
+  companyId      String
+}
+
+model KeyEmployees {
+  id        String  @id @default(uuid())
+  name      String
+  role      String
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+}
+
+model ProductInformation {
+  id           String   @id @default(uuid())
+  product      String
+  market       String
+  partnerships String[]
+  company      Company  @relation(fields: [companyId], references: [id])
+  companyId    String
+}
+
+model Activity {
+  id          String  @id @default(uuid())
+  title       String
+  description String  @db.VarChar(500)
+  company     Company @relation(fields: [companyId], references: [id])
+  companyId   String
+}
+
+model CompanyFile {
+  id         String   @id @default(uuid())
+  fileName   String
+  filePath   String
+  fileType   String
+  uploadedAt DateTime @default(now())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([fileName, companyId])
+}

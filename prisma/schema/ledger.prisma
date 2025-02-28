@@ -18,34 +18,30 @@ enum TransactionType {
 }
 
 model Wallet {
-  id        String          @id @default(uuid())
-  amount    Decimal         @default(0.0)
-  onHold    Decimal         @default(0.0)
-  userId    String?          @unique
-  user      User?            @relation("Wallet", fields: [userId], references: [id])
-  companyId String?          @unique
-  company   Company_Profile? @relation("CompanyWallet", fields: [companyId], references: [id])
+  id        String  @id @default(uuid())
+  amount    Decimal @default(0.0)
+  onHold    Decimal @default(0.0)
+  accountId String  @unique
+  account   Account @relation("Wallet", fields: [accountId], references: [id])
 }
 
 model Transaction {
-  id              String           @id @default(uuid())
+  id              String          @id @default(uuid())
   transactionType TransactionType
   amount          Decimal
-  date            DateTime         @default(now())
+  date            DateTime        @default(now())
   description     String
-  companyId       String?
-  company         Company_Profile? @relation("Transaction", fields: [companyId], references: [id])
-  userId          String?
-  user            User?            @relation("Transaction", fields: [userId], references: [id])
+  accountId       String
+  account         Account         @relation("Transaction", fields: [accountId], references: [id])
   Entry           Entry[]
 }
 
 model Journal {
-  id             String         @id @default(uuid())
-  name           String         @unique
+  id             String        @id @default(uuid())
+  name           String        @unique
   flowType       FlowType
-  raisingFundsId String?        @unique
-  raisingFunds   Raising_Funds? @relation(fields: [raisingFundsId], references: [id])
+  raisingFundsId String?       @unique
+  raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
   Entry          Entry[]
 }
 
@@ -64,13 +60,11 @@ model Entry {
 }
 
 model LedgerAccount {
-  id           String           @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
-  totalBalance Decimal          @default(0)
-  companyId    String?          @unique
-  company      Company_Profile? @relation("LedgerAccountCompany", fields: [companyId], references: [id])
-  userId       String?          @unique
-  user         User?            @relation("LedgerAccountUser", fields: [userId], references: [id])
+  totalBalance Decimal @default(0)
+  accountId    String  @unique
+  account      Account @relation("LedgerAccount", fields: [accountId], references: [id])
   Entry        Entry[]
 }
 
