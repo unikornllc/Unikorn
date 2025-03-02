@@ -62,10 +62,9 @@ export const getUserFile = async (req, res) => {
 	try {
 		const user = await prisma.user.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.query.username,
-				}
-				
+				},
 			},
 		});
 
@@ -103,9 +102,9 @@ export const getAllUserFile = async (req, res) => {
 	try {
 		const user = await prisma.user.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.query.username,
-				}
+				},
 			},
 			include: {
 				userFile: true,
@@ -115,7 +114,7 @@ export const getAllUserFile = async (req, res) => {
 			return res.status(400).json({ message: "User not found" });
 		}
 		res.status(200).json({
-			file: user.user_file.map(({ userId, filePath, ...rest }) => rest),
+			file: user.userFile.map(({ userId, filePath, ...rest }) => rest),
 		});
 	} catch (error) {
 		res.status(400).json({ message: "Error getting user files" });

@@ -43,7 +43,7 @@ export default function Signup() {
 		website: "",
 		file: null,
 		founded: Date.now(),
-		hqlocation: "",
+		hqLocation: "",
 		hunter: false,
 		industry: "",
 	});
@@ -203,8 +203,8 @@ export default function Signup() {
 					</div>
 					<TextInput
 						label="HQ Location"
-						name="hqlocation"
-						value={formData.hqlocation}
+						name="hqLocation"
+						value={formData.hqLocation}
 						onChange={handleChange}
 					/>
 					<TextInput

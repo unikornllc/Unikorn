@@ -7,9 +7,7 @@ import passport from "passport";
 import session from "express-session";
 import configurePassport from "./passport.js";
 import { protect } from "./auth.js";
-import {
-	suggestUsername,
-} from "./controllers/user.js";
+import { suggestUsername } from "./controllers/user.js";
 import { verifiedUser } from "./middlewares/verifiedMail.js";
 import {
 	confirmPassword,
@@ -24,8 +22,12 @@ import { createJWT } from "./auth.js";
 import crypto from "crypto";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
-import docusignRouter from "./docusign.js";
-import { verifyAccount , createAccount } from "./controllers/account.js";
+import docusignRouter, {
+	checkDocuSignToken,
+	downloadSignedDocument,
+} from "./docusign.js";
+import { verifyAccount, createAccount } from "./controllers/account.js";
+import prisma from "./db.js";
 
 const sessionStore = new InMemorySessionStore();
 const messageStore = new InMemoryMessageStore();
@@ -183,6 +185,37 @@ app.post(
 			.json({ role: req.account.role, message: "Login Successful" });
 	},
 );
+app.post("/api/webhook", async (req, res) => {
+	res.sendStatus(200);
+	await checkDocuSignToken(req);
+	// Handle the notification data
+	const notification = req.body;
+	// For debugging purposes, you can log the notification
+
+	console.log("Received webhook notification:", JSON.stringify(notification));
+
+	// Check for envelope status
+	const envelopeStatus = notification.event;
+	const envelopeId = notification.data.envelopeId;
+	if (notification && envelopeStatus === "envelope-completed") {
+		await prisma.raisingFunds.updateMany({
+			where: { envelopeId },
+			data: { status: "Active" },
+		});
+		console.log(
+			`Envelope ${envelopeId} has been completed. Downloading the signed document...`,
+		);
+		downloadSignedDocument(envelopeId, req);
+	} else if (envelopeStatus === "envelope-declined") {
+		// Delete the record
+		await prisma.raisingFunds.deleteMany({
+			where: { envelopeId },
+		});
+		console.log(
+			`Raising_Funds record for envelope ${envelopeId} deleted due to decline.`,
+		);
+	}
+});
 
 app.use(
 	"/api",
@@ -192,7 +225,13 @@ app.use(
 );
 
 //app.use(protect, router);
-app.use(docusignRouter);
+// app.use(docusignRouter);
+app.use(
+	"/api",
+	verifyAccessTokenRoute,
+	verifyRefreshTokenAndGenerateAccessToken,
+	docusignRouter,
+);
 
 server.listen(3002, () => {
 	console.log("Server is running on port 3002");

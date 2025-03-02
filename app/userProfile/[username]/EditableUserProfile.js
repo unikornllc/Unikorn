@@ -17,7 +17,6 @@ import ManageSub from "@/app/_components/_user/_user_profile/ManageSub";
 export default function EditableUserProfile({ user, editable = false }) {
 	const [loading, setLoading] = useState(true);
 
-
 	const handleFollow = async () => {
 		try {
 			setLoading(true);
@@ -64,7 +63,6 @@ export default function EditableUserProfile({ user, editable = false }) {
 	// 	console.log(editable);
 	// }, []);
 
-
 	if (!user)
 		return (
 			<div className="bg-gray-100 min-h-screen py-8">
@@ -84,7 +82,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 					name: user.name,
 					title: user.title,
 					unikornVerified: false,
-					calendlyIntegration: user.calendly_integration,
+					calendlyIntegration: user.calendlyIntegration,
 				}}
 				editable
 			/>
@@ -92,7 +90,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
 					<ManageSub tier={user.tier} wallet={user.wallet} />
-					{user.calendly_integration && (
+					{user.calendlyIntegration && (
 						<CalendlyEventTypes></CalendlyEventTypes>
 					)}
 					<About
@@ -104,8 +102,8 @@ export default function EditableUserProfile({ user, editable = false }) {
 					/>
 					<Experience
 						username={user.username}
-						corporateExperienceList={user.corporate_experience}
-						startupExperienceList={user.startup_experience}
+						corporateExperienceList={user.corporateExperience}
+						startupExperienceList={user.startupExperience}
 						editable
 					/>
 					<Education
@@ -120,7 +118,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 					/>
 					<Certifications
 						username={user.username}
-						certificationList={user.certifications_courses}
+						certificationList={user.certificationsCourses}
 						editable
 					/>
 					<Files username={user.username} editable />
@@ -130,7 +128,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 						username={user.username}
 						languageList={user.language}
 						interestList={user.interest}
-						socialMediaList={user.social_media}
+						socialMediaList={user.socialMedia}
 						editable
 					/>
 				</div>

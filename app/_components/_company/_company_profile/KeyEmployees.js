@@ -39,13 +39,13 @@ const KeyEmployees = ({ employees = [], onUpdate }) => {
 		setLocalEmployees(updatedEmployees);
 		setEditingIndex(null);
 		setTempEmployee({ name: "", role: "" });
-		onUpdate("key_employees", updatedEmployees);
+		onUpdate("keyEmployees", updatedEmployees);
 	};
 
 	const handleDelete = (index) => {
 		const updatedEmployees = localEmployees.filter((_, i) => i !== index);
 		setLocalEmployees(updatedEmployees);
-		onUpdate("key_employees", updatedEmployees);
+		onUpdate("keyEmployees", updatedEmployees);
 	};
 
 	const handleAddClick = () => {
@@ -58,7 +58,7 @@ const KeyEmployees = ({ employees = [], onUpdate }) => {
 		setLocalEmployees(updatedEmployees);
 		setIsAdding(false);
 		setTempEmployee({ name: "", role: "" });
-		onUpdate("key_employees", updatedEmployees);
+		onUpdate("keyEmployees", updatedEmployees);
 	};
 
 	const handleChange = (field, value) => {

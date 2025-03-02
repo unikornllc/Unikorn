@@ -45,7 +45,7 @@ export const createFounder = async (req, res) => {
 			data: {
 				name: req.body.name,
 				role: req.body.role,
-				crunch_base_link: req.body.crunch_base_link,
+				crunchBaseLink: req.body.crunchBaseLink,
 				company: { connect: { id: company.id } },
 			},
 		});

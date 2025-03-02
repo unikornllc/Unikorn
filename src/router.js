@@ -101,10 +101,7 @@ import {
 	deleteFounder,
 } from "./controllers/founder.js";
 
-import {
-	createFinancial,
-	getAllFinancial,
-} from "./controllers/financial.js";
+import { createFinancial, getAllFinancial } from "./controllers/financial.js";
 import {
 	createFundingRound,
 	deleteOneFundingRound,
@@ -294,7 +291,7 @@ router.get("/getAllFundingRound", getAllFundingRound);
 router.get("/getOneFundingRound", getOneFundingRound);
 router.delete("/deleteFundingRound", deleteOneFundingRound);
 
-//product_information
+//productInformation
 router.post("/createProductInformation", createProductInformation);
 router.get("/getAllProductInformation", getAllProductInformation);
 router.get("/getOneProductInformation", getOneProductInformation);
@@ -306,13 +303,13 @@ router.get("/getAllActivity", getAllActivity);
 router.get("/getOneActivity", getOneActivity);
 router.delete("/deleteActivity", deleteOneActivity);
 
-//user_file
+//userFile
 router.post("/uploadUserFile", upload.single("file"), uploadUserFile);
 router.get("/getUserFile", getUserFile);
 router.get("/getAllUserFile", getAllUserFile);
 router.delete("/deleteUserFile", deleteUserFile);
 
-//calendly_integration
+//calendlyIntegration
 router.get("/calendly/auth", authorizeCalendly);
 router.get("/calendly/eventType", eventTypeCalendly);
 router.post("/calendly/createEventType", createEventTypeCalendly);
@@ -320,7 +317,7 @@ router.get("/calendly/auth/callback", callbackCalendly);
 router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
-//raising_funds and investments offers
+//raisingFunds and investments offers
 
 router.get("/raisingFunds/active", getActiveRaisingFunds);
 router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);

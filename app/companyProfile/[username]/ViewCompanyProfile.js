@@ -115,7 +115,7 @@ export default function ViewCompanyProfile({ company }) {
 						<p className="text-gray-600">{company.description}</p>
 						<p className="text-gray-600">{company.type}</p>
 						<p className="text-gray-600">{company.industry}</p>
-						<p className="text-gray-600">{company.hqlocation}</p>
+						<p className="text-gray-600">{company.hqLocation}</p>
 					</div>
 					<div>
 						<div className="flex justify-center space-x-4 my-4">

@@ -37,14 +37,14 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 		setEditingIndex(null);
 		setTempProductInfo({ product: "", market: "", partnerships: [] });
 		// Update the backend and parent state
-		onUpdate("product_information", updatedList);
+		onUpdate("productInformation", updatedList);
 	};
 
 	// Delete a product information entry
 	const handleDelete = (index) => {
 		const updatedList = localProductInfoList.filter((_, i) => i !== index);
 		setLocalProductInfoList(updatedList);
-		onUpdate("product_information", updatedList);
+		onUpdate("productInformation", updatedList);
 	};
 
 	// Handle changes to the product information fields
@@ -92,7 +92,7 @@ const ProductInformation = ({ productInformationList = [], onUpdate }) => {
 		setLocalProductInfoList(updatedList);
 		setIsAdding(false);
 		setTempProductInfo({ product: "", market: "", partnerships: [] });
-		onUpdate("product_information", updatedList);
+		onUpdate("productInformation", updatedList);
 	};
 
 	return (
