@@ -46,10 +46,9 @@ export const isCurrentCompany = async (req, res) => {
 		let isCurrentCompany = false;
 		const company = await prisma.company.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.query.username,
-				}
-				
+				},
 			},
 		});
 		if (req.cookies.userId && company.id && req.cookies.userId == company.id) {
@@ -75,13 +74,13 @@ export const getCurrentCompany = async (req, res) => {
 				},
 				...(include
 					? {
-						...Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+							...Object.fromEntries(
+								Object.entries(include).map(([key, value]) => [
+									key,
+									value === "true",
+								]),
+							),
+						}
 					: {}),
 			},
 		});
@@ -136,17 +135,17 @@ export const getOneCompanyProfile = async (req, res) => {
 				account: {
 					select: { username: true },
 				},
-				...(include? {
-						...Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+				...(include
+					? {
+							...Object.fromEntries(
+								Object.entries(include).map(([key, value]) => [
+									key,
+									value === "true",
+								]),
+							),
+						}
 					: {}),
-			}
-
+			},
 		});
 
 		if (!company) {
@@ -154,13 +153,9 @@ export const getOneCompanyProfile = async (req, res) => {
 		}
 		const isCurrentCompany = company.id === req.account.id;
 
-		const safeCompany = (({ id, ...rest }) => rest)(
-			company,
-		);
+		const safeCompany = (({ id, ...rest }) => rest)(company);
 
-		const cleanedCompany = removeKeys(company, [
-			"companyId",
-		]);
+		const cleanedCompany = removeKeys(company, ["companyId"]);
 
 		//console.log(cleanedCompany);
 
@@ -196,12 +191,12 @@ export const updateCompanyProfile = async (req, res) => {
 			"hunter",
 			"industry",
 			"type",
-			"board_members",
+			"boardMembers",
 			"advisors",
 			"activities",
 			"founders",
-			"key_employees",
-			"product_information",
+			"keyEmployees",
+			"productInformation",
 			"financials",
 		];
 
@@ -226,12 +221,12 @@ export const updateCompanyProfile = async (req, res) => {
 						create: {
 							name: founder.name,
 							role: founder.role,
-							crunchBaseLink: founder.crunch_base_link,
+							crunchBaseLink: founder.crunchBaseLink,
 						},
 						update: {
 							name: founder.name,
 							role: founder.role,
-							crunchBaseLink: founder.crunch_base_link,
+							crunchBaseLink: founder.crunchBaseLink,
 						},
 					})),
 				},
@@ -252,7 +247,7 @@ export const updateCompanyProfile = async (req, res) => {
 					})),
 				},
 			};
-		} else if (fieldName === "key_employees") {
+		} else if (fieldName === "keyEmployees") {
 			updateData = {
 				keyEmployees: {
 					upsert: fieldValue.map((key_employee) => ({
@@ -268,20 +263,20 @@ export const updateCompanyProfile = async (req, res) => {
 					})),
 				},
 			};
-		} else if (fieldName === "product_information") {
+		} else if (fieldName === "productInformation") {
 			updateData = {
 				productInformation: {
-					upsert: fieldValue.map((product_information) => ({
-						where: { id: product_information.id || "" },
+					upsert: fieldValue.map((productInformation) => ({
+						where: { id: productInformation.id || "" },
 						create: {
-							product: product_information.product,
-							market: product_information.market,
-							partnerships: product_information.partnerships,
+							product: productInformation.product,
+							market: productInformation.market,
+							partnerships: productInformation.partnerships,
 						},
 						update: {
-							product: product_information.product,
-							market: product_information.market,
-							partnerships: product_information.partnerships,
+							product: productInformation.product,
+							market: productInformation.market,
+							partnerships: productInformation.partnerships,
 						},
 					})),
 				},

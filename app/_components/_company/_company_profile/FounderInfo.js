@@ -13,7 +13,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [tempFounder, setTempFounder] = useState({
 		name: "",
 		role: "",
-		crunch_base_link: "",
+		crunchBaseLink: "",
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
@@ -30,7 +30,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 
 	const cancelEditing = () => {
 		setEditingIndex(null);
-		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
 		setIsAdding(false);
 	};
 
@@ -39,7 +39,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 		updatedFounders[editingIndex] = tempFounder;
 		setLocalFounders(updatedFounders);
 		setEditingIndex(null);
-		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
 		onUpdate("founders", updatedFounders);
 	};
 
@@ -51,14 +51,14 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 
 	const handleAddClick = () => {
 		setIsAdding(true);
-		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
 	};
 
 	const handleAddSubmit = () => {
 		const updatedFounders = [...localFounders, tempFounder];
 		setLocalFounders(updatedFounders);
 		setIsAdding(false);
-		setTempFounder({ name: "", role: "", crunch_base_link: "" });
+		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
 		onUpdate("founders", updatedFounders);
 	};
 
@@ -103,23 +103,23 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={tempFounder.crunch_base_link}
+									value={tempFounder.crunchBaseLink}
 									onChange={(e) =>
-										handleChange("crunch_base_link", e.target.value)
+										handleChange("crunchBaseLink", e.target.value)
 									}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
-							) : founder.crunch_base_link ? (
+							) : founder.crunchBaseLink ? (
 								<ExternalLink
 									href={
-										founder.crunch_base_link.startsWith("http://") ||
-											founder.crunch_base_link.startsWith("https://")
-											? founder.crunch_base_link
-											: `https://${founder.crunch_base_link}`
+										founder.crunchBaseLink.startsWith("http://") ||
+										founder.crunchBaseLink.startsWith("https://")
+											? founder.crunchBaseLink
+											: `https://${founder.crunchBaseLink}`
 									}
 									className="flex-grow mr-2 text-blue-500 underline"
 								>
-									{founder.crunch_base_link}
+									{founder.crunchBaseLink}
 								</ExternalLink>
 							) : (
 								<span className="flex-grow mr-2">-</span>
@@ -190,8 +190,8 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						<span className="font-medium w-1/3">CrunchBase Link:</span>
 						<input
 							type="text"
-							value={tempFounder.crunch_base_link}
-							onChange={(e) => handleChange("crunch_base_link", e.target.value)}
+							value={tempFounder.crunchBaseLink}
+							onChange={(e) => handleChange("crunchBaseLink", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>

@@ -121,7 +121,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 			</div>
 			<div className="container mx-auto flex flex-col lg:flex-row">
 				<div className="w-full lg:w-2/3 p-4">
-					{user.calendly_integration && (
+					{user.calendlyIntegration && (
 						<div className="bg-white p-6 rounded-lg shadow mb-6 relative">
 							<h3 className="text-2xl font-semibold text-textPrimary mb-4">
 								User's Schedules
@@ -137,14 +137,14 @@ export default function EditableUserProfile({ user, editable = false }) {
 					/>
 					<Experience
 						username={user.username}
-						corporateExperienceList={user.corporate_experience}
-						startupExperienceList={user.startup_experience}
+						corporateExperienceList={user.corporateExperience}
+						startupExperienceList={user.startupExperience}
 					/>
 					<Education username={user.username} educationList={user.education} />
 					<Expertise username={user.username} expertiseList={user.expertise} />
 					<Certifications
 						username={user.username}
-						certificationList={user.certifications_courses}
+						certificationList={user.certificationsCourses}
 					/>
 					<Files username={user.username} />
 				</div>
@@ -153,7 +153,7 @@ export default function EditableUserProfile({ user, editable = false }) {
 						username={user.username}
 						languageList={user.language}
 						interestList={user.interest}
-						socialMediaList={user.social_media}
+						socialMediaList={user.socialMedia}
 					/>
 				</div>
 			</div>

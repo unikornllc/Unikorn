@@ -48,12 +48,12 @@ const MyCompanyProfile = ({ company }) => {
 			}
 
 			const res = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/docusign`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/docusign`,
 				{
-					name: companyData.name,
-					email: companyData.email, // Ensure the company's email is available in the data
-					company: companyData.name,
-					username: companyData.username,
+					// name: companyData.name,
+					// email: companyData.email, // Ensure the company's email is available in the data
+					// company: companyData.name,
+					// username: companyData.username,
 					data: {
 						equity: parseFloat(equityPercentage),
 						price: parseInt(fundingAmount),
@@ -164,18 +164,18 @@ const MyCompanyProfile = ({ company }) => {
 			)}
 			<GeneralInfo company={companyData} onUpdate={handleUpdate} />
 			<BoardMembers
-				members={companyData.board_members}
+				members={companyData.boardMembers}
 				onUpdate={handleUpdate}
 			/>
 			<Advisors advisors={companyData.advisors} onUpdate={handleUpdate} />
 			<FounderInfo founders={companyData.founders} onUpdate={handleUpdate} />
 			<ProductInformation
-				productInformationList={companyData.product_information}
+				productInformationList={companyData.productInformation}
 				onUpdate={handleUpdate}
 			/>
 			<Activity activities={companyData.activities} onUpdate={handleUpdate} />
 			<KeyEmployees
-				employees={companyData.key_employees}
+				employees={companyData.keyEmployees}
 				onUpdate={handleUpdate}
 			/>
 			<CompanyFiles files={companyData.company_file} onUpdate={handleUpdate} />

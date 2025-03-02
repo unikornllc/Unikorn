@@ -19,13 +19,13 @@ function makeRecipientViewRequest(name, email) {
 	return viewRequest;
 }
 
-function makeEnvelopeCompany(name, email, company, data) {
+function makeEnvelopeCompany(name, email, data) {
 	const env = new docusign.EnvelopeDefinition();
 	env.templateId = process.env.TEMPLATE_ID_DOCUSIGN;
 
 	const companyText = docusign.Text.constructFromObject({
 		tabLabel: "company_name",
-		value: company,
+		value: name,
 	});
 
 	const dateText = docusign.Text.constructFromObject({
@@ -87,7 +87,7 @@ function getEnvelopeApi(req) {
 	return new docusign.EnvelopesApi(dsApiClient);
 }
 
-async function checkDocuSignToken(req) {
+export async function checkDocuSignToken(req) {
 	if (req.session.access_token && Date.now() < req.session.expires_at) {
 		console.log("re-using access_token ");
 	} else {
@@ -111,8 +111,7 @@ docusignRouter.post("/docusigninvestor", async (req, res) => {
 		const { raisingFundsId } = req.body;
 		await checkDocuSignToken(req);
 		const eventNotification = new docusign.EventNotification();
-		eventNotification.url =
-			"https://d79c-156-213-237-58.ngrok-free.app/webhook";
+		eventNotification.url = `${process.env.DOCUSIGN_WEBHOOK}`;
 		eventNotification.loggingEnabled = "true";
 		eventNotification.requireAcknowledgment = "true";
 		eventNotification.format = "json";
@@ -132,7 +131,7 @@ docusignRouter.post("/docusigninvestor", async (req, res) => {
 		];
 
 		const envelopesApi = getEnvelopeApi(req);
-		const completedRaisingFunds = await prisma.raising_Funds.findUnique({
+		const completedRaisingFunds = await prisma.raisingFunds.findUnique({
 			where: { id: raisingFundsId },
 			include: {
 				fundraisers: {
@@ -210,8 +209,7 @@ docusignRouter.post("/docusign", async (req, res) => {
 	try {
 		await checkDocuSignToken(req);
 		const eventNotification = new docusign.EventNotification();
-		eventNotification.url =
-			"https://d79c-156-213-237-58.ngrok-free.app/webhook";
+		eventNotification.url = `${process.env.DOCUSIGN_WEBHOOK}`;
 		eventNotification.loggingEnabled = "true";
 		eventNotification.requireAcknowledgment = "true";
 		eventNotification.format = "json";
@@ -231,13 +229,18 @@ docusignRouter.post("/docusign", async (req, res) => {
 		];
 
 		const company = await prisma.company.findUnique({
-			where: { username: req.body.username },
+			where: { id: req.account.id },
+			include: {
+				account: {
+					select: { email: true },
+				},
+			},
 		});
 
 		if (!company) {
 			return res.status(404).json({ message: "Company not found" });
 		}
-		const existingFund = await prisma.raising_Funds.findFirst({
+		const existingFund = await prisma.raisingFunds.findFirst({
 			where: {
 				companyId: company.id,
 				status: { in: ["Pending", "Active"] },
@@ -251,9 +254,8 @@ docusignRouter.post("/docusign", async (req, res) => {
 		}
 		const envelopesApi = getEnvelopeApi(req);
 		const envelope = makeEnvelopeCompany(
-			req.body.name,
-			req.body.email,
-			req.body.company,
+			company.name,
+			company.account.email,
 			req.body.data,
 		);
 
@@ -264,7 +266,7 @@ docusignRouter.post("/docusign", async (req, res) => {
 			},
 		);
 
-		await prisma.raising_Funds.create({
+		await prisma.raisingFunds.create({
 			data: {
 				equityPercentage: req.body.data.equity,
 				fundingAmount: req.body.data.price,
@@ -277,7 +279,10 @@ docusignRouter.post("/docusign", async (req, res) => {
 				company: { connect: { id: company.id } },
 			},
 		});
-		const viewRequest = makeRecipientViewRequest(req.body.name, req.body.email);
+		const viewRequest = makeRecipientViewRequest(
+			company.name,
+			company.account.email,
+		);
 		const recipientViewRequest = await envelopesApi.createRecipientView(
 			process.env.ACCOUNT_ID_DOCUSIGN,
 			results.envelopeId,
@@ -291,40 +296,7 @@ docusignRouter.post("/docusign", async (req, res) => {
 	}
 });
 
-docusignRouter.post("/webhook", async (req, res) => {
-	res.sendStatus(200);
-	await checkDocuSignToken(req);
-	// Handle the notification data
-	const notification = req.body;
-	// For debugging purposes, you can log the notification
-
-	console.log("Received webhook notification:", JSON.stringify(notification));
-
-	// Check for envelope status
-	const envelopeStatus = notification.event;
-	const envelopeId = notification.data.envelopeId;
-	if (notification && envelopeStatus === "envelope-completed") {
-		await prisma.raising_Funds.updateMany({
-			where: { envelopeId },
-			data: { status: "Active" },
-		});
-		console.log(
-			`Envelope ${envelopeId} has been completed. Downloading the signed document...`,
-		);
-		downloadSignedDocument(envelopeId, req);
-	} else if (envelopeStatus === "envelope-declined") {
-		// Delete the record
-		await prisma.raising_Funds.deleteMany({
-			where: { envelopeId },
-		});
-		console.log(
-			`Raising_Funds record for envelope ${envelopeId} deleted due to decline.`,
-		);
-	}
-});
-
-// Function to download the signed document from the completed envelope
-async function downloadSignedDocument(envelopeId, req) {
+export async function downloadSignedDocument(envelopeId, req) {
 	if (!envelopeId) {
 		console.error("Envelope ID is required to download the signed document.");
 		return;

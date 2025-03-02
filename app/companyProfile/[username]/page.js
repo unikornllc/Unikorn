@@ -16,7 +16,6 @@ export default async function CompanyProfile({ params }) {
 		financials: true,
 		activities: true,
 		raisingFunds: true,
-		wallet: true,
 	};
 
 	try {
@@ -31,8 +30,8 @@ export default async function CompanyProfile({ params }) {
 		);
 		const isCurrentCompany = res.data.isCurrentCompany;
 		const company = res.data.company;
-		for (let i = 0; i < company.raising_Funds.length; ++i) {
-			if (company.raising_Funds[i].status == "Active") {
+		for (let i = 0; i < company.raisingFunds.length; ++i) {
+			if (company.raisingFunds[i].status == "Active") {
 				company.activeFund = true;
 				break;
 			}
@@ -40,7 +39,6 @@ export default async function CompanyProfile({ params }) {
 
 		if (!isCurrentCompany) {
 			try {
-				company.wallet = null;
 				await axios
 					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
 						params: { username: company.username, isUser: false },

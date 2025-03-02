@@ -57,13 +57,13 @@ export const getOneUser = async (req, res) => {
 				},
 				...(include
 					? {
-						...Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+							...Object.fromEntries(
+								Object.entries(include).map(([key, value]) => [
+									key,
+									value === "true",
+								]),
+							),
+						}
 					: {}),
 			},
 		});
@@ -98,13 +98,13 @@ export const getCurrentUser = async (req, res) => {
 				},
 				...(include
 					? {
-						...Object.fromEntries(
-							Object.entries(include).map(([key, value]) => [
-								key,
-								value === "true",
-							]),
-						),
-					}
+							...Object.fromEntries(
+								Object.entries(include).map(([key, value]) => [
+									key,
+									value === "true",
+								]),
+							),
+						}
 					: {}),
 			},
 		});
@@ -154,8 +154,8 @@ export const suggestUsername = async (req, res) => {
 
 export const updateUser = async (req, res) => {
 	try {
-		const {...updateData } = req.body;
-		
+		const { ...updateData } = req.body;
+
 		const updatedUser = await prisma.user.update({
 			where: {
 				id: req.account.id,
@@ -163,7 +163,7 @@ export const updateUser = async (req, res) => {
 			data: updateData,
 		});
 		res.status(200).json({
-			user: (({  id, ...safe }) => safe)(updatedUser),
+			user: (({ id, ...safe }) => safe)(updatedUser),
 		});
 	} catch (error) {
 		console.error("Error updating user:", error);
@@ -227,7 +227,7 @@ const sanitizeData = (model, data) => {
 				jobTitle: data.jobTitle,
 				companyName: data.companyName,
 				startDate: new Date(data.startDate),
-				endDate: data.end_date ? new Date(data.endDate) : null,
+				endDate: data.endDate ? new Date(data.endDate) : null,
 				responsibilities: data.responsibilities,
 			};
 

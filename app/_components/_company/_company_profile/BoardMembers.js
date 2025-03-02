@@ -27,14 +27,14 @@ const BoardMembers = ({ members, onUpdate }) => {
 		setEditingIndex(null);
 		setTempValue("");
 		// Update the backend and parent state
-		onUpdate("board_members", updatedMembers);
+		onUpdate("boardMembers", updatedMembers);
 	};
 
 	const handleDelete = (index) => {
 		const updatedMembers = localMembers.filter((_, i) => i !== index);
 		setLocalMembers(updatedMembers);
 		// Update the backend and parent state
-		onUpdate("board_members", updatedMembers);
+		onUpdate("boardMembers", updatedMembers);
 	};
 
 	const handleAdd = () => {

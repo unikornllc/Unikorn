@@ -12,7 +12,7 @@ export const createProductInformation = async (req, res) => {
 				productInformation: true,
 			},
 		});
-		const product_information = await prisma.productInformation.create({
+		const productInformation = await prisma.productInformation.create({
 			data: {
 				product: req.body.product,
 				market: req.body.market,
@@ -23,7 +23,7 @@ export const createProductInformation = async (req, res) => {
 			},
 		});
 
-		res.status(200).json({ data: product_information });
+		res.status(200).json({ data: productInformation });
 	} catch (e) {
 		res.status(400).send("Failed to create");
 	}
@@ -31,7 +31,7 @@ export const createProductInformation = async (req, res) => {
 
 export const getAllProductInformation = async (req, res) => {
 	try {
-		const product_information = await prisma.company.findFirst({
+		const productInformation = await prisma.company.findFirst({
 			where: {
 				account: {
 					username: req.query.username,
@@ -41,7 +41,7 @@ export const getAllProductInformation = async (req, res) => {
 				productInformation: true,
 			},
 		});
-		res.status(200).json({ data: product_information });
+		res.status(200).json({ data: productInformation });
 	} catch (e) {
 		res.status(400).send("Failed to retrieve");
 	}
@@ -49,12 +49,12 @@ export const getAllProductInformation = async (req, res) => {
 
 export const getOneProductInformation = async (req, res) => {
 	try {
-		const product_information = await prisma.productInformation.findUnique({
+		const productInformation = await prisma.productInformation.findUnique({
 			where: {
 				id: req.body.productInformationId,
 			},
 		});
-		res.status(200).json({ data: product_information });
+		res.status(200).json({ data: productInformation });
 	} catch (e) {
 		res.status(400).send("Failed to retrieve");
 	}
@@ -62,7 +62,7 @@ export const getOneProductInformation = async (req, res) => {
 
 export const deleteOneProductInformation = async (req, res) => {
 	try {
-		const product_information = await prisma.productInformation.delete({
+		const productInformation = await prisma.productInformation.delete({
 			where: {
 				id: req.body.productInformationId,
 			},

@@ -70,7 +70,7 @@ const GeneralInfo = ({ company, onUpdate }) => {
 					{ label: "Description", name: "description", type: "text" },
 					{ label: "Website", name: "website", type: "text" },
 					{ label: "Founded", name: "founded", type: "date" },
-					{ label: "HQ Location", name: "hqlocation", type: "text" },
+					{ label: "HQ Location", name: "hqLocation", type: "text" },
 					{ label: "Hunter", name: "hunter", type: "checkbox" },
 					{ label: "Industry", name: "industry", type: "text" },
 					{

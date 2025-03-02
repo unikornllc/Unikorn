@@ -9,12 +9,12 @@ const allowedFields = [
 	"hunter",
 	"industry",
 	"type",
-	"board_members",
+	"boardMembers",
 	"advisors",
 	"activities",
 	"founders",
-	"key_employees",
-	"product_information",
+	"keyEmployees",
+	"productInformation",
 	"financials",
 ];
 
@@ -84,7 +84,7 @@ export const validateUpdateCompanyProfile = (req, res, next) => {
 			}
 			break;
 
-		case "board_members":
+		case "boardMembers":
 		case "advisors":
 			if (
 				!Array.isArray(fieldValue) ||
@@ -130,27 +130,25 @@ export const validateUpdateCompanyProfile = (req, res, next) => {
 				if (
 					typeof founder.name !== "string" ||
 					typeof founder.role !== "string" ||
-					typeof founder.crunch_base_link !== "string"
+					typeof founder.crunchBaseLink !== "string"
 				) {
 					return res.status(400).json({
 						error:
-							"Each founder must have name, role, and crunch_base_link as strings",
+							"Each founder must have name, role, and crunchBaseLink as strings",
 					});
 				}
-				// Validate that crunch_base_link is a valid URL
-				if (!isValidURL(founder.crunch_base_link)) {
+				// Validate that crunchBaseLink is a valid URL
+				if (!isValidURL(founder.crunchBaseLink)) {
 					return res.status(400).json({
-						error: `Invalid URL format for founder's crunch_base_link: ${founder.crunch_base_link}`,
+						error: `Invalid URL format for founder's crunchBaseLink: ${founder.crunchBaseLink}`,
 					});
 				}
 			}
 			break;
 
-		case "key_employees":
+		case "keyEmployees":
 			if (!Array.isArray(fieldValue)) {
-				return res
-					.status(400)
-					.json({ error: "key_employees must be an array" });
+				return res.status(400).json({ error: "keyEmployees must be an array" });
 			}
 			for (const employee of fieldValue) {
 				if (typeof employee !== "object") {
@@ -169,17 +167,17 @@ export const validateUpdateCompanyProfile = (req, res, next) => {
 			}
 			break;
 
-		case "product_information":
+		case "productInformation":
 			if (!Array.isArray(fieldValue)) {
 				return res
 					.status(400)
-					.json({ error: "product_information must be an array" });
+					.json({ error: "productInformation must be an array" });
 			}
 			for (const product of fieldValue) {
 				if (typeof product !== "object") {
 					return res
 						.status(400)
-						.json({ error: "Each product_information item must be an object" });
+						.json({ error: "Each productInformation item must be an object" });
 				}
 				if (
 					typeof product.product !== "string" ||
@@ -187,7 +185,7 @@ export const validateUpdateCompanyProfile = (req, res, next) => {
 				) {
 					return res.status(400).json({
 						error:
-							"Each product_information item must have product and market as strings",
+							"Each productInformation item must have product and market as strings",
 					});
 				}
 				if (

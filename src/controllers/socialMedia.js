@@ -67,7 +67,7 @@ export const getAllSocialMedia = async (req, res) => {
 			return res.status(400).json({ message: "User not found" });
 		}
 		res.status(200).json({
-			socialMedia: user.social_media.map(({ userId, ...rest }) => rest),
+			socialMedia: user.socialMedia.map(({ userId, ...rest }) => rest),
 		});
 	} catch (error) {
 		res.status(400).json({ message: "Error getting socialMedia" });

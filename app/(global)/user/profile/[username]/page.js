@@ -56,7 +56,7 @@ export default async function UserProfile({ params }) {
 					.then((response) => {
 						user.tier = response.data.tier;
 						if (user.tier == "Standard" || user.tier == "Holder") {
-							user.calendly_integration = null;
+							user.calendlyIntegration = null;
 						}
 					});
 			} catch (err) {
