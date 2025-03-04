@@ -841,7 +841,7 @@ export const cancelInvestmentOffer = async (req, res) => {
 export const cancelRaisingFunds = async (req, res) => {
 	const companyId = req.account.id;
 	const userRole = req.account.role;
-	const { id } = req.body.fundingData;
+	const id = req.body.raisingFundsId;
 	try {
 		if (userRole != "Company") {
 			return res.status(403).json({ message: "Unauthorized action" });

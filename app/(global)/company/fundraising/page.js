@@ -40,6 +40,13 @@ export default function CompanyDashboard() {
 	});
 	const [handlingItems, setHandlingItems] = useState({});
 
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [fundingDetails, setFundingDetails] = useState({
+		equityPercentage: "",
+		fundingAmount: "",
+		date: "",
+	});
+
 	const fetchDashboardData = async () => {
 		try {
 			// Fetch active fundraising
@@ -47,7 +54,7 @@ export default function CompanyDashboard() {
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
 				{ withCredentials: true },
 			);
-			
+
 			setActiveFundraising(activeResponse.data.activeFundraising);
 
 			// Fetch pending fundraising
@@ -88,14 +95,52 @@ export default function CompanyDashboard() {
 			}
 		} catch (error) {
 			console.error("Error fetching dashboard data:", error);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
 		setLoading(true);
 		fetchDashboardData();
-		setLoading(false);
 	}, []);
+
+	const handleRaiseFunds = async () => {
+		try {
+			const { equityPercentage, fundingAmount, date } = fundingDetails;
+			if (!equityPercentage || !fundingAmount || !date) {
+				alert("Please fill in all fields.");
+				return;
+			}
+			await axios
+				.post(
+					`${process.env.NEXT_PUBLIC_SERVER}/api/docusign`,
+					{
+						// name: companyData.name,
+						// email: companyData.email, // Ensure the company's email is available in the data
+						// company: companyData.name,
+						// username: companyData.username,
+						data: {
+							equity: parseFloat(equityPercentage),
+							price: parseInt(fundingAmount),
+							date,
+						},
+					},
+					{
+						withCredentials: true,
+					},
+				)
+				.then((res) => {
+					setIsModalOpen(false);
+					if (res.data.redirectUrl) {
+						window.open(res.data.redirectUrl, "_blank");
+					}
+				});
+		} catch (error) {
+			console.error("Error initiating fundraising:", error);
+			alert("An error occurred while starting the fundraising process.");
+		}
+	};
 
 	const handleActionClick = (item, type) => {
 		setSelectedOffer(item);
@@ -113,10 +158,13 @@ export default function CompanyDashboard() {
 		// if(actionType !== "cancelFundraising" && actionType !== "cancelPendingFundraising" ){
 
 		// }
-		setHandlingItems((prevState) => ({
-			...prevState,
-			[selectedOffer.id]: true,
-		}));
+		if (selectedOffer) {
+			setHandlingItems((prevState) => ({
+				...prevState,
+				[selectedOffer.id]: true,
+			}));
+		}
+
 		try {
 			if (actionType === "accept") {
 				await axios.post(
@@ -172,11 +220,13 @@ export default function CompanyDashboard() {
 				severity: "error",
 			});
 		} finally {
-			setHandlingItems((prevState) => {
-				const newState = { ...prevState };
-				delete newState[selectedOffer.id];
-				return newState;
-			});
+			if (selectedOffer) {
+				setHandlingItems((prevState) => {
+					const newState = { ...prevState };
+					delete newState[selectedOffer.id];
+					return newState;
+				});
+			}
 		}
 	};
 
@@ -271,7 +321,7 @@ export default function CompanyDashboard() {
 			)}
 
 			{/* Active Fundraising */}
-			{activeFundraising && (
+			{activeFundraising ? (
 				<Card sx={{ marginBottom: 4 }}>
 					<CardContent>
 						<Typography variant="h5" gutterBottom>
@@ -354,8 +404,82 @@ export default function CompanyDashboard() {
 						</Box>
 					</CardContent>
 				</Card>
+			) : (
+				<button
+					className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+					onClick={() => setIsModalOpen(true)}
+				>
+					Raise Funds
+				</button>
 			)}
+			{isModalOpen && (
+				<div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+					<div className="bg-white p-6 rounded shadow-md w-1/3">
+						<h2 className="text-xl font-bold mb-4">Raise Funds</h2>
+						<div className="mb-4">
+							<label className="block text-sm font-medium mb-1">
+								Equity Percentage (%)
+							</label>
+							<input
+								type="number"
+								className="w-full border px-3 py-2 rounded"
+								value={fundingDetails.equityPercentage}
+								onChange={(e) =>
+									setFundingDetails((prev) => ({
+										...prev,
+										equityPercentage: e.target.value,
+									}))
+								}
+							/>
+						</div>
+						<div className="mb-4">
+							<label className="block text-sm font-medium mb-1">
+								Funding Amount ($)
+							</label>
+							<input
+								type="number"
+								className="w-full border px-3 py-2 rounded"
+								value={fundingDetails.fundingAmount}
+								onChange={(e) =>
+									setFundingDetails((prev) => ({
+										...prev,
+										fundingAmount: e.target.value,
+									}))
+								}
+							/>
+						</div>
+						<div className="mb-4">
+							<label className="block text-sm font-medium mb-1">Date</label>
+							<input
+								type="date"
+								className="w-full border px-3 py-2 rounded"
+								value={fundingDetails.date}
+								onChange={(e) =>
+									setFundingDetails((prev) => ({
+										...prev,
+										date: e.target.value,
+									}))
+								}
+							/>
+						</div>
 
+						<div className="flex justify-end space-x-2">
+							<button
+								className="bg-gray-500 text-white px-4 py-2 rounded"
+								onClick={() => setIsModalOpen(false)}
+							>
+								Cancel
+							</button>
+							<button
+								className="bg-blue-500 text-white px-4 py-2 rounded"
+								onClick={handleRaiseFunds}
+							>
+								Confirm
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 			{/* Investment Offers */}
 			{activeFundraising && investmentOffers.length > 0 && (
 				<Box marginBottom={4}>
@@ -499,19 +623,20 @@ export default function CompanyDashboard() {
 								</TableRow>
 							</TableHead>
 							<TableBody>
-								{fundraisers.map((fundraiser) => (
-									<TableRow key={fundraiser.id}>
-										<TableCell>
-											{fundraiser.investorType === "User"
-												? fundraiser.investorUser?.name
-												: fundraiser.investorCompany?.name}
-										</TableCell>
-										<TableCell>{fundraiser.portions}</TableCell>
-										<TableCell>${fundraiser.pricePerPortion}</TableCell>
-										<TableCell>${fundraiser.fundingAmount}</TableCell>
-										<TableCell>{fundraiser.status}</TableCell>
-									</TableRow>
-								))}
+								{fundraisers &&
+									fundraisers.map((fundraiser) => (
+										<TableRow key={fundraiser.id}>
+											<TableCell>
+												{fundraiser.investorType === "User"
+													? fundraiser.investorUser?.name
+													: fundraiser.investorCompany?.name}
+											</TableCell>
+											<TableCell>{fundraiser.portions}</TableCell>
+											<TableCell>${fundraiser.pricePerPortion}</TableCell>
+											<TableCell>${fundraiser.fundingAmount}</TableCell>
+											<TableCell>{fundraiser.status}</TableCell>
+										</TableRow>
+									))}
 							</TableBody>
 						</Table>
 					)}
