@@ -10,7 +10,7 @@ export const getFollowing = async (req, res) => {
 				following: { account: true },
 			},
 			select: {
-				following: { select:{ account: { select: {username: true , role: true}}}},
+				following: { select: { account: { select: { username: true, role: true } } } },
 			}
 		});
 		if (account.following.length === 0) {
@@ -29,14 +29,14 @@ export const getFollowing = async (req, res) => {
 		account.following.forEach((follow) => {
 			if (follow.account.role === "User") {
 				following.users.push(follow.account.username);
-			} else{
+			} else {
 				following.companies.push(follow.account.username);
 			}
 		});
 
 		res
 			.status(200)
-			.json({...following});
+			.json({ ...following });
 	} catch (e) {
 		console.error(e);
 		res
@@ -55,7 +55,7 @@ export const getFollowers = async (req, res) => {
 				followedBy: { account: true },
 			},
 			select: {
-				followedBy :{ select:{ account: { select: {username: true , role: true}}}},
+				followedBy: { select: { account: { select: { username: true, role: true } } } },
 			}
 		});
 		if (account.followedBy.length === 0) {
@@ -74,14 +74,14 @@ export const getFollowers = async (req, res) => {
 		account.followedBy.forEach((follow) => {
 			if (follow.account.role === "User") {
 				followedBy.users.push(follow.account.username);
-			} else{
+			} else {
 				followedBy.companies.push(follow.account.username);
 			}
 		});
 
 		res
 			.status(200)
-			.json({...followedBy});
+			.json({ ...followedBy });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching followers" });
@@ -93,10 +93,10 @@ export const followUser = async (req, res) => {
 		const follow = await prisma.account.findUnique({
 			where: {
 				username: req.body.username,
-				},
-				select: { id: true, followedBy: true },
-			});
-		
+			},
+			select: { id: true, followedBy: true },
+		});
+
 		if (!follow) {
 			res.status(400).json({ message: "User or company not found" });
 		}
@@ -125,19 +125,23 @@ export const isFollowingUser = async (req, res) => {
 	try {
 		const follow = await prisma.company.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.query.username,
 				}
-				
+
 			},
 			select: {
-				followedBy: true,
-			},
+				account: {
+					select: {
+						followedBy: true,
+					}
+				}
+			}
 		});
 		if (!follow) {
 			res.status(400).json({ message: "User not found" });
 		}
-		const isFollowing = followedBy.some((entry) =>
+		const isFollowing = follow.account.followedBy.some((entry) =>
 			entry.followerId === req.account.id
 		);
 		isFollowing
@@ -152,10 +156,10 @@ export const isFollowingUser = async (req, res) => {
 export const unfollowUser = async (req, res) => {
 	try {
 		const unfollow = await prisma.account.findUnique({
-				where: { username: req.body.username },
-				select: { id: true, followedBy: true },
-			});
-	
+			where: { username: req.body.username },
+			select: { id: true, followedBy: true },
+		});
+
 		if (!unfollow) {
 			return res.status(402).json({ message: "User or company not found" });
 		}
@@ -188,10 +192,10 @@ export const isFollowingCompany = async (req, res) => {
 	try {
 		const company = await prisma.company.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.query.username,
 				}
-				
+
 			},
 			select: {
 				id: true,
@@ -217,10 +221,10 @@ export const followCompany = async (req, res) => {
 	try {
 		const company = await prisma.company.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.body.username,
 				}
-				
+
 			},
 			select: {
 				id: true,
@@ -243,7 +247,7 @@ export const unfollowCompany = async (req, res) => {
 	try {
 		const company = await prisma.company.findFirst({
 			where: {
-				account:{
+				account: {
 					username: req.body.username,
 				}
 			},

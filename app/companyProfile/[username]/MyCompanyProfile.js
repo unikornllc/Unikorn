@@ -50,10 +50,6 @@ const MyCompanyProfile = ({ company }) => {
 			const res = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/docusign`,
 				{
-					// name: companyData.name,
-					// email: companyData.email, // Ensure the company's email is available in the data
-					// company: companyData.name,
-					// username: companyData.username,
 					data: {
 						equity: parseFloat(equityPercentage),
 						price: parseInt(fundingAmount),
@@ -65,7 +61,6 @@ const MyCompanyProfile = ({ company }) => {
 				},
 			);
 
-			// Redirect the user to the DocuSign signing page
 			if (res.data.redirectUrl) {
 				window.open(res.data.redirectUrl, "_blank");
 			}
