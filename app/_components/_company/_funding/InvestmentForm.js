@@ -53,12 +53,12 @@ export function InvestmentForm({ mode, fundingData }) {
 	const fetchWallet = async () => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/getUserWallet`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getWallet`,
 				{
 					withCredentials: true,
 				},
 			);
-			setUser({ walletBalance: response.data });
+			setUser({ walletBalance: response.data.amount });
 		} catch (err) {
 			console.error("Error fetching wallet:", err);
 		}

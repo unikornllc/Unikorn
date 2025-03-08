@@ -254,7 +254,7 @@ export const cancelInvestment = async (req, res) => {
 				fundingAmount:
 					Math.abs(
 						fundraising.pricePerPortion * fundraiser.portions -
-							fundraiser.pricePerPortion * fundraiser.portions,
+						fundraiser.pricePerPortion * fundraiser.portions,
 					) + fundraising.fundingAmount,
 				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
 			};
@@ -694,8 +694,8 @@ export const acceptInvestmentOffer = async (req, res) => {
 						...(offer.investorType == "User"
 							? { investorUser: { connect: { id: offer.investorUserId } } }
 							: {
-									investorCompany: { connect: { id: offer.investorCompanyId } },
-								}),
+								investorCompany: { connect: { id: offer.investorCompanyId } },
+							}),
 					},
 				});
 			}
