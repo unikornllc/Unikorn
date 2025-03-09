@@ -16,26 +16,308 @@ export const getAllRaisingFunds = async (req, res) => {
 	}
 };
 
-export const getRaisingFundsById = async (req, res) => {
+export const getRaisingFundsStats = async (req, res) => {
 	try {
-		const { raisingFundsId } = req.query;
-		const raisingFunds = await prisma.raisingFunds.findUnique({
-			where: { raisingFundsId },
-			include: {
-				company: true,
-				fundraisers: true,
-				investmentOffers: true,
+		const totalCount = await prisma.raisingFunds.count({
+			where: { status: "Active" },
+		});
+
+		const industries = await prisma.company.findMany({
+			where: {
+				raisingFunds: {
+					some: {
+						status: "Active",
+					},
+				},
+			},
+			select: {
+				industry: true,
+			},
+			distinct: ["industry"],
+		});
+
+		const uniqueIndustries = industries.length;
+
+		const fundraisings = await prisma.raisingFunds.findMany({
+			where: { status: "Active" },
+			select: {
+				equityPercentage: true,
+				pricePerPortion: true,
+				totalPortions: true,
+				remainingPortions: true,
+				fundingAmount: true,
 			},
 		});
-		if (!raisingFunds) {
-			return res.status(400).json({ error: "Funding Round not found" });
+
+		let totalFunding = 0;
+		let totalEquity = 0;
+
+		fundraisings.forEach((fundraising) => {
+			const fundedPortions =
+				fundraising.totalPortions - fundraising.remainingPortions;
+			totalFunding += fundedPortions * fundraising.pricePerPortion;
+			totalEquity += fundraising.equityPercentage;
+			totalFunding -=
+				fundraising.totalPortions * fundraising.pricePerPortion -
+				fundraising.fundingAmount;
+		});
+
+		const averageEquity =
+			fundraisings.length > 0 ? totalEquity / fundraisings.length : 0;
+
+		res.status(200).json({
+			totalCount,
+			uniqueIndustries,
+			totalFunding,
+			averageEquity,
+		});
+	} catch (e) {
+		console.error("Error in getRaisingFundsStats:", e);
+		res.status(400).json({
+			message: "Failed to retrieve fundraising stats",
+			error: e.message,
+		});
+	}
+};
+export const getActiveRaisingFundsFiltered = async (req, res) => {
+	try {
+		const {
+			searchTerm,
+			minPrice,
+			maxPrice,
+			minEquity,
+			maxEquity,
+			minPortions,
+			industry,
+			sortBy,
+			sortOrder,
+			page = 1,
+			limit = 10,
+		} = req.query;
+
+		const where = {
+			status: "Active",
+		};
+
+		if (req.account.role === "Company") {
+			where.companyId = { not: req.account.id };
 		}
-		res.status(200).json(raisingFunds);
-	} catch (error) {
-		res.status(500).json({ error: error.message });
+
+		if (searchTerm) {
+			where.OR = [
+				{
+					company: {
+						name: {
+							contains: searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+				{
+					company: {
+						industry: {
+							contains: searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+			];
+		}
+
+		if (minPrice) {
+			where.pricePerPortion = {
+				...where.pricePerPortion,
+				gte: Number.parseFloat(minPrice),
+			};
+		}
+		if (maxPrice) {
+			where.pricePerPortion = {
+				...where.pricePerPortion,
+				lte: Number.parseFloat(maxPrice),
+			};
+		}
+
+		if (minPortions) {
+			where.remainingPortions = {
+				gte: Number.parseInt(minPortions),
+			};
+		}
+
+		if (industry && industry !== "all") {
+			where.company = {
+				...where.company,
+				industry: industry,
+			};
+		}
+
+		let orderBy = {};
+
+		switch (sortBy) {
+			case "date":
+				orderBy = { date: sortOrder || "desc" };
+				break;
+			case "price":
+				orderBy = { pricePerPortion: sortOrder || "asc" };
+				break;
+			case "equity":
+				orderBy = { equityPercentage: sortOrder || "desc" };
+				break;
+			case "progress":
+				orderBy = { date: "desc" };
+				break;
+			default:
+				orderBy = { date: "desc" };
+		}
+
+		const skip = (Number.parseInt(page) - 1) * Number.parseInt(limit);
+
+		const fundraisings = await prisma.raisingFunds.findMany({
+			where,
+			include: {
+				company: true,
+			},
+			orderBy,
+			skip,
+			take: Number.parseInt(limit),
+		});
+
+		const totalCount = await prisma.raisingFunds.count({ where });
+		if (!fundraisings || fundraisings.length === 0) {
+			return res.status(200).json({
+				fundraisings: [],
+				totalCount: 0,
+				page: Number.parseInt(page),
+				totalPages: 0,
+				message: "No active fundraising found matching your criteria",
+			});
+		}
+
+		const processedFundraisings = fundraisings.map((fundraising) => {
+			const fundedPortions =
+				fundraising.totalPortions - fundraising.remainingPortions;
+			const fundedPercentage = (
+				(fundedPortions / fundraising.totalPortions) *
+				100
+			).toFixed(1);
+			const remainingEquity = (
+				fundraising.remainingPortions *
+				(fundraising.equityPercentage / fundraising.totalPortions)
+			).toFixed(1);
+
+			const equityPerPortion =
+				fundraising.equityPercentage / fundraising.totalPortions;
+
+			return {
+				...fundraising,
+				remainingEquity,
+				fundedPortions,
+				fundedPercentage,
+				equityPerPortion,
+			};
+		});
+
+		let filteredResults = processedFundraisings;
+
+		if (minEquity) {
+			const minEquityValue = Number.parseFloat(minEquity) / 100;
+			filteredResults = filteredResults.filter(
+				(item) => item.equityPerPortion >= minEquityValue,
+			);
+		}
+
+		if (maxEquity) {
+			const maxEquityValue = Number.parseFloat(maxEquity) / 100;
+			filteredResults = filteredResults.filter(
+				(item) => item.equityPerPortion <= maxEquityValue,
+			);
+		}
+
+		if (sortBy === "progress") {
+			filteredResults.sort((a, b) => {
+				const progressA = Number.parseFloat(a.fundedPercentage);
+				const progressB = Number.parseFloat(b.fundedPercentage);
+				return sortOrder === "asc"
+					? progressA - progressB
+					: progressB - progressA;
+			});
+		}
+
+		res.status(200).json({
+			fundraisings: filteredResults,
+			totalCount,
+			page: Number.parseInt(page),
+			totalPages: Math.ceil(totalCount / Number.parseInt(limit)),
+		});
+	} catch (e) {
+		console.error("Error in getActiveRaisingFunds:", e);
+		res
+			.status(400)
+			.json({ message: "Failed to retrieve fundraisings", error: e.message });
 	}
 };
 
+export const getRaisingFundById = async (req, res) => {
+	try {
+		const { id } = req.query;
+		const fundraising = await prisma.raisingFunds.findUnique({
+			where: { id },
+			include: {
+				company: { include: { account: { select: { username: true } } } },
+				fundraisers: {
+					include: {
+						investorUser: {
+							select: {
+								id: true,
+								name: true,
+								account: { select: { username: true } },
+							},
+						},
+						investorCompany: {
+							select: {
+								id: true,
+								name: true,
+								account: { select: { username: true } },
+							},
+						},
+					},
+				},
+				investmentOffers: true,
+			},
+		});
+
+		if (!fundraising) {
+			return res.status(404).json({ message: "Fundraising not found" });
+		}
+
+		const fundedPortions =
+			fundraising.totalPortions - fundraising.remainingPortions;
+		const fundedPercentage = (
+			(fundedPortions / fundraising.totalPortions) *
+			100
+		).toFixed(1);
+		const remainingEquity = (
+			fundraising.remainingPortions *
+			(fundraising.equityPercentage / fundraising.totalPortions)
+		).toFixed(1);
+
+		const processedFundraising = {
+			...fundraising,
+			remainingEquity,
+			fundedPortions,
+			fundedPercentage,
+			equityPerPortion: (
+				fundraising.equityPercentage / fundraising.totalPortions
+			).toFixed(4),
+		};
+
+		res.status(200).json(processedFundraising);
+	} catch (e) {
+		console.error("Error in getRaisingFundById:", e);
+		res
+			.status(400)
+			.json({ message: "Failed to retrieve fundraising", error: e.message });
+	}
+};
 export const getActiveRaisingFunds = async (req, res) => {
 	try {
 		const fundraisings = await prisma.raisingFunds.findMany({
@@ -62,6 +344,7 @@ export const getActiveRaisingFunds = async (req, res) => {
 			fundraising.fundedPortions = fundedPortions;
 			fundraising.fundedPercentage = fundedPercentage;
 		});
+
 		res.status(200).json({ fundraisings });
 	} catch (e) {
 		res.status(400).json({ message: "Failed to retrieve" });
@@ -79,7 +362,7 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 			};
 		} else {
 			if (req.account.role != "Company") {
-				return res.status(401).json({ message: "Unauthorized action" });
+				return res.status(403).json({ message: "Unauthorized action" });
 			}
 			param = { id: req.account.id };
 		}
@@ -125,7 +408,7 @@ export const getCompanyActiveRaisingFund = async (req, res) => {
 export const getCompanyPendingRaisingFund = async (req, res) => {
 	try {
 		if (req.account.role != "Company") {
-			return res.status(401).json({ message: "Unauthorized action" });
+			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
 		const fundraising = await prisma.raisingFunds.findFirst({
@@ -156,7 +439,7 @@ export const getCompanyPendingRaisingFund = async (req, res) => {
 export const getCompanyPastRaisingFunds = async (req, res) => {
 	try {
 		if (req.account.role != "Company") {
-			return res.status(401).json({ message: "Unauthorized action" });
+			return res.status(403).json({ message: "Unauthorized action" });
 		}
 
 		const pastFundraisings = await prisma.raisingFunds.findMany({
@@ -183,13 +466,12 @@ export const getCompanyPastRaisingFunds = async (req, res) => {
 
 export const getRaisingFundFundraisers = async (req, res) => {
 	try {
-		console.log();
 		const { raisingFundsId } = req.query;
 		if (!raisingFundsId) {
 			return res.status(400).json({ message: "Missing required fields" });
 		}
 		if (req.account.role != "Company") {
-			return res.status(401).json({ message: "Unauthorized action" });
+			return res.status(403).json({ message: "Unauthorized action" });
 		}
 		const fundraisers = await prisma.fundraiser.findMany({
 			where: {
@@ -199,8 +481,12 @@ export const getRaisingFundFundraisers = async (req, res) => {
 				},
 			},
 			include: {
-				investorUser: true,
-				investorCompany: true,
+				investorUser: {
+					select: { name: true, account: { select: { username: true } } },
+				},
+				investorCompany: {
+					select: { name: true, account: { select: { username: true } } },
+				},
 			},
 		});
 
@@ -254,7 +540,7 @@ export const cancelInvestment = async (req, res) => {
 				fundingAmount:
 					Math.abs(
 						fundraising.pricePerPortion * fundraiser.portions -
-						fundraiser.pricePerPortion * fundraiser.portions,
+							fundraiser.pricePerPortion * fundraiser.portions,
 					) + fundraising.fundingAmount,
 				remainingPortions: fundraising.remainingPortions + fundraiser.portions,
 			};
@@ -303,6 +589,12 @@ export const investAtFixedPrice = async (req, res) => {
 			return res
 				.status(404)
 				.json({ message: "Fundraising campaign not found" });
+		}
+
+		if (fundraising.companyId == req.account.id) {
+			return res
+				.status(403)
+				.json({ message: "Cannot invest in your own campaign" });
 		}
 
 		if (fundraising.status != "Active") {
@@ -451,6 +743,11 @@ export const makeInvestmentOffer = async (req, res) => {
 				.json({ message: "Fundraising campaign not found" });
 		}
 
+		if (fundraising.companyId == req.account.id) {
+			return res
+				.status(403)
+				.json({ message: "Cannot invest in your own campaign" });
+		}
 		if (fundraising.status != "Active") {
 			return res
 				.status(400)
@@ -594,7 +891,7 @@ export const getMyInvestmentOffers = async (req, res) => {
 export const getFundingInvestmentOffers = async (req, res) => {
 	if (req.account.role != "Company") {
 		return res
-			.status(401)
+			.status(403)
 			.json({ message: "Only companies can view investment offers" });
 	}
 
@@ -622,7 +919,7 @@ export const getFundingInvestmentOffers = async (req, res) => {
 export const acceptInvestmentOffer = async (req, res) => {
 	if (req.account.role != "Company") {
 		return res
-			.status(401)
+			.status(403)
 			.json({ message: "Only companies can accept investment offers" });
 	}
 
@@ -694,8 +991,8 @@ export const acceptInvestmentOffer = async (req, res) => {
 						...(offer.investorType == "User"
 							? { investorUser: { connect: { id: offer.investorUserId } } }
 							: {
-								investorCompany: { connect: { id: offer.investorCompanyId } },
-							}),
+									investorCompany: { connect: { id: offer.investorCompanyId } },
+								}),
 					},
 				});
 			}
@@ -754,7 +1051,7 @@ export const acceptInvestmentOffer = async (req, res) => {
 export const rejectInvestmentOffer = async (req, res) => {
 	if (req.account.role != "Company") {
 		return res
-			.status(401)
+			.status(403)
 			.json({ message: "Only companies can view investment offers" });
 	}
 

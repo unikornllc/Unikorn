@@ -49,7 +49,6 @@ export default function CompanyDashboard() {
 
 	const fetchDashboardData = async () => {
 		try {
-			// Fetch active fundraising
 			const activeResponse = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
 				{ withCredentials: true },
@@ -57,20 +56,17 @@ export default function CompanyDashboard() {
 
 			setActiveFundraising(activeResponse.data.activeFundraising);
 
-			// Fetch pending fundraising
 			const pendingResponse = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/pending`,
 				{ withCredentials: true },
 			);
 			setPendingFundraising(pendingResponse.data.pendingFundraising);
 
-			// Fetch past fundraisings
 			const pastResponse = await axios.get(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/past`,
 				{ withCredentials: true },
 			);
 			setPastFundraisings(pastResponse.data.pastFundraisings);
-			// Fetch investment offers for active fundraising
 			if (activeResponse.data.activeFundraising) {
 				const offersResponse = await axios.get(
 					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/offers`,
@@ -78,7 +74,6 @@ export default function CompanyDashboard() {
 				);
 				setInvestmentOffers(offersResponse.data.offers);
 
-				// Fetch fundraisers for active fundraising
 				const fundraisersResponse = await axios.get(
 					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/fundraisers`,
 					{
@@ -240,6 +235,7 @@ export default function CompanyDashboard() {
 				`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/fundraisers`,
 				{ params: { raisingFundsId: fundraising.id }, withCredentials: true },
 			);
+			console.log("Fundraisers:", response.data.fundraisers);
 			setFundraisers(response.data.fundraisers);
 			setOpenFundraisersDialog(true);
 		} catch (error) {
@@ -270,7 +266,6 @@ export default function CompanyDashboard() {
 				Company Dashboard
 			</Typography>
 
-			{/* Pending Fundraising */}
 			{pendingFundraising && (
 				<Card sx={{ marginBottom: 4 }}>
 					<CardContent>
@@ -280,7 +275,6 @@ export default function CompanyDashboard() {
 						<Typography variant="body1" gutterBottom>
 							Please complete the contract to activate your fundraising.
 						</Typography>
-						{/* Display fundraising details */}
 						<Grid container spacing={4} alignItems="center">
 							<Grid item xs={12} md={6}>
 								<Typography variant="body1" gutterBottom>
@@ -320,17 +314,14 @@ export default function CompanyDashboard() {
 				</Card>
 			)}
 
-			{/* Active Fundraising */}
 			{activeFundraising ? (
 				<Card sx={{ marginBottom: 4 }}>
 					<CardContent>
 						<Typography variant="h5" gutterBottom>
 							Active Fundraising
 						</Typography>
-						{/* Display fundraising progress */}
 						<Grid container spacing={4} alignItems="center">
 							<Grid item xs={12} md={6}>
-								{/* Progress Circle */}
 								<Box position="relative" display="inline-flex">
 									<CircularProgress
 										variant="determinate"
@@ -480,7 +471,6 @@ export default function CompanyDashboard() {
 					</div>
 				</div>
 			)}
-			{/* Investment Offers */}
 			{activeFundraising && investmentOffers.length > 0 && (
 				<Box marginBottom={4}>
 					<Typography variant="h6" gutterBottom>
@@ -559,7 +549,6 @@ export default function CompanyDashboard() {
 				</Box>
 			)}
 
-			{/* Past Fundraisings */}
 			{pastFundraisings && pastFundraisings.length > 0 && (
 				<Box>
 					<Typography variant="h5" gutterBottom>
@@ -571,7 +560,6 @@ export default function CompanyDashboard() {
 								<Typography variant="h6" gutterBottom>
 									{fundraising.status} Fundraising
 								</Typography>
-								{/* Display fundraising details */}
 								<Typography variant="body1" gutterBottom>
 									<strong>Total Amount Required:</strong> $
 									{fundraising.fundingAmount}
@@ -600,7 +588,6 @@ export default function CompanyDashboard() {
 				</Box>
 			)}
 
-			{/* Fundraisers Dialog */}
 			<Dialog
 				open={openFundraisersDialog}
 				onClose={() => setOpenFundraisersDialog(false)}
@@ -609,13 +596,14 @@ export default function CompanyDashboard() {
 			>
 				<DialogTitle>Fundraisers</DialogTitle>
 				<DialogContent>
-					{fundraisers ? (
+					{!fundraisers ? (
 						<Typography>No fundraisers found.</Typography>
 					) : (
 						<Table>
 							<TableHead>
 								<TableRow>
-									<TableCell>Investor</TableCell>
+									<TableCell>Investor Name</TableCell>
+									<TableCell>Username</TableCell>
 									<TableCell>Portions</TableCell>
 									<TableCell>Price Per Portion</TableCell>
 									<TableCell>Total Investment</TableCell>
@@ -630,6 +618,11 @@ export default function CompanyDashboard() {
 												{fundraiser.investorType === "User"
 													? fundraiser.investorUser?.name
 													: fundraiser.investorCompany?.name}
+											</TableCell>
+											<TableCell>
+												{fundraiser.investorType === "User"
+													? fundraiser.investorUser?.account.username
+													: fundraiser.investorCompany?.account.username}
 											</TableCell>
 											<TableCell>{fundraiser.portions}</TableCell>
 											<TableCell>${fundraiser.pricePerPortion}</TableCell>
@@ -651,7 +644,6 @@ export default function CompanyDashboard() {
 				</DialogActions>
 			</Dialog>
 
-			{/* Confirmation Dialog */}
 			<Dialog
 				open={openConfirmDialog}
 				onClose={() => setOpenConfirmDialog(false)}
@@ -679,7 +671,6 @@ export default function CompanyDashboard() {
 				</DialogActions>
 			</Dialog>
 
-			{/* Snackbar for notifications */}
 			<Snackbar
 				open={snackbar.open}
 				autoHideDuration={6000}

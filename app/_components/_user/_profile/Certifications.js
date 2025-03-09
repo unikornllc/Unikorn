@@ -13,7 +13,6 @@ const Certifications = ({ username, certificationList, editable }) => {
 
 	const { updateItem } = useUpdateItem();
 
-
 	const [newCert, setNewCert] = useState({
 		title: "",
 		institution: "",
@@ -22,8 +21,8 @@ const Certifications = ({ username, certificationList, editable }) => {
 	});
 
 	const formatDateForInput = (dateString) => {
-		if (!dateString) return '';
-		return new Date(dateString).toISOString().split('T')[0];
+		if (!dateString) return "";
+		return new Date(dateString).toISOString().split("T")[0];
 	};
 
 	const handleEditClick = (cert) => {
@@ -76,12 +75,14 @@ const Certifications = ({ username, certificationList, editable }) => {
 	const updateCertification = async (certId) => {
 		try {
 			setLoading(true);
-			const updatedItem = await updateItem('certificationsCourses', certId, editData);
+			const updatedItem = await updateItem(
+				"certificationsCourses",
+				certId,
+				editData,
+			);
 
 			setCerts((prevCerts) =>
-				prevCerts.map((cert) =>
-					cert.id === certId ? updatedItem : cert
-				)
+				prevCerts.map((cert) => (cert.id === certId ? updatedItem : cert)),
 			);
 
 			setEditingCertId(null);
@@ -185,27 +186,35 @@ const Certifications = ({ username, certificationList, editable }) => {
 								<input
 									type="text"
 									value={editData.title}
-									onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+									onChange={(e) =>
+										setEditData({ ...editData, title: e.target.value })
+									}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 									placeholder="Title"
 								/>
 								<input
 									type="text"
 									value={editData.institution}
-									onChange={(e) => setEditData({ ...editData, institution: e.target.value })}
+									onChange={(e) =>
+										setEditData({ ...editData, institution: e.target.value })
+									}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 									placeholder="Institution"
 								/>
 								<input
 									type="date"
 									value={formatDateForInput(editData.completionDate)}
-									onChange={(e) => setEditData({ ...editData, completionDate: e.target.value })}
+									onChange={(e) =>
+										setEditData({ ...editData, completionDate: e.target.value })
+									}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 								/>
 								<input
 									type="text"
 									value={editData.focusArea}
-									onChange={(e) => setEditData({ ...editData, focusArea: e.target.value })}
+									onChange={(e) =>
+										setEditData({ ...editData, focusArea: e.target.value })
+									}
 									className="border border-gray-300 p-2 rounded-md w-full mb-2"
 									placeholder="Focus Area"
 								/>
@@ -243,7 +252,7 @@ const Certifications = ({ username, certificationList, editable }) => {
 									</h4>
 									<p className="text-textSecondary">{cert.institution}</p>
 									<p className="text-sm text-gray-500">
-										Completed on {" "}
+										Completed on{" "}
 										{new Date(cert.completionDate).toLocaleDateString()}
 									</p>
 									<p className="text-textSecondary mt-2">

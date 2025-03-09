@@ -155,7 +155,9 @@ import {
 	getCompanyPastRaisingFunds,
 	getRaisingFundFundraisers,
 	getAllRaisingFunds,
-	getRaisingFundsById,
+	getRaisingFundById,
+	getRaisingFundsStats,
+	getActiveRaisingFundsFiltered,
 } from "./controllers/raisingFunds.js";
 import {
 	depositWallet,
@@ -319,7 +321,9 @@ router.put("/calendly/settings", updateCalendlySettings);
 
 //raisingFunds and investments offers
 
-router.get("/raisingFunds/active", getActiveRaisingFunds);
+router.get("/raisingFunds/active", getActiveRaisingFundsFiltered);
+router.get("/raisingFunds/id/", getRaisingFundById);
+router.get("/raisingFunds/stats", getRaisingFundsStats);
 router.get("/raisingFunds/company/active", getCompanyActiveRaisingFund);
 router.get("/raisingFunds/company/pending", getCompanyPendingRaisingFund);
 router.get("/raisingFunds/company/past", getCompanyPastRaisingFunds);
@@ -337,8 +341,8 @@ router.post("/investments/cancel", cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
 router.post("/investments/offer/cancel", cancelInvestmentOffer);
 
-router.get("getAllRaisingFunds", getAllRaisingFunds);
-router.get("getRaisingFundsById", getRaisingFundsById);
+router.get("/getAllRaisingFunds", getAllRaisingFunds);
+// router.get("/getRaisingFundsById", getRaisingFundById);
 
 // Wallet and transactions
 

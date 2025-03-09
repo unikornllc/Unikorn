@@ -16,7 +16,6 @@ const Expertise = ({ username, expertiseList, editable }) => {
 
 	const { updateItem } = useUpdateItem();
 
-
 	const handleEditClick = (skill) => {
 		setEditingSkillId(skill.id);
 		setEditSkillData(skill.field);
@@ -51,12 +50,12 @@ const Expertise = ({ username, expertiseList, editable }) => {
 	const updateSkill = async (skillId) => {
 		try {
 			setLoading(true);
-			const updatedItem = await updateItem('expertise', skillId, { field: editSkillData });
+			const updatedItem = await updateItem("expertise", skillId, {
+				field: editSkillData,
+			});
 
 			setExpertise((prevSkills) =>
-				prevSkills.map((skill) =>
-					skill.id === skillId ? updatedItem : skill
-				)
+				prevSkills.map((skill) => (skill.id === skillId ? updatedItem : skill)),
 			);
 
 			setEditingSkillId(null);

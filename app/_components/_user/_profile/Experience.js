@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon, PencilIcon, } from "@heroicons/react/24/solid";
+import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
 import { Switch } from "@/app/_components/_ui/Switch";
@@ -37,15 +37,15 @@ const Experience = ({
 	const [editingCorporateId, setEditingCorporateId] = useState(null);
 	const [editingStartupId, setEditingStartupId] = useState(null);
 	const [editData, setEditData] = useState({
-		jobTitle: '',
-		companyName: '',
-		startDate: '',
-		endDate: '',
-		responsibilities: '',
+		jobTitle: "",
+		companyName: "",
+		startDate: "",
+		endDate: "",
+		responsibilities: "",
 		// for startup
-		startupName: '',
-		role: '',
-		description: '',
+		startupName: "",
+		role: "",
+		description: "",
 	});
 
 	const { updateItem } = useUpdateItem();
@@ -121,12 +121,14 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('corporateExperience', experienceId, experienceData);
+			const updatedItem = await updateItem(
+				"corporateExperience",
+				experienceId,
+				experienceData,
+			);
 
 			setCorporateExperiences((prevExps) =>
-				prevExps.map((exp) =>
-					exp.id === experienceId ? updatedItem : exp
-				)
+				prevExps.map((exp) => (exp.id === experienceId ? updatedItem : exp)),
 			);
 
 			setEditingCorporateId(null);
@@ -138,7 +140,6 @@ const Experience = ({
 			setLoading(false);
 		}
 	};
-
 
 	const addStartupExperience = async () => {
 		try {
@@ -201,12 +202,13 @@ const Experience = ({
 			// 	},
 			// 	{ withCredentials: true }
 			// );
-			const updatedItem = await updateItem('startupExperience', experienceId, editData
+			const updatedItem = await updateItem(
+				"startupExperience",
+				experienceId,
+				editData,
 			);
 			setStartupExperiences((prevExps) =>
-				prevExps.map((exp) =>
-					exp.id === experienceId ? updatedItem : exp
-				)
+				prevExps.map((exp) => (exp.id === experienceId ? updatedItem : exp)),
 			);
 
 			setEditingStartupId(null);
@@ -219,52 +221,51 @@ const Experience = ({
 	};
 
 	const handleEditClick = (exp, type) => {
-		if (type === 'corporate') {
+		if (type === "corporate") {
 			setEditingCorporateId(exp.id);
 			setEditData({
-				jobTitle: exp.jobTitle || '',
-				companyName: exp.companyName || '',
-				startDate: exp.startDate || '',
-				endDate: exp.endDate || '',
-				responsibilities: exp.responsibilities || '',
+				jobTitle: exp.jobTitle || "",
+				companyName: exp.companyName || "",
+				startDate: exp.startDate || "",
+				endDate: exp.endDate || "",
+				responsibilities: exp.responsibilities || "",
 			});
-			if(!exp.endDate){
+			if (!exp.endDate) {
 				setIsEditCurrentlyWorking(true);
 			}
 		} else {
 			setEditingStartupId(exp.id);
 			setEditData({
-				startupName: exp.startupName || '',
-				role: exp.role || '',
-				description: exp.description || '',
+				startupName: exp.startupName || "",
+				role: exp.role || "",
+				description: exp.description || "",
 			});
 		}
 	};
 	const handleCancelEdit = (type) => {
-		if (type === 'corporate') {
+		if (type === "corporate") {
 			setEditingCorporateId(null);
 			setEditData({
-				jobTitle: '',
-				companyName: '',
-				startDate: '',
-				endDate: '',
-				responsibilities: '',
+				jobTitle: "",
+				companyName: "",
+				startDate: "",
+				endDate: "",
+				responsibilities: "",
 			});
 			setIsEditCurrentlyWorking(false);
 		} else {
 			setEditingStartupId(null);
 			setEditData({
-				startupName: '',
-				role: '',
-				description: '',
+				startupName: "",
+				role: "",
+				description: "",
 			});
 		}
 	};
 
-
 	const formatDateForInput = (dateString) => {
-		if (!dateString) return '';
-		return new Date(dateString).toISOString().split('T')[0];
+		if (!dateString) return "";
+		return new Date(dateString).toISOString().split("T")[0];
 	};
 
 	// useEffect(() => {
@@ -320,19 +321,21 @@ const Experience = ({
 			</div>
 			<div className="mb-4 border-b border-gray-200">
 				<button
-					className={`mr-4 pb-2 ${activeTab === "Corporate"
-						? "border-b-2 border-primary text-primary font-semibold"
-						: "text-gray-600"
-						}`}
+					className={`mr-4 pb-2 ${
+						activeTab === "Corporate"
+							? "border-b-2 border-primary text-primary font-semibold"
+							: "text-gray-600"
+					}`}
 					onClick={() => setActiveTab("Corporate")}
 				>
 					Corporate
 				</button>
 				<button
-					className={`pb-2 ${activeTab === "Startup"
-						? "border-b-2 border-primary text-primary font-semibold"
-						: "text-gray-600"
-						}`}
+					className={`pb-2 ${
+						activeTab === "Startup"
+							? "border-b-2 border-primary text-primary font-semibold"
+							: "text-gray-600"
+					}`}
 					onClick={() => setActiveTab("Startup")}
 				>
 					Startup
@@ -376,7 +379,7 @@ const Experience = ({
 											if (checked) {
 												setNewCorporateExp({
 													...newCorporateExp,
-													endDate: '',
+													endDate: "",
 												});
 											}
 										}}
@@ -412,7 +415,6 @@ const Experience = ({
 										disabled={isCurrentlyWorking}
 									/>
 								</div>
-
 							</div>
 							<textarea
 								value={newCorporateExp.responsibilities}
@@ -453,113 +455,141 @@ const Experience = ({
 							</div>
 						</div>
 					)}
-					{corporateExperiences && corporateExperiences.map((exp, index) => (
-						<div key={exp.id || `exp-${index}`} className="mb-6">
-							{editingCorporateId === exp.id ? (
-								<div className="border p-4 rounded-lg">
-									<input
-										type="text"
-										value={editData.jobTitle || ''}
-										onChange={(e) => setEditData({ ...editData, jobTitle: e.target.value })}
-										className="border border-gray-300 p-2 rounded-md w-full mb-2"
-										placeholder="Job Title"
-									/>
-									<input
-										type="text"
-										value={editData.companyName}
-										onChange={(e) => setEditData({ ...editData, companyName: e.target.value })}
-										className="border border-gray-300 p-2 rounded-md w-full mb-2"
-										placeholder="Company Name"
-									/>
-									<div className="flex flex-col space-y-2 mb-2">
-										<div className="flex items-center space-x-2">
-											<Switch
-												checked={isEditCurrentlyWorking}
-												onCheckedChange={(checked) => {
-													setIsEditCurrentlyWorking(checked);
-													if (checked) {
+					{corporateExperiences &&
+						corporateExperiences.map((exp, index) => (
+							<div key={exp.id || `exp-${index}`} className="mb-6">
+								{editingCorporateId === exp.id ? (
+									<div className="border p-4 rounded-lg">
+										<input
+											type="text"
+											value={editData.jobTitle || ""}
+											onChange={(e) =>
+												setEditData({ ...editData, jobTitle: e.target.value })
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Job Title"
+										/>
+										<input
+											type="text"
+											value={editData.companyName}
+											onChange={(e) =>
+												setEditData({
+													...editData,
+													companyName: e.target.value,
+												})
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Company Name"
+										/>
+										<div className="flex flex-col space-y-2 mb-2">
+											<div className="flex items-center space-x-2">
+												<Switch
+													checked={isEditCurrentlyWorking}
+													onCheckedChange={(checked) => {
+														setIsEditCurrentlyWorking(checked);
+														if (checked) {
+															setEditData({
+																...editData,
+																endDate: "",
+															});
+														}
+													}}
+												/>
+												<label className="text-sm text-gray-600">
+													I am currently working here
+												</label>
+											</div>
+											<div className="flex space-x-2">
+												<input
+													type="date"
+													value={formatDateForInput(editData.startDate) || ""}
+													onChange={(e) =>
 														setEditData({
 															...editData,
-															endDate: '',
-														});
+															startDate: e.target.value,
+														})
 													}
-												}}
-											/>
-											<label className="text-sm text-gray-600">
-												I am currently working here
-											</label>
+													className="border border-gray-300 p-2 rounded-md w-1/2"
+												/>
+												<input
+													type="date"
+													value={formatDateForInput(editData.endDate) || ""}
+													onChange={(e) =>
+														setEditData({
+															...editData,
+															endDate: e.target.value,
+														})
+													}
+													className="border border-gray-300 p-2 rounded-md w-1/2"
+													disabled={isEditCurrentlyWorking}
+												/>
+											</div>
 										</div>
-										<div className="flex space-x-2">
-											<input
-												type="date"
-												value={formatDateForInput(editData.startDate) || ''}
-												onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
-												className="border border-gray-300 p-2 rounded-md w-1/2"
-											/>
-											<input
-												type="date"
-												value={formatDateForInput(editData.endDate) || ''}
-												onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
-												className="border border-gray-300 p-2 rounded-md w-1/2"
-												disabled={isEditCurrentlyWorking}
-											/>
-										</div>
-
-									</div>
-									<textarea
-										value={editData.responsibilities}
-										onChange={(e) => setEditData({ ...editData, responsibilities: e.target.value })}
-										className="border border-gray-300 p-2 rounded-md w-full mb-2"
-										rows={4}
-									/>
-									<div className="flex justify-between items-center">
-										<DeleteButton
-											onDelete={() => removeCorporateExperience(exp.id)}
-											itemType="Corporate Experience"
-											loading={loading}
-											size="small"
-											className="ml-2"
+										<textarea
+											value={editData.responsibilities}
+											onChange={(e) =>
+												setEditData({
+													...editData,
+													responsibilities: e.target.value,
+												})
+											}
+											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											rows={4}
 										/>
-										<div className="flex space-x-2">
-											<button
-												className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-												onClick={() => setEditingCorporateId(null)}
-											>
-												Cancel
-											</button>
-											<button
-												className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
-												onClick={() => updateCorporateExperience(exp.id)}
-												disabled={loading}
-											>
-												Save
-											</button>
+										<div className="flex justify-between items-center">
+											<DeleteButton
+												onDelete={() => removeCorporateExperience(exp.id)}
+												itemType="Corporate Experience"
+												loading={loading}
+												size="small"
+												className="ml-2"
+											/>
+											<div className="flex space-x-2">
+												<button
+													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+													onClick={() => setEditingCorporateId(null)}
+												>
+													Cancel
+												</button>
+												<button
+													className="px-3 py-1 bg-primary text-white rounded hover:bg-secondary"
+													onClick={() => updateCorporateExperience(exp.id)}
+													disabled={loading}
+												>
+													Save
+												</button>
+											</div>
 										</div>
 									</div>
-								</div>
-							) : (
-								<div className="flex justify-between items-start">
-									<div>
-										<h4 className="text-lg font-semibold text-textPrimary">{exp.jobTitle}</h4>
-										<p className="text-textSecondary">{exp.companyName}</p>
-										<p className="text-sm text-gray-500">
-											{new Date(exp.startDate).toLocaleDateString()} - {" "}
-											{exp.endDate ? new Date(exp.endDate).toLocaleDateString() : "Present"}
-										</p>
-										<p className="text-textSecondary mt-2">{exp.responsibilities}</p>
+								) : (
+									<div className="flex justify-between items-start">
+										<div>
+											<h4 className="text-lg font-semibold text-textPrimary">
+												{exp.jobTitle}
+											</h4>
+											<p className="text-textSecondary">{exp.companyName}</p>
+											<p className="text-sm text-gray-500">
+												{new Date(exp.startDate).toLocaleDateString()} -{" "}
+												{exp.endDate
+													? new Date(exp.endDate).toLocaleDateString()
+													: "Present"}
+											</p>
+											<p className="text-textSecondary mt-2">
+												{exp.responsibilities}
+											</p>
+										</div>
+										{editable && (
+											<button
+												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+												onClick={() => handleEditClick(exp, "corporate")}
+											>
+												<PencilIcon className="w-5 h-5 text-gray-600" />
+											</button>
+										)}
 									</div>
-									{editable && (
-										<button
-											className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-											onClick={() => handleEditClick(exp, 'corporate')}
-										>
-											<PencilIcon className="w-5 h-5 text-gray-600" />
-										</button>
-									)}
-								</div>
-							)}
-						</div>
-					))}
+								)}
+							</div>
+						))}
 				</div>
 			)}
 			{activeTab === "Startup" && (
@@ -645,7 +675,10 @@ const Experience = ({
 											type="text"
 											value={editData.startupName}
 											onChange={(e) =>
-												setEditData({ ...editData, startupName: e.target.value })
+												setEditData({
+													...editData,
+													startupName: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Startup Name"
@@ -653,7 +686,10 @@ const Experience = ({
 										<textarea
 											value={editData.description}
 											onChange={(e) =>
-												setEditData({ ...editData, description: e.target.value })
+												setEditData({
+													...editData,
+													description: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Description"
@@ -691,12 +727,14 @@ const Experience = ({
 												{exp.role}
 											</h4>
 											<p className="text-textSecondary">{exp.startupName}</p>
-											<p className="text-textSecondary mt-2">{exp.description}</p>
+											<p className="text-textSecondary mt-2">
+												{exp.description}
+											</p>
 										</div>
 										{editable && (
 											<button
 												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-												onClick={() => handleEditClick(exp, 'startup')}
+												onClick={() => handleEditClick(exp, "startup")}
 											>
 												<PencilIcon className="w-5 h-5 text-gray-600" />
 											</button>

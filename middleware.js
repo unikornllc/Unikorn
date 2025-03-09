@@ -4,22 +4,35 @@ import { jwtVerify } from "jose";
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const routeRules = {
-	authRoutes: ["/", "/signin", "/signup/company", "/signup/user", "/verifyAccount", "/checkEmail"],
+	authRoutes: [
+		"/",
+		"/signin",
+		"/signup/company",
+		"/signup/user",
+		"/verifyAccount",
+		"/checkEmail",
+	],
 	protectedUserRoutes: ["/user/home", "/user/profile", "/myInvestments"],
-	protectedCompanyRoutes: ["/company/home", "/company/profile", "/company/fundraising"],
+	protectedCompanyRoutes: [
+		"/company/home",
+		"/company/profile",
+		"/company/fundraising",
+	],
 	sharedRoutes: [
 		"/investments",
+		"/companies",
 		"/reset-password",
 		"/password-reset-request",
 		"/userChat",
 		"/text",
-		"/external-redirect"
+		"/external-redirect",
 	],
 	dynamicRoutes: [
 		"/user/profile/",
 		"/company/profile/",
 		"/companyProfile/",
 		"/userProfile/",
+		"/companies/",
 	],
 };
 
@@ -34,7 +47,7 @@ function withRoleResponse(response, role) {
 export async function middleware(req) {
 	const token = req.cookies.get("BSID")?.value;
 	const pathname = req.nextUrl.pathname;
-	
+
 	if (
 		pathname.startsWith("/_next/") ||
 		pathname.startsWith("/static/") ||
@@ -80,7 +93,7 @@ export async function middleware(req) {
 		}
 
 		// return NextResponse.rewrite(new URL("/not-found", req.url));
-		return withRoleResponse(NextResponse.next(), role)
+		return withRoleResponse(NextResponse.next(), role);
 	} catch (error) {
 		return NextResponse.redirect(new URL("/signin", req.url));
 	}

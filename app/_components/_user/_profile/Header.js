@@ -63,10 +63,13 @@ const Header = ({ user, editable }) => {
 	const deleteProfilePicture = async (fileId) => {
 		try {
 			if (userFile) {
-				await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`, {
-					params: { username, fileName: "profile_picture" },
-					withCredentials: true,
-				});
+				await axios.delete(
+					`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`,
+					{
+						params: { username, fileName: "profile_picture" },
+						withCredentials: true,
+					},
+				);
 				window.location.reload();
 			}
 		} catch (error) {
@@ -196,10 +199,11 @@ const Header = ({ user, editable }) => {
 			</div>
 			{editable && (
 				<p
-					className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-lg transition duration-300 ${user.tier === "Standard"
-						? "bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100"
-						: "bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-white"
-						}`}
+					className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 rounded-full px-3 py-1 text-sm font-medium shadow-lg transition duration-300 ${
+						user.tier === "Standard"
+							? "bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100"
+							: "bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-white"
+					}`}
 				>
 					{user.tier}
 				</p>
