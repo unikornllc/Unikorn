@@ -4,7 +4,6 @@ import axios from "axios";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
 import { useUpdateItem } from "@/app/_components/_hooks/useUpdateItem";
 
-
 const Education = ({ username, educationList, editable }) => {
 	const [educations, setEducations] = useState(educationList);
 	const [addingEducation, setAddingEducation] = useState(false);
@@ -26,7 +25,6 @@ const Education = ({ username, educationList, editable }) => {
 	});
 
 	const { updateItem } = useUpdateItem();
-
 
 	const handleEditClick = (edu) => {
 		setEditingEducationId(edu.id);
@@ -66,12 +64,10 @@ const Education = ({ username, educationList, editable }) => {
 		try {
 			setLoading(true);
 
-			const updatedItem = await updateItem('education', educationId, editData);
+			const updatedItem = await updateItem("education", educationId, editData);
 
 			setEducations((prevEdus) =>
-				prevEdus.map((edu) =>
-					edu.id === educationId ? updatedItem : edu
-				)
+				prevEdus.map((edu) => (edu.id === educationId ? updatedItem : edu)),
 			);
 
 			setEditingEducationId(null);
@@ -237,7 +233,6 @@ const Education = ({ username, educationList, editable }) => {
 						)}
 					</div>
 				))}
-
 		</div>
 	);
 };

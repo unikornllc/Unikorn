@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Header from "@/app/_components/_user/_user_profile/Header";
-import About from "@/app/_components/_user/_user_profile/About";
-import Experience from "@/app/_components/_user/_user_profile/Experience";
-import Education from "@/app/_components/_user/_user_profile/Education";
-import Expertise from "@/app/_components/_user/_user_profile/Expertise";
-import Certifications from "@/app/_components/_user/_user_profile/Certifications";
-import Sidebar from "@/app/_components/_user/_user_profile/Sidebar";
-import Files from "@/app/_components/_user/_user_profile/Files";
+import Header from "@/app/_components/_user/_profile/Header";
+import About from "@/app/_components/_user/_profile/About";
+import Experience from "@/app/_components/_user/_profile/Experience";
+import Education from "@/app/_components/_user/_profile/Education";
+import Expertise from "@/app/_components/_user/_profile/Expertise";
+import Certifications from "@/app/_components/_user/_profile/Certifications";
+import Sidebar from "@/app/_components/_user/_profile/Sidebar";
+import Files from "@/app/_components/_user/_profile/Files";
 import axios from "axios";
 import CalendlySchedule from "@/app/_components/_shared/_calendly/CalendlySchedule";
 
@@ -126,7 +126,9 @@ export default function EditableUserProfile({ user, editable = false }) {
 							<h3 className="text-2xl font-semibold text-textPrimary mb-4">
 								User's Schedules
 							</h3>
-							<CalendlySchedule username={user.account.username}></CalendlySchedule>
+							<CalendlySchedule
+								username={user.account.username}
+							></CalendlySchedule>
 						</div>
 					)}
 					<About
@@ -140,8 +142,14 @@ export default function EditableUserProfile({ user, editable = false }) {
 						corporateExperienceList={user.corporateExperience}
 						startupExperienceList={user.startupExperience}
 					/>
-					<Education username={user.account.username} educationList={user.education} />
-					<Expertise username={user.account.username} expertiseList={user.expertise} />
+					<Education
+						username={user.account.username}
+						educationList={user.education}
+					/>
+					<Expertise
+						username={user.account.username}
+						expertiseList={user.expertise}
+					/>
 					<Certifications
 						username={user.account.username}
 						certificationList={user.certificationsCourses}

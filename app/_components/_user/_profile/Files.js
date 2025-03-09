@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { set } from "react-hook-form";
+import { useToast } from "@/app/_components/_hooks/useToast";
 
 const Files = ({ username, editable }) => {
 	const [userFiles, setUserFiles] = useState([]);
 	const [addingFile, setAddingFile] = useState(false);
 	const [selectedFile, setSelectedFile] = useState(null);
 	const [loading, setLoading] = useState(false);
+
+	const { toast } = useToast();
 
 	const uploadFile = async (e) => {
 		e.preventDefault();

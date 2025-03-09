@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
-import { set } from "react-hook-form";
+
+import { useToast } from "@/app/_components/_hooks/useToast";
 
 const About = ({ username, aboutList, editable }) => {
 	const [about, setAbout] = useState(aboutList);
 	const [editing, setEditing] = useState(false);
 	const [loading, setLoading] = useState(false);
-
+	const maxCharacters = 600;
+	const { toast } = useToast();
 	const handleSave = async () => {
 		try {
 			setLoading(true);
@@ -18,7 +20,18 @@ const About = ({ username, aboutList, editable }) => {
 					withCredentials: true,
 				},
 			);
+			toast({
+				title: "Success",
+				description: `Description updated successfully`,
+				variant: "success",
+			});
 		} catch (error) {
+			toast({
+				title: "Failed",
+				description:
+					error.response?.data?.message || "An error occurred while updating",
+				variant: "destructive",
+			});
 			console.error("Error updating Description:", error);
 		} finally {
 			setLoading(false);
@@ -44,11 +57,17 @@ const About = ({ username, aboutList, editable }) => {
 					<textarea
 						value={about.description}
 						onChange={(e) =>
-							setAbout({ ...about, description: e.target.value })
+							setAbout({
+								...about,
+								description: e.target.value.slice(0, maxCharacters),
+							})
 						}
 						rows="5"
 						className="w-full border border-gray-300 p-2 rounded-md"
 					></textarea>
+					<p className="text-sm text-gray-500 mt-1">
+						{about.description.length}/{maxCharacters} characters
+					</p>
 					<div className="mt-4 flex">
 						<button
 							className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary mr-2"

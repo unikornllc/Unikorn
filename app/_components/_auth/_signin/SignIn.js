@@ -15,7 +15,12 @@ import {
 	CardTitle,
 	CardFooter,
 } from "../../_ui/Card";
-import { Alert, AlertDescription, AlertTitle, AlertCircle } from "../../_ui/Alert";
+import {
+	Alert,
+	AlertDescription,
+	AlertTitle,
+	AlertCircle,
+} from "../../_ui/Alert";
 import { Separator } from "../../_ui/Separator";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -80,7 +85,6 @@ export default function SignIn() {
 						<CardContent className="space-y-4">
 							{signUpSuccess && (
 								<Alert className="bg-green-50 text-green-700 border-green-500">
-									<AlertCircle className="h-4 w-4" />
 									<AlertTitle>Success</AlertTitle>
 									<AlertDescription>
 										Sign in successful! Redirecting...
@@ -89,7 +93,6 @@ export default function SignIn() {
 							)}
 							{signInError && (
 								<Alert variant="destructive">
-									<AlertCircle className="h-4 w-4" />
 									<AlertTitle>Login Failed</AlertTitle>
 									<AlertDescription>{signInError}</AlertDescription>
 								</Alert>

@@ -39,7 +39,7 @@ const Sidebar = ({
 	const [editingLanguageId, setEditingLanguageId] = useState(null);
 	const [editLanguageData, setEditLanguageData] = useState({
 		language: "",
-		proficiency: "Beginner"
+		proficiency: "Beginner",
 	});
 	const [editingInterestId, setEditingInterestId] = useState(null);
 	const [editInterestData, setEditInterestData] = useState("");
@@ -47,7 +47,7 @@ const Sidebar = ({
 	const [editingSocialId, setEditingSocialId] = useState(null);
 	const [editSocialData, setEditSocialData] = useState({
 		platform: "LinkedIn",
-		url: ""
+		url: "",
 	});
 
 	const [loading, setLoading] = useState({
@@ -57,8 +57,6 @@ const Sidebar = ({
 	});
 
 	const { updateItem } = useUpdateItem();
-
-
 
 	const addLanguage = async () => {
 		try {
@@ -104,21 +102,22 @@ const Sidebar = ({
 		setEditingLanguageId(lang.id);
 		setEditLanguageData({
 			language: lang.language || "",
-			proficiency: lang.proficiency || "Beginner"
+			proficiency: lang.proficiency || "Beginner",
 		});
 	};
-
 
 	const updateLanguage = async (languageId) => {
 		try {
 			setLoading({ ...loading, language: true });
 
-			const updatedItem = await updateItem('language', languageId, editLanguageData);
+			const updatedItem = await updateItem(
+				"language",
+				languageId,
+				editLanguageData,
+			);
 
 			setUserLanguages((prevLangs) =>
-				prevLangs.map((lang) =>
-					lang.id === languageId ? updatedItem : lang
-				)
+				prevLangs.map((lang) => (lang.id === languageId ? updatedItem : lang)),
 			);
 
 			setEditingLanguageId(null);
@@ -179,12 +178,14 @@ const Sidebar = ({
 		try {
 			setLoading({ ...loading, interest: true });
 			console.log(editInterestData);
-			const updatedItem = await updateItem('interest', interestId, { name: editInterestData });
+			const updatedItem = await updateItem("interest", interestId, {
+				name: editInterestData,
+			});
 
 			setUserInterests((prevInterests) =>
 				prevInterests.map((interest) =>
-					interest.id === interestId ? updatedItem : interest
-				)
+					interest.id === interestId ? updatedItem : interest,
+				),
 			);
 
 			setEditingInterestId(null);
@@ -239,19 +240,21 @@ const Sidebar = ({
 		setEditingSocialId(social.id);
 		setEditSocialData({
 			platform: social.platform || "LinkedIn",
-			url: social.url || ""
+			url: social.url || "",
 		});
 	};
 
 	const updateSocialLink = async (socialId) => {
 		try {
 			setLoading({ ...loading, socialMedia: true });
-			const updatedItem = await updateItem('socialMedia', socialId, editSocialData);
+			const updatedItem = await updateItem(
+				"socialMedia",
+				socialId,
+				editSocialData,
+			);
 
 			setUserSocialLinks((prevLinks) =>
-				prevLinks.map((link) =>
-					link.id === socialId ? updatedItem : link
-				)
+				prevLinks.map((link) => (link.id === socialId ? updatedItem : link)),
 			);
 
 			setEditingSocialId(null);
@@ -356,7 +359,10 @@ const Sidebar = ({
 											type="text"
 											value={editLanguageData.language}
 											onChange={(e) =>
-												setEditLanguageData({ ...editLanguageData, language: e.target.value })
+												setEditLanguageData({
+													...editLanguageData,
+													language: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Language"
@@ -364,7 +370,10 @@ const Sidebar = ({
 										<select
 											value={editLanguageData.proficiency}
 											onChange={(e) =>
-												setEditLanguageData({ ...editLanguageData, proficiency: e.target.value })
+												setEditLanguageData({
+													...editLanguageData,
+													proficiency: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 										>
@@ -385,7 +394,10 @@ const Sidebar = ({
 													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
 													onClick={() => {
 														setEditingLanguageId(null);
-														setEditLanguageData({ language: "", proficiency: "Beginner" });
+														setEditLanguageData({
+															language: "",
+															proficiency: "Beginner",
+														});
 													}}
 													disabled={loading.language}
 												>
@@ -523,7 +535,9 @@ const Sidebar = ({
 
 			<div className="bg-white p-6 rounded-lg shadow">
 				<div className="flex justify-between items-center mb-4">
-					<h3 className="text-xl font-semibold text-textPrimary">Social Media</h3>
+					<h3 className="text-xl font-semibold text-textPrimary">
+						Social Media
+					</h3>
 					{editable && (
 						<button
 							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
@@ -588,7 +602,10 @@ const Sidebar = ({
 										<select
 											value={editSocialData.platform}
 											onChange={(e) =>
-												setEditSocialData({ ...editSocialData, platform: e.target.value })
+												setEditSocialData({
+													...editSocialData,
+													platform: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 										>
@@ -602,7 +619,10 @@ const Sidebar = ({
 											type="url"
 											value={editSocialData.url}
 											onChange={(e) =>
-												setEditSocialData({ ...editSocialData, url: e.target.value })
+												setEditSocialData({
+													...editSocialData,
+													url: e.target.value,
+												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Profile URL"
@@ -620,7 +640,10 @@ const Sidebar = ({
 													className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
 													onClick={() => {
 														setEditingSocialId(null);
-														setEditSocialData({ platform: "LinkedIn", url: "" });
+														setEditSocialData({
+															platform: "LinkedIn",
+															url: "",
+														});
 													}}
 													disabled={loading.socialMedia}
 												>
