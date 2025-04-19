@@ -10,8 +10,10 @@ export const getFollowing = async (req, res) => {
 				following: { account: true },
 			},
 			select: {
-				following: { select: { account: { select: { username: true, role: true } } } },
-			}
+				following: {
+					select: { account: { select: { username: true, role: true } } },
+				},
+			},
 		});
 		if (account.following.length === 0) {
 			return res.status(200).json({ users: [], companies: [] });
@@ -34,9 +36,7 @@ export const getFollowing = async (req, res) => {
 			}
 		});
 
-		res
-			.status(200)
-			.json({ ...following });
+		res.status(200).json({ ...following });
 	} catch (e) {
 		console.error(e);
 		res
@@ -55,8 +55,10 @@ export const getFollowers = async (req, res) => {
 				followedBy: { account: true },
 			},
 			select: {
-				followedBy: { select: { account: { select: { username: true, role: true } } } },
-			}
+				followedBy: {
+					select: { account: { select: { username: true, role: true } } },
+				},
+			},
 		});
 		if (account.followedBy.length === 0) {
 			return res.status(200).json({ users: [], companies: [] });
@@ -79,9 +81,7 @@ export const getFollowers = async (req, res) => {
 			}
 		});
 
-		res
-			.status(200)
-			.json({ ...followedBy });
+		res.status(200).json({ ...followedBy });
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching followers" });
@@ -100,8 +100,8 @@ export const followUser = async (req, res) => {
 		if (!follow) {
 			res.status(400).json({ message: "User or company not found" });
 		}
-		const isAlreadyFollowing = follow.followedBy.some((entry) =>
-			entry.followerId === req.account.id
+		const isAlreadyFollowing = follow.followedBy.some(
+			(entry) => entry.followerId === req.account.id,
 		);
 		if (isAlreadyFollowing) {
 			res.status(400).json({ message: "User already followed" });
@@ -127,22 +127,21 @@ export const isFollowingUser = async (req, res) => {
 			where: {
 				account: {
 					username: req.query.username,
-				}
-
+				},
 			},
 			select: {
 				account: {
 					select: {
 						followedBy: true,
-					}
-				}
-			}
+					},
+				},
+			},
 		});
 		if (!follow) {
 			res.status(400).json({ message: "User not found" });
 		}
-		const isFollowing = follow.account.followedBy.some((entry) =>
-			entry.followerId === req.account.id
+		const isFollowing = follow.account.followedBy.some(
+			(entry) => entry.followerId === req.account.id,
 		);
 		isFollowing
 			? res.status(200).json({ isFollowing: true })
@@ -163,8 +162,8 @@ export const unfollowUser = async (req, res) => {
 		if (!unfollow) {
 			return res.status(402).json({ message: "User or company not found" });
 		}
-		const isFollowing = unfollow.followedBy.some((entry) =>
-			entry.followerId === req.account.id
+		const isFollowing = unfollow.followedBy.some(
+			(entry) => entry.followerId === req.account.id,
 		);
 
 		if (!isFollowing) {
@@ -187,15 +186,13 @@ export const unfollowUser = async (req, res) => {
 	}
 };
 
-
 export const isFollowingCompany = async (req, res) => {
 	try {
 		const company = await prisma.company.findFirst({
 			where: {
 				account: {
 					username: req.query.username,
-				}
-
+				},
 			},
 			select: {
 				id: true,
@@ -223,8 +220,7 @@ export const followCompany = async (req, res) => {
 			where: {
 				account: {
 					username: req.body.username,
-				}
-
+				},
 			},
 			select: {
 				id: true,
@@ -249,7 +245,7 @@ export const unfollowCompany = async (req, res) => {
 			where: {
 				account: {
 					username: req.body.username,
-				}
+				},
 			},
 			select: {
 				id: true,
