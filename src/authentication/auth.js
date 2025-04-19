@@ -101,14 +101,14 @@ export const verifyCredentialsIfNoRefreshToken = async (req, res, next) => {
 
 		const isEmail = email.includes("@");
 
-const account = await prisma.account.findUnique({
-	where: isEmail ? { email } : { username: email },
-	include: {
-		company: true,
-		user: true,
-		loginDevices: true,
-	},	
-});
+		const account = await prisma.account.findUnique({
+			where: isEmail ? { email } : { username: email },
+			include: {
+				company: true,
+				user: true,
+				loginDevices: true,
+			},
+		});
 
 		if (!account) {
 			return res.status(401).json({ message: "Invalid credentials." });
