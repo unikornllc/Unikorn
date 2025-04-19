@@ -3,6 +3,6 @@ model Follow {
   createdAt   DateTime @default(now())
   followerId  String?
   followingId String?
-  follower    Account? @relation("follower", fields: [followerId], references: [id])
-  following   Account? @relation("following", fields: [followingId], references: [id])
+  follower    Account? @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   Account? @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 }

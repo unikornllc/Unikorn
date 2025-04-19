@@ -37,7 +37,7 @@ model Fundraiser {
   id String @id @default(uuid())
 
   investorType   InvestorType
-  investorUser   User?        @relation("UserInvestments", fields: [investorUserId], references: [id])
+  investorUser   User?        @relation("UserInvestments", fields: [investorUserId], references: [id], onDelete: Cascade)
   investorUserId String?
 
   investorCompany   Company? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id])
@@ -62,7 +62,7 @@ model InvestmentOffer {
 
   investorType InvestorType
 
-  investorUser   User?   @relation("UserOffers", fields: [investorUserId], references: [id])
+  investorUser   User?   @relation("UserOffers", fields: [investorUserId], references: [id], onDelete: Cascade)
   investorUserId String?
 
   investorCompany   Company? @relation("CompanyOffers", fields: [investorCompanyId], references: [id])
