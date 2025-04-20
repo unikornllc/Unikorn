@@ -78,7 +78,9 @@ const MyCompanyProfile = ({ company }) => {
 			<h1 className="text-2xl font-bold mb-4">{companyData.name}</h1>
 			{activeFund ? (
 				<div>
-					<FundingComponentCompany companyUsername={companyData.username} />
+					<FundingComponentCompany
+						companyUsername={companyData.account.username}
+					/>
 				</div>
 			) : (
 				<button
@@ -157,6 +159,7 @@ const MyCompanyProfile = ({ company }) => {
 					</div>
 				</div>
 			)}
+			{console.log()}
 			<GeneralInfo company={companyData} onUpdate={handleUpdate} />
 			<BoardMembers
 				members={companyData.boardMembers}
