@@ -123,24 +123,19 @@ export const followUser = async (req, res) => {
 
 export const isFollowingUser = async (req, res) => {
 	try {
-		const follow = await prisma.company.findFirst({
+		if (!req.query.username) {
+			return res.status(400).json({ message: "Username is required" });
+		}
+		const follow = await prisma.account.findUnique({
 			where: {
-				account: {
-					username: req.query.username,
-				},
+				username: req.query.username,
 			},
 			select: {
-				account: {
-					select: {
-						followedBy: true,
-					},
-				},
+				followedBy: true,
 			},
 		});
-		if (!follow) {
-			res.status(400).json({ message: "User not found" });
-		}
-		const isFollowing = follow.account.followedBy.some(
+
+		const isFollowing = follow.followedBy.some(
 			(entry) => entry.followerId === req.account.id,
 		);
 		isFollowing
