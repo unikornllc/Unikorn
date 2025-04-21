@@ -6,9 +6,6 @@ export const getFollowing = async (req, res) => {
 			where: {
 				username: req.query.username,
 			},
-			include: {
-				following: { account: true },
-			},
 			select: {
 				following: {
 					select: { account: { select: { username: true, role: true } } },
