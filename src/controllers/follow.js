@@ -1,5 +1,92 @@
 import prisma from "../db.js";
 
+export const getMyFollowing = async (req, res) => {
+	try {
+		const account = await prisma.account.findUnique({
+			where: {
+				id: req.account.id,
+			},
+			select: {
+				following: {
+					select: {
+						following: true,
+					},
+				},
+			},
+		});
+		if (account.following.length === 0) {
+			return res.status(200).json({ users: [], companies: [] });
+		}
+
+		if (!account) {
+			return res.status(400).json({ message: "User or company not found" });
+		}
+
+		const following = {
+			users: [],
+			companies: [],
+		};
+
+		account.following.forEach((follow) => {
+			if (follow.following.role === "User") {
+				following.users.push(follow.following.username);
+			} else {
+				following.companies.push(follow.following.username);
+			}
+		});
+
+		res.status(200).json({ ...following });
+	} catch (e) {
+		console.error(e);
+		res
+			.status(400)
+			.json({ message: "Error fetching following users and companies" });
+	}
+};
+export const getMyFollowers = async (req, res) => {
+	try {
+		const account = await prisma.account.findUnique({
+			where: {
+				id: req.account.id,
+			},
+			select: {
+				followedBy: {
+					select: {
+						follower: true,
+					},
+				},
+			},
+		});
+		if (account.followedBy.length === 0) {
+			return res.status(200).json({ users: [], companies: [] });
+		}
+
+		if (!account) {
+			return res.status(400).json({ message: "User or company not found" });
+		}
+
+		const follower = {
+			users: [],
+			companies: [],
+		};
+
+		account.followedBy.forEach((follow) => {
+			if (follow.follower.role === "User") {
+				follower.users.push(follow.follower.username);
+			} else {
+				follower.companies.push(follow.follower.username);
+			}
+		});
+
+		res.status(200).json({ ...follower });
+	} catch (e) {
+		console.error(e);
+		res
+			.status(400)
+			.json({ message: "Error fetching following users and companies" });
+	}
+};
+
 export const getFollowing = async (req, res) => {
 	try {
 		const account = await prisma.account.findUnique({
