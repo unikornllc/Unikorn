@@ -19,4 +19,15 @@ model Account {
   transaction   Transaction[]  @relation("Transaction")
   following     Follow[]       @relation("follower")
   followedBy    Follow[]       @relation("following")
+
+  //chat relations
+  sentMessages          Message[]         @relation("SentMessages")
+  participantIn         ChatParticipant[]  // change name 3ashan yahia medaye2
+  readReceipts          ReadReceipt[]
+  sentFriendRequests    FriendRequest[]   @relation("Sender")
+  receivedFriendRequests FriendRequest[]  @relation("Receiver")
+  blockedUsers          BlockedUser[]     @relation("Blocker")
+  blockedBy             BlockedUser[]     @relation("Blocked")
+  reportedUsers         ReportedUser[]    @relation("Reporter")
+  reportedBy            ReportedUser[]    @relation("Reported")
 }
