@@ -57,6 +57,8 @@ import {
 	unfollowCompany,
 	isFollowingCompany,
 	getFollowingCompanies,
+	getMyFollowing,
+	getMyFollowers,
 } from "./controllers/follow.js";
 
 import {
@@ -236,6 +238,8 @@ router.get("/getWallet", getWallet);
 //get followers and following returns an array of usernames
 router.get("/getFollowers", getFollowers);
 router.get("/getFollowing", getFollowing);
+router.get("/getMyFollowing", getMyFollowing);
+router.get("/getMyFollowers", getMyFollowers);
 
 //Certifications_Courses
 router.post("/createCertificationsCourses", createCertificationsCourses);

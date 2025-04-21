@@ -28,6 +28,15 @@ export default async function CompanyProfile({ params }) {
 				},
 			},
 		);
+		const he = await axios.get(
+			`${process.env.NEXT_PUBLIC_SERVER}/api/getMyFollowers`,
+			{
+				headers: {
+					cookie: cookie || "",
+				},
+			},
+		);
+		console.log("he", he.data);
 		const isCurrentCompany = res.data.isCurrentCompany;
 		const company = res.data.company;
 		for (let i = 0; i < company.raisingFunds.length; ++i) {
