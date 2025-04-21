@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FundingComponent } from "@/app/_components/_company/_funding/FundingComponent";
+import { FaCheckCircle } from "react-icons/fa";
 
 export default function ViewCompanyProfile({ company }) {
 	const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function ViewCompanyProfile({ company }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/followUser`,
 				{
-					username: company.username,
+					username: company.account.username,
 					isUser: false,
 				},
 				{
@@ -79,7 +80,7 @@ export default function ViewCompanyProfile({ company }) {
 			const follow = await axios.put(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/unfollowUser`,
 				{
-					username: company.username,
+					username: company.account.username,
 					isUser: false,
 				},
 				{
@@ -109,12 +110,22 @@ export default function ViewCompanyProfile({ company }) {
 						/>
 					</div>
 					<div className="p-4 text-center">
-						<h1 className="text-2xl font-bold">{company.username}</h1>
+						<h1 className="text-2xl font-bold flex items-center justify-center gap-2">
+							{company.name}
+							{company.verified && (
+								<FaCheckCircle className="text-blue-500" title="Verified" />
+							)}
+						</h1>
+						<p className="text-sm text-gray-500 text-center mt-1">
+							Abdo Certified
+						</p>
 						<p className="text-gray-600">{company.website}</p>
-						<h1 className="text-gray-600">{company.name}</h1>
 						<p className="text-gray-600">{company.description}</p>
 						<p className="text-gray-600">{company.type}</p>
 						<p className="text-gray-600">{company.industry}</p>
+						<p className="text-gray-600">
+							founded: {company.founded?.substring(0, 10)}
+						</p>
 						<p className="text-gray-600">{company.hqLocation}</p>
 					</div>
 					<div>
@@ -149,6 +160,84 @@ export default function ViewCompanyProfile({ company }) {
 							)}
 						</div>
 					</div>
+					<div className="p-4 text-center">
+						<h2 className="text-xl font-bold text-gray-800 mb-4">
+							Team Overview
+						</h2>
+
+						{company.founders?.length > 0 && (
+							<div className="mb-4">
+								<h3 className="text-lg font-semibold text-gray-700">
+									Founders
+								</h3>
+								<div className="flex flex-wrap justify-center gap-2 mt-2">
+									{company.founders.map((founder, idx) => (
+										<span
+											key={idx}
+											className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
+										>
+											{founder.name} - {founder.role}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+
+						{company.boardMembers?.length > 0 && (
+							<div className="mb-4">
+								<h3 className="text-lg font-semibold text-gray-700">
+									Board Members
+								</h3>
+								<div className="flex flex-wrap justify-center gap-2 mt-2">
+									{company.boardMembers.map((member, idx) => (
+										<span
+											key={idx}
+											className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"
+										>
+											{member}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+
+						{company.advisors?.length > 0 && (
+							<div className="mb-4">
+								<h3 className="text-lg font-semibold text-gray-700">
+									Advisors
+								</h3>
+								<div className="flex flex-wrap justify-center gap-2 mt-2">
+									{company.advisors.map((advisor, idx) => (
+										<span
+											key={idx}
+											className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+										>
+											{advisor}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+
+						{company.keyEmployees?.length > 0 && (
+							<div className="mb-4">
+								<h3 className="text-lg font-semibold text-gray-700">
+									Key Employees
+								</h3>
+								<div className="flex flex-wrap justify-center gap-2 mt-2">
+									{company.keyEmployees.map((employee, idx) => (
+										<span
+											key={idx}
+											className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+										>
+											{employee.name}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+					</div>
+
 					<FundingComponent companyUsername={company.account.username} />
 
 					<div className="p-4">

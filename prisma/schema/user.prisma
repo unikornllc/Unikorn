@@ -33,9 +33,9 @@ enum Tier {
 
 model User {
   id                    String                  @id @default(uuid())  @unique
-  account               Account                 @relation(fields: [id], references: [id])
+  account               Account                 @relation(fields: [id], references: [id], onDelete: Cascade)
   name                  String
-  description           String                  @db.VarChar(600)
+  description           String                  @db.VarChar(601)
   title                 Title                   @default(Mr)
   tier                  Tier                    @default(Standard)
   expertise             Expertise[]
@@ -55,7 +55,7 @@ model User {
 model Expertise {
   id     String @id @default(uuid())
   field  String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }
 
@@ -63,14 +63,14 @@ model Education {
   id          String @id @default(uuid())
   degree      Degree @default(NONE)
   institution String
-  user        User   @relation(fields: [userId], references: [id])
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 }
 
 model Interest {
   id     String @id @default(uuid())
   name   String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }
 
@@ -81,7 +81,7 @@ model CorporateExperience {
   startDate        DateTime
   endDate          DateTime?
   responsibilities String
-  user             User     @relation(fields: [userId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId           String
 }
 
@@ -90,7 +90,7 @@ model StartupExperience {
   startupName String
   role        String
   description String @db.VarChar(500)
-  user        User   @relation(fields: [userId], references: [id])
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 }
 
@@ -100,7 +100,7 @@ model CertificationsCourses {
   institution    String
   completionDate DateTime
   focusArea      String
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         String
 }
 
@@ -108,7 +108,7 @@ model Language {
   id          String              @id @default(uuid())
   language    String
   proficiency LanguageProficiency @default(Beginner)
-  user        User                @relation(fields: [userId], references: [id])
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 }
 
@@ -116,7 +116,7 @@ model SocialMedia {
   id       String               @id @default(uuid())
   platform SocialMediaPlatforms @default(X)
   url      String
-  user     User                 @relation(fields: [userId], references: [id])
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   String
 }
 
@@ -127,7 +127,7 @@ model UserFile {
   fileType   String
   uploadedAt DateTime @default(now())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([fileName, userId])
 }

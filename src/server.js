@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import bodyParser from "body-parser";
 import router from "./router.js";
@@ -35,6 +37,7 @@ const messageStore = new InMemoryMessageStore();
 const randomId = () => crypto.randomBytes(64).toString("hex");
 
 const app = express();
+
 configurePassport(passport);
 // const csrfProtection = csrf();
 

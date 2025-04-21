@@ -36,12 +36,11 @@ export default async function CompanyProfile({ params }) {
 				break;
 			}
 		}
-
 		if (!isCurrentCompany) {
 			try {
 				await axios
 					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
-						params: { username: company.username, isUser: false },
+						params: { username: company.account.username, isUser: false },
 						headers: {
 							cookie: cookie || "",
 						},
@@ -65,7 +64,12 @@ export default async function CompanyProfile({ params }) {
 		return (
 			<div>
 				{isCurrentCompany ? (
-					<MyCompanyProfile company={company} />
+					<MyCompanyProfile
+						company={{
+							...company,
+							username: company.account?.username,
+						}}
+					/>
 				) : (
 					<ViewCompanyProfile company={company} />
 				)}
