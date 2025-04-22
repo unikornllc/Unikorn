@@ -8,14 +8,6 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 	const [selectedUsers, setSelectedUsers] = useState([]);
 	const [searchTerm, setSearchTerm] = useState("");
 
-	const filteredUsers = users.filter(
-		(user) =>
-			user.userID !== userId &&
-			!selectedUsers.some((selected) => selected.userID === user.userID) &&
-			(searchTerm === "" ||
-				user.username.toLowerCase().includes(searchTerm.toLowerCase())),
-	);
-
 	const handleCreateChat = () => {
 		if (isGroupChat && !groupName.trim()) {
 			alert("Please enter a group name");
@@ -33,7 +25,7 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 		}
 
 		onCreateChat({
-			participants: selectedUsers.map((user) => user.userID),
+			participants: selectedUsers,
 			isGroupChat,
 			name: isGroupChat ? groupName : undefined,
 		});
@@ -46,7 +38,7 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 	};
 
 	const removeUser = (userID) => {
-		setSelectedUsers((prev) => prev.filter((user) => user.userID !== userID));
+		setSelectedUsers((prev) => prev.filter((user) => user !== userID));
 	};
 
 	return (
@@ -94,12 +86,12 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 							<div className="flex flex-wrap gap-2 mb-2">
 								{selectedUsers.map((user) => (
 									<div
-										key={user.userID}
+										key={user}
 										className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center text-sm"
 									>
-										<span>{user.username}</span>
+										<span>{user}</span>
 										<button
-											onClick={() => removeUser(user.userID)}
+											onClick={() => removeUser(user)}
 											className="ml-1 text-blue-500 hover:text-blue-700"
 										>
 											×
@@ -121,20 +113,20 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 
 					{/* User list */}
 					<div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
-						{filteredUsers.length === 0 ? (
+						{users.length === 0 ? (
 							<div className="p-3 text-center text-gray-500">
 								{searchTerm ? "No users found" : "No users available"}
 							</div>
 						) : (
 							<ul className="divide-y divide-gray-200">
-								{filteredUsers.map((user) => (
+								{users.map((user) => (
 									<li
-										key={user.userID}
+										key={user}
 										onClick={() => selectUser(user)}
 										className="p-3 hover:bg-gray-50 cursor-pointer"
 									>
-										<div className="font-medium">{user.username}</div>
-										<div className="text-sm text-gray-500">{user.userID}</div>
+										<div className="font-medium">{user}</div>
+										<div className="text-sm text-gray-500">{user}</div>
 									</li>
 								))}
 							</ul>

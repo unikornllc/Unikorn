@@ -23,6 +23,7 @@ export default function ChatWindow({ chat, messages, userId, onSendMessage }) {
 
 	return (
 		<>
+			<MessageInput onSendMessage={onSendMessage} />
 			<div className="p-4 border-b border-gray-200 bg-white">
 				<h2 className="font-semibold">{chat.name}</h2>
 				<p className="text-sm text-gray-500">
@@ -86,7 +87,6 @@ export default function ChatWindow({ chat, messages, userId, onSendMessage }) {
 			</div>
 
 			{/* Message Input */}
-			<MessageInput onSendMessage={onSendMessage} />
 		</>
 	);
 }

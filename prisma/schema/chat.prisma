@@ -11,7 +11,7 @@ model Chat {
 
 model ChatParticipant {
   id                    String            @id @default(uuid())
-  userId                String
+  username               String
   chatId                String
   isAdmin               Boolean           @default(false)  // For group chats
   isFavorited           Boolean           @default(false)
@@ -21,13 +21,13 @@ model ChatParticipant {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
-  account                  Account              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account                  Account              @relation(fields: [username], references: [username], onDelete: Cascade)
   chat                  Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
   lastReadMessage       Message?          @relation("LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, chatId])
+  @@unique([username, chatId])
   @@index([chatId])
-  @@index([userId])
+  @@index([username])
 }
 
 model Message {
@@ -75,14 +75,14 @@ enum AttachmentType {
 model ReadReceipt {
   id                    String            @id @default(uuid())
   messageId             String
-  userId                String
+  username               String
   readAt                DateTime          @default(now())
 
   message               Message           @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  account                  Account              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account                  Account              @relation(fields: [username], references: [username], onDelete: Cascade)
 
-  @@unique([messageId, userId])
-  @@index([userId])
+  @@unique([messageId, username])
+  @@index([username])
   @@index([messageId])
 }
 
