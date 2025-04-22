@@ -27,7 +27,7 @@ function ChatApp({ userId, username }) {
 	useEffect(() => {
 		async function getFollowing() {
 			const res = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/getFollowing`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getMyFollowing`,
 				{
 					withCredentials: true,
 				},
@@ -35,11 +35,10 @@ function ChatApp({ userId, username }) {
 					username: username,
 				},
 			);
-			console.log(res);
-			setUsers(res.users);
+			setUsers([...res.data.users, ...res.data.companies]);
 		}
 		getFollowing();
-	}, [users]);
+	}, []);
 
 	useEffect(() => {
 		if (!socket) return;

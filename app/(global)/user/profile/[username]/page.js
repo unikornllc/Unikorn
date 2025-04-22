@@ -39,7 +39,7 @@ export default async function UserProfile({ params }) {
 				user.wallet = null;
 				await axios
 					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/isFollowing`, {
-						params: { username: user.username, isUser: true },
+						params: { username: user.account.username, isUser: true },
 						headers: {
 							cookie: cookie || "",
 						},

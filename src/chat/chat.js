@@ -25,7 +25,7 @@ io.on("connection", async (socket) => {
 
 	try {
 		const userChats = await prisma.chatParticipant.findMany({
-			where: { userId: userId },
+			where: { username: userId },
 			include: {
 				chat: {
 					include: {
@@ -61,7 +61,7 @@ io.on("connection", async (socket) => {
 						attachments: true,
 						readReceipts: {
 							where: {
-								userId: { not: userId },
+								username: { not: userId },
 							},
 						},
 					},
@@ -70,10 +70,10 @@ io.on("connection", async (socket) => {
 				});
 
 				const otherParticipants = chatParticipant.chat.participants
-					.filter((p) => p.userId !== userId)
+					.filter((p) => p.username !== userId)
 					.map((p) => ({
-						userID: p.user.id,
-						username: p.user.username,
+						userID: p.account.id,
+						username: p.account.username,
 					}));
 
 				const isDirectChat = !chatParticipant.chat.isGroupChat;
@@ -94,6 +94,9 @@ io.on("connection", async (socket) => {
 				};
 			}),
 		);
+
+		console.log(userChats);
+		console.log(chatsWithMessages);
 
 		socket.emit("chats", chatsWithMessages);
 	} catch (error) {
@@ -119,7 +122,7 @@ io.on("connection", async (socket) => {
 						isGroupChat: false,
 						participants: {
 							every: {
-								userId: {
+								username: {
 									in: participants,
 								},
 							},
@@ -128,14 +131,14 @@ io.on("connection", async (socket) => {
 							{
 								participants: {
 									some: {
-										userId: participants[0],
+										username: participants[0],
 									},
 								},
 							},
 							{
 								participants: {
 									some: {
-										userId: participants[1],
+										username: participants[1],
 									},
 								},
 							},
@@ -144,7 +147,7 @@ io.on("connection", async (socket) => {
 					include: {
 						participants: {
 							include: {
-								user: {
+								account: {
 									select: {
 										id: true,
 										username: true,
@@ -157,7 +160,7 @@ io.on("connection", async (socket) => {
 
 				if (existingChat) {
 					const otherParticipant = existingChat.participants.find(
-						(p) => p.userId !== userId,
+						(p) => p !== userId,
 					);
 
 					socket.emit("chat created", {
@@ -166,7 +169,7 @@ io.on("connection", async (socket) => {
 						isGroupChat: false,
 						participants: [
 							{
-								userID: otherParticipant.userId,
+								username: otherParticipant.userId,
 								username: otherParticipant.user.username,
 							},
 						],
@@ -179,10 +182,10 @@ io.on("connection", async (socket) => {
 			const newChat = await prisma.chat.create({
 				data: {
 					isGroupChat: isGroupChat,
-					name: isGroupChat ? name : null,
+					name: isGroupChat ? name : "chat",
 					participants: {
 						create: participants.map((participantId) => ({
-							userId: participantId,
+							username: participantId,
 							isAdmin: participantId === userId,
 						})),
 					},
@@ -190,7 +193,7 @@ io.on("connection", async (socket) => {
 				include: {
 					participants: {
 						include: {
-							user: {
+							account: {
 								select: {
 									id: true,
 									username: true,
@@ -205,20 +208,18 @@ io.on("connection", async (socket) => {
 				chatID: newChat.id,
 				name: isGroupChat
 					? name
-					: newChat.participants.find((p) => p.userId !== userId)?.user
-							.username,
+					: newChat.participants.find((p) => p !== userId)?.account.username,
 				isGroupChat: isGroupChat,
 				participants: newChat.participants
-					.filter((p) => p.userId !== userId)
+					.filter((p) => p !== userId)
 					.map((p) => ({
-						userID: p.userId,
-						username: p.user.username,
+						username: p,
 					})),
 				messages: [],
 			};
 
 			newChat.participants.forEach((participant) => {
-				io.to(participant.userId).emit("chat created", chatResponse);
+				io.to(participant).emit("chat created", chatResponse);
 			});
 		} catch (error) {
 			console.error("Error creating chat:", error);
@@ -230,8 +231,8 @@ io.on("connection", async (socket) => {
 		try {
 			const participant = await prisma.chatParticipant.findUnique({
 				where: {
-					userId_chatId: {
-						userId: userId,
+					username_chatId: {
+						username: userId,
 						chatId: chatId,
 					},
 				},
@@ -353,8 +354,8 @@ io.on("connection", async (socket) => {
 		try {
 			const participant = await prisma.chatParticipant.findUnique({
 				where: {
-					userId_chatId: {
-						userId: userId,
+					username_chatId: {
+						username: userId,
 						chatId: chatId,
 					},
 				},
@@ -410,8 +411,8 @@ io.on("connection", async (socket) => {
 		try {
 			await prisma.chatParticipant.update({
 				where: {
-					userId_chatId: {
-						userId: userId,
+					username_chatId: {
+						username: userId,
 						chatId: chatId,
 					},
 				},
@@ -424,7 +425,7 @@ io.on("connection", async (socket) => {
 				where: {
 					messageId_userId: {
 						messageId: messageId,
-						userId: userId,
+						username: userId,
 					},
 				},
 				update: {
@@ -498,8 +499,8 @@ io.on("connection", async (socket) => {
 		try {
 			const participant = await prisma.chatParticipant.findUnique({
 				where: {
-					userId_chatId: {
-						userId: userId,
+					username_chatId: {
+						username: userId,
 						chatId: chatId,
 					},
 				},
@@ -513,8 +514,8 @@ io.on("connection", async (socket) => {
 
 			await prisma.chatParticipant.update({
 				where: {
-					userId_chatId: {
-						userId: userId,
+					username_chatId: {
+						username: userId,
 						chatId: chatId,
 					},
 				},
