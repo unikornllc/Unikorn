@@ -191,11 +191,12 @@ export const updateCompanyProfile = async (req, res) => {
 			"hunter",
 			"industry",
 			"type",
-			"boardMembers",
-			"advisors",
+			// "boardMembers",
+			// "advisors",
 			"activities",
-			"founders",
-			"keyEmployees",
+			// "founders",
+			// "keyEmployees",
+			// "personnel",
 			"productInformation",
 			"financials",
 		];
@@ -213,25 +214,7 @@ export const updateCompanyProfile = async (req, res) => {
 
 		let updateData = {};
 
-		if (fieldName === "founders") {
-			updateData = {
-				founders: {
-					upsert: fieldValue.map((founder) => ({
-						where: { id: founder.id || "" },
-						create: {
-							name: founder.name,
-							role: founder.role,
-							crunchBaseLink: founder.crunchBaseLink,
-						},
-						update: {
-							name: founder.name,
-							role: founder.role,
-							crunchBaseLink: founder.crunchBaseLink,
-						},
-					})),
-				},
-			};
-		} else if (fieldName === "activities") {
+		if (fieldName === "activities") {
 			updateData = {
 				activities: {
 					upsert: fieldValue.map((activity) => ({
@@ -247,22 +230,22 @@ export const updateCompanyProfile = async (req, res) => {
 					})),
 				},
 			};
-		} else if (fieldName === "keyEmployees") {
-			updateData = {
-				keyEmployees: {
-					upsert: fieldValue.map((key_employee) => ({
-						where: { id: key_employee.id || "" },
-						create: {
-							name: key_employee.name,
-							role: key_employee.role,
-						},
-						update: {
-							name: key_employee.name,
-							role: key_employee.role,
-						},
-					})),
-				},
-			};
+			// } else if (fieldName === "keyEmployees") {
+			// 	updateData = {
+			// 		keyEmployees: {
+			// 			upsert: fieldValue.map((key_employee) => ({
+			// 				where: { id: key_employee.id || "" },
+			// 				create: {
+			// 					name: key_employee.name,
+			// 					role: key_employee.role,
+			// 				},
+			// 				update: {
+			// 					name: key_employee.name,
+			// 					role: key_employee.role,
+			// 				},
+			// 			})),
+			// 		},
+			// 	};
 		} else if (fieldName === "productInformation") {
 			updateData = {
 				productInformation: {
@@ -294,6 +277,66 @@ export const updateCompanyProfile = async (req, res) => {
 	} catch (error) {
 		console.error("Error updating company profile:", error);
 		res.status(500).json({ error: "Internal server error" });
+	}
+};
+
+export const updatePersonnel = async (req, res) => {
+	try {
+		const person = req.body.formData;
+		let userId = null;
+
+		if (person.username) {
+			const account = await prisma.account.findUnique({
+				where: { id: person.user.id },
+				include: { user: true },
+			});
+
+			if (account && account.user) {
+				userId = account.user.id;
+			}
+		}
+		const upsertedPersonnel = await prisma.personnel.upsert({
+			where: { id: person.id || "" },
+			create: {
+				name: person.name,
+				role: person.role,
+				crunchBaseLink: person.crunchBaseLink,
+				user: userId ? { connect: { id: userId } } : undefined,
+				company: { connect: { id: req.account.id } },
+			},
+			update: {
+				name: person.name,
+				role: person.role,
+				crunchBaseLink: person.crunchBaseLink,
+				user: userId ? { connect: { id: userId } } : undefined,
+			},
+		});
+
+		res.status(200).json({ personnel: upsertedPersonnel });
+	} catch (error) {
+		console.error("Error updating personnel:", error);
+		res.status(400).json({ message: "Error updating personnel" });
+	}
+};
+
+export const deletePersonnel = async (req, res) => {
+	try {
+		const deleted = await prisma.personnel.delete({
+			where: {
+				companyId: req.account.id,
+				id: req.query.personnelId,
+			},
+		});
+
+		if (deleted.count === 0) {
+			return res.status(401).json({
+				message:
+					"Personnel not found or you don't have permission to delete it.",
+			});
+		}
+		res.status(200).json({ message: "Personnel deleted successfully" });
+	} catch (e) {
+		res.status(400).json({ message: "Error deleting personnel" });
 	}
 };
 

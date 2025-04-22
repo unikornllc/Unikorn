@@ -45,6 +45,7 @@ import {
 	getTier,
 	updateTier,
 	updateUserItem,
+	searchUsers,
 } from "./controllers/user.js";
 
 import {
@@ -87,6 +88,8 @@ import {
 	updateCompanyProfile,
 	getCompanyTier,
 	getCurrentCompany,
+	updatePersonnel,
+	deletePersonnel,
 } from "./controllers/companyProfile.js";
 
 import {
@@ -217,6 +220,7 @@ router.get("/getAllEducation", getAllEducation);
 router.delete("/deleteOneEducation", deleteOneEducation);
 
 //user
+router.get("/searchUsers", searchUsers);
 router.get("/getAllUsers", getAllUser);
 router.get("/getOneUser", getOneUser);
 router.get("/isCurrentUser", isCurrentUser);
@@ -270,6 +274,9 @@ router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
 router.get("/getCompanyTier", getCompanyTier);
 router.get("/getCurrentCompany", getCurrentCompany);
+
+router.put("/updatePersonnel", updatePersonnel);
+router.delete("/deletePersonnel", deletePersonnel);
 
 //get all companies that the user is following
 //returns an array of usernames
