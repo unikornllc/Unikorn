@@ -1,6 +1,48 @@
 import prisma from "../db.js";
 import { generateUsername } from "unique-username-generator";
 
+export const searchUsers = async (req, res) => {
+	try {
+		const query = req.query.term || "";
+		const page = Number.parseInt(req.query.page || "1");
+		const limit = Number.parseInt(req.query.limit || "10");
+
+		if (!query) {
+			return res.status(400).json({ error: "Query parameter is required" });
+		}
+
+		const startIndex = (page - 1) * limit;
+
+		const users = await prisma.user.findMany({
+			where: {
+				OR: [
+					{ name: { contains: query, mode: "insensitive" } },
+					{ account: { username: { contains: query, mode: "insensitive" } } },
+				],
+			},
+			select: {
+				id: true,
+				name: true,
+				account: {
+					select: {
+						username: true,
+					},
+				},
+			},
+			skip: startIndex,
+			take: limit + 1,
+		});
+		const hasMore = users.length > limit;
+
+		const results = users.slice(0, limit);
+
+		res.status(200).json({ users: results, hasMore });
+	} catch (error) {
+		console.error("Error searching users:", error);
+		res.status(400).json({ message: "Error searching users" });
+	}
+};
+
 export const getAllUser = async (req, res) => {
 	try {
 		const user = await prisma.user.findMany();

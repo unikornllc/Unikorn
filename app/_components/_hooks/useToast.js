@@ -46,6 +46,7 @@ export function useToast() {
 		useContext(ToastContext);
 
 	useEffect(() => {
+		if (!toasts) return;
 		const timers = toasts
 			.map((toast) => {
 				if (toast.open !== false) {

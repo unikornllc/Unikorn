@@ -10,8 +10,15 @@ enum CompanyTier {
   Holder
 }
 
+enum CompanyPersonnel {
+  Founder
+  Advisor
+  BoardMemeber
+  KeyEmployee
+}
+
 model Company {
-  id                 String               @id @default(uuid())  @unique
+  id                 String               @id @unique @default(uuid())
   account            Account              @relation(fields: [id], references: [id])
   name               String
   description        String               @db.VarChar(600)
@@ -22,10 +29,7 @@ model Company {
   industry           String
   verified           Boolean              @default(false)
   tier               CompanyTier          @default(Holder)
-  boardMembers       String[]
-  advisors           String[]
-  founders           Founder[]
-  keyEmployees       KeyEmployees[]
+  personnel          Personnel[]
   productInformation ProductInformation[]
   financials         Financial?
   activities         Activity[]
@@ -35,22 +39,24 @@ model Company {
   investmentOffers   InvestmentOffer[]    @relation("CompanyOffers")
 }
 
-model Founder {
-  id             String  @id @default(uuid())
+model Personnel {
+  id             String           @id @default(uuid())
   name           String
-  role           String
+  role           CompanyPersonnel
   crunchBaseLink String
-  company        Company @relation(fields: [companyId], references: [id])
+  company        Company          @relation(fields: [companyId], references: [id])
   companyId      String
+  user           User?            @relation(fields: [userId], references: [id])
+  userId         String?
 }
 
-model KeyEmployees {
-  id        String  @id @default(uuid())
-  name      String
-  role      String
-  company   Company @relation(fields: [companyId], references: [id])
-  companyId String
-}
+// model KeyEmployees {
+//   id        String  @id @default(uuid())
+//   name      String
+//   role      String
+//   company   Company @relation(fields: [companyId], references: [id])
+//   companyId String
+// }
 
 model ProductInformation {
   id           String   @id @default(uuid())

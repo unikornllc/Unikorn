@@ -10,8 +10,9 @@ export default async function CompanyProfile({ params }) {
 	const cookie = headersInstance.get("cookie");
 
 	const include = {
-		founders: true,
-		keyEmployees: true,
+		// founders: true,
+		// keyEmployees: true,
+		personnel: { include: { user: true } },
 		productInformation: true,
 		financials: true,
 		activities: true,
@@ -38,7 +39,34 @@ export default async function CompanyProfile({ params }) {
 		// );
 		// console.log("he", he.data);
 		const isCurrentCompany = res.data.isCurrentCompany;
-		const company = res.data.company;
+		let company = res.data.company;
+
+		company.advisors = [];
+		company.founders = [];
+		company.boardMembers = [];
+		company.keyEmployees = [];
+		if (company.personnel) {
+			company.personnel.forEach((person) => {
+				switch (person.role) {
+					case "Advisor":
+						company.advisors.push(person);
+						break;
+					case "Founder":
+						company.founders.push(person);
+						break;
+					case "BoardMember":
+						company.boardMembers.push(person);
+						break;
+					case "KeyEmployee":
+						company.keyEmployees.push(person);
+						break;
+					default:
+						break;
+				}
+			});
+		}
+		console.log(company.personnel);
+
 		for (let i = 0; i < company.raisingFunds.length; ++i) {
 			if (company.raisingFunds[i].status == "Active") {
 				company.activeFund = true;

@@ -10,6 +10,7 @@ import CompanyFiles from "@/app/_components/_company/_company_profile/CompanyFil
 import Advisors from "@/app/_components/_company/_company_profile/Advisors";
 import KeyEmployees from "@/app/_components/_company/_company_profile/KeyEmployees";
 import { FundingComponentCompany } from "@/app/_components/_company/_funding/FundingComponentCompany";
+import PersonnelDashboard from "@/app/_components/_company/_company_profile/PersonnelDashboard";
 
 const MyCompanyProfile = ({ company }) => {
 	const [companyData, setCompanyData] = useState(company);
@@ -161,6 +162,8 @@ const MyCompanyProfile = ({ company }) => {
 			)}
 			{console.log()}
 			<GeneralInfo company={companyData} onUpdate={handleUpdate} />
+			<PersonnelDashboard personnelData={companyData.personnel} />
+
 			<BoardMembers
 				members={companyData.boardMembers}
 				onUpdate={handleUpdate}
