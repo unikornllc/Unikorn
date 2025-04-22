@@ -307,7 +307,7 @@ io.on("connection", async (socket) => {
 			});
 
 			participant.chat.participants.forEach((p) => {
-				io.to(p.userId).emit("new message", {
+				io.to(p.username).emit("new message", {
 					chatId: chatId,
 					message: message,
 				});
@@ -315,14 +315,14 @@ io.on("connection", async (socket) => {
 
 			if (isRequestMessage) {
 				const otherParticipant = participant.chat.participants.find(
-					(p) => p.userId !== userId,
+					(p) => p.username !== userId,
 				);
 
 				const existingRequest = await prisma.friendRequest.findFirst({
 					where: {
 						OR: [
-							{ senderId: userId, receiverId: otherParticipant.userId },
-							{ senderId: otherParticipant.userId, receiverId: userId },
+							{ senderId: userId, receiverId: otherParticipant.username },
+							{ senderId: otherParticipant.username, receiverId: userId },
 						],
 					},
 				});
@@ -331,7 +331,7 @@ io.on("connection", async (socket) => {
 					const friendRequest = await prisma.friendRequest.create({
 						data: {
 							senderId: userId,
-							receiverId: otherParticipant.userId,
+							receiverId: otherParticipant.username,
 							status: "PENDING",
 						},
 					});
