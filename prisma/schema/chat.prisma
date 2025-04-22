@@ -11,7 +11,7 @@ model Chat {
 
 model ChatParticipant {
   id                    String            @id @default(uuid())
-  username               String
+  username              String
   chatId                String
   isAdmin               Boolean           @default(false)  // For group chats
   isFavorited           Boolean           @default(false)
@@ -21,7 +21,7 @@ model ChatParticipant {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
-  account                  Account              @relation(fields: [username], references: [username], onDelete: Cascade)
+  account               Account           @relation(fields: [username], references: [username], onDelete: Cascade)
   chat                  Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
   lastReadMessage       Message?          @relation("LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
 
@@ -42,7 +42,7 @@ model Message {
 
   
   chat                  Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sender                Account              @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  sender                Account           @relation("SentMessages", fields: [senderId], references: [username], onDelete: Cascade)
   attachments           Attachment[]
   readReceipts          ReadReceipt[]
   lastReadBy            ChatParticipant[] @relation("LastReadMessage")
@@ -79,7 +79,7 @@ model ReadReceipt {
   readAt                DateTime          @default(now())
 
   message               Message           @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  account                  Account              @relation(fields: [username], references: [username], onDelete: Cascade)
+  account               Account           @relation(fields: [username], references: [username], onDelete: Cascade)
 
   @@unique([messageId, username])
   @@index([username])
@@ -94,8 +94,8 @@ model FriendRequest {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
-  sender                Account              @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver              Account              @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender                Account           @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver              Account           @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([receiverId, status])
