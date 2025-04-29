@@ -46,17 +46,7 @@ function ChatApp({ userId, username }) {
 		if (!socket) return;
 
 		socket.on("chats", (receivedChats) => {
-			const chatsWithUnread = receivedChats.map((chat) => ({
-				...chat,
-				unreadCount: 0, // Add unreadCount field initially
-			}));
-
-			setChats(chatsWithUnread);
-
-			if (chatsWithUnread.length > 0 && !selectedChat) {
-				setSelectedChat(chatsWithUnread[0]);
-				setMessages(chatsWithUnread[0].messages || []);
-			}
+			setChats(receivedChats); // trust unreadCount from server
 		});
 
 		socket.on("new message", ({ chatId, message }) => {
@@ -72,13 +62,13 @@ function ChatApp({ userId, username }) {
 						text: `New message from ${message.sender.username}`,
 					},
 				]);
-				setChats((prevChats) =>
-					prevChats.map((chat) =>
-						chat.chatID === chatId
-							? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
-							: chat,
-					),
-				);
+				// setChats((prevChats) =>
+				// 	prevChats.map((chat) =>
+				// 		chat.chatID === chatId
+				// 			? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
+				// 			: chat,
+				// 	),
+				// );
 			}
 
 			setChats((prevChats) =>
@@ -105,12 +95,27 @@ function ChatApp({ userId, username }) {
 		socket.on("users", (onlineUsers) => {
 			setUsers(onlineUsers);
 		});
+		socket.on("chat unread update", ({ chatId }) => {
+			socket.emit("get updated chat", { chatId });
+		});
+
+		socket.on("updated chat", (updatedChat) => {
+			setChats((prevChats) =>
+				prevChats.map((chat) =>
+					chat.chatID === updatedChat.chatID
+						? { ...chat, unreadCount: updatedChat.unreadCount }
+						: chat,
+				),
+			);
+		});
 
 		return () => {
 			socket.off("chats");
 			socket.off("new message");
 			socket.off("chat created");
 			socket.off("users");
+			socket.off("chat unread update");
+			socket.off("updated chat");
 		};
 	}, [socket, selectedChat]);
 
@@ -133,12 +138,26 @@ function ChatApp({ userId, username }) {
 		});
 	};
 
-	const handleMarkAsRead = (messageId) => {
-		if (!selectedChat || !socket) return;
+	// useEffect(() => {
+	// 	if (!selectedChat || !socket || messages.length === 0) return;
 
+	// 	const latestMessage = messages[messages.length - 1];
+
+	// 	if (!latestMessage) return;
+
+	// 	console.log("📬 Marking as read:", latestMessage.id);
+
+	// 	socket.emit("mark as read", {
+	// 		chatId: selectedChat.chatID,
+	// 		messageId: latestMessage.id,
+	// 	});
+	// }, [selectedChat, messages]);
+
+	const handleMarkAsRead = (chatId, messageId) => {
+		if (!socket) return;
 		socket.emit("mark as read", {
-			chatId: selectedChat.chatID,
-			messageId,
+			chatId: chatId,
+			messageId: messageId,
 		});
 	};
 
@@ -174,15 +193,16 @@ function ChatApp({ userId, username }) {
 						setSelectedChat(chat);
 						setMessages(chat.messages || []);
 
-						setChats((prevChats) =>
-							prevChats.map((c) =>
-								c.chatID === chat.chatID ? { ...c, unreadCount: 0 } : c,
-							),
-						);
+						// setChats((prevChats) =>
+						// 	prevChats.map((c) =>
+						// 		c.chatID === chat.chatID ? { ...c, unreadCount: 0 } : c,
+						// 	),
+						// );
 
 						if (chat.messages?.length > 0) {
 							const latestMessage = chat.messages[chat.messages.length - 1];
-							handleMarkAsRead(latestMessage.id);
+							console.log(latestMessage);
+							handleMarkAsRead(chat.chatID, latestMessage.id);
 						}
 					}}
 				/>
