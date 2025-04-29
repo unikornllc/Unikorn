@@ -95,14 +95,79 @@ io.on("connection", async (socket) => {
 			}),
 		);
 
-		console.log(userChats);
-		console.log(chatsWithMessages);
+		// console.log(userChats);
+		// console.log(chatsWithMessages);
 
 		socket.emit("chats", chatsWithMessages);
 	} catch (error) {
 		console.error("Error fetching user data:", error);
 		socket.emit("error", { message: "Failed to load chat data" });
 	}
+
+	socket.on("get updated chat", async ({ chatId }) => {
+		try {
+			const participant = await prisma.chatParticipant.findUnique({
+				where: {
+					username_chatId: {
+						username: userId,
+						chatId: chatId,
+					},
+				},
+				include: {
+					chat: {
+						include: {
+							participants: {
+								include: {
+									account: {
+										select: {
+											id: true,
+											username: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			});
+
+			let unreadCount = 0;
+			if (participant.lastReadMessageId) {
+				const lastReadMessage = await prisma.message.findUnique({
+					where: { id: participant.lastReadMessageId },
+				});
+				const lastReadTime = lastReadMessage?.createdAt || new Date(0);
+
+				unreadCount = await prisma.message.count({
+					where: {
+						chatId: chatId,
+						isDeleted: false,
+						senderId: { not: userId },
+						createdAt: { gt: lastReadTime },
+					},
+				});
+			} else {
+				unreadCount = await prisma.message.count({
+					where: {
+						chatId: chatId,
+						isDeleted: false,
+						senderId: { not: userId },
+					},
+				});
+			}
+			console.log(
+				`On connect, lastReadMessageId =`,
+				participant.lastReadMessageId,
+			);
+
+			socket.emit("updated chat", {
+				chatID: chatId,
+				unreadCount: unreadCount,
+			});
+		} catch (err) {
+			console.error("Failed to send updated chat:", err);
+		}
+	});
 
 	socket.on("create chat", async ({ participants, isGroupChat, name }) => {
 		try {
@@ -312,6 +377,13 @@ io.on("connection", async (socket) => {
 					message: message,
 				});
 			});
+			participant.chat.participants.forEach((p) => {
+				if (p.username !== userId) {
+					io.to(p.username).emit("chat unread update", {
+						chatId: chatId,
+					});
+				}
+			});
 
 			if (isRequestMessage) {
 				const otherParticipant = participant.chat.participants.find(
@@ -449,6 +521,9 @@ io.on("connection", async (socket) => {
 					readBy: userId,
 				});
 			}
+			console.log(
+				`Updated lastReadMessageId to ${messageId} for ${userId} in chat ${chatId}`,
+			);
 		} catch (error) {
 			console.error("Error marking message as read:", error);
 			socket.emit("error", { message: "Failed to mark message as read" });
