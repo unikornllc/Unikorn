@@ -5,6 +5,7 @@ import { SocketProvider, useSocket } from "../contexts/SocketContext.js";
 import ChatList from "./ChatList.js";
 import ChatWindow from "./ChatWindow.js";
 import NewChatModal from "./NewChatModal.js";
+import NotificationToast from "./NotificationToast.js";
 import axios from "axios";
 
 export default function ChatInterface({ userId, username }) {
@@ -21,6 +22,7 @@ function ChatApp({ userId, username }) {
 	const [messages, setMessages] = useState([]);
 	const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 	const [users, setUsers] = useState([]);
+	const [notifications, setNotifications] = useState([]);
 
 	const { socket, connected } = useSocket();
 
@@ -44,12 +46,16 @@ function ChatApp({ userId, username }) {
 		if (!socket) return;
 
 		socket.on("chats", (receivedChats) => {
-			console.log("Received chats:", receivedChats);
-			setChats(receivedChats);
+			const chatsWithUnread = receivedChats.map((chat) => ({
+				...chat,
+				unreadCount: 0, // Add unreadCount field initially
+			}));
 
-			if (receivedChats.length > 0 && !selectedChat) {
-				setSelectedChat(receivedChats[0]);
-				setMessages(receivedChats[0].messages || []);
+			setChats(chatsWithUnread);
+
+			if (chatsWithUnread.length > 0 && !selectedChat) {
+				setSelectedChat(chatsWithUnread[0]);
+				setMessages(chatsWithUnread[0].messages || []);
 			}
 		});
 
@@ -58,6 +64,21 @@ function ChatApp({ userId, username }) {
 
 			if (selectedChat && selectedChat.chatID === chatId) {
 				setMessages((prev) => [...prev, message]);
+			} else {
+				setNotifications((prev) => [
+					...prev,
+					{
+						id: Date.now(),
+						text: `New message from ${message.sender.username}`,
+					},
+				]);
+				setChats((prevChats) =>
+					prevChats.map((chat) =>
+						chat.chatID === chatId
+							? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
+							: chat,
+					),
+				);
 			}
 
 			setChats((prevChats) =>
@@ -122,11 +143,11 @@ function ChatApp({ userId, username }) {
 	};
 
 	return (
-		<div className="flex h-full">
-			<div className="w-80 bg-white border-r border-gray-200">
-				<div className="p-4 border-b border-gray-200">
+		<div className="flex flex-1 h-full overflow-hidden">
+			<div className="w-80 bg-white border-r border-gray-100 flex flex-col h-full shadow-sm rounded-l-lg">
+				<div className="p-4 border-b border-gray-100">
 					<div className="flex items-center justify-between">
-						<h1 className="text-xl font-semibold">Chats</h1>
+						<h1 className="text-xl font-semibold text-[#6366f1]">Messages</h1>
 						<div className="flex items-center">
 							<span
 								className={`h-3 w-3 rounded-full mr-2 ${connected ? "bg-green-500" : "bg-red-500"}`}
@@ -136,10 +157,12 @@ function ChatApp({ userId, username }) {
 							</span>
 						</div>
 					</div>
-					<p className="text-sm text-gray-500">Logged in as {username}</p>
+					<p className="text-sm text-gray-500">
+						Logged in as <span className="text-[#6366f1]">@{username}</span>
+					</p>
 					<button
 						onClick={() => setIsNewChatModalOpen(true)}
-						className="mt-4 w-full bg-blue-500 text-white rounded-md py-2 px-4 hover:bg-blue-600 transition"
+						className="mt-4 w-full bg-[#6366f1] text-white rounded-md py-2 px-4 hover:bg-[#4f46e5] transition shadow-sm"
 					>
 						New Chat
 					</button>
@@ -147,10 +170,16 @@ function ChatApp({ userId, username }) {
 
 				<ChatList
 					chats={chats}
-					selectedChatId={selectedChat?.chatID}
 					onSelectChat={(chat) => {
 						setSelectedChat(chat);
 						setMessages(chat.messages || []);
+
+						setChats((prevChats) =>
+							prevChats.map((c) =>
+								c.chatID === chat.chatID ? { ...c, unreadCount: 0 } : c,
+							),
+						);
+
 						if (chat.messages?.length > 0) {
 							const latestMessage = chat.messages[chat.messages.length - 1];
 							handleMarkAsRead(latestMessage.id);
@@ -159,13 +188,26 @@ function ChatApp({ userId, username }) {
 				/>
 			</div>
 
-			<div className="flex-1 flex flex-col">
+			<div className="flex-1 flex flex-col bg-white rounded-r-lg shadow-sm">
 				<ChatWindow
 					chat={selectedChat}
 					messages={messages}
 					userId={userId}
 					onSendMessage={handleSendMessage}
 				/>
+			</div>
+			<div className="fixed bottom-6 right-6 space-y-2 z-50">
+				{notifications.map((n) => (
+					<NotificationToast
+						key={n.id}
+						message={n.text}
+						onClose={() =>
+							setNotifications((prev) =>
+								prev.filter((notif) => notif.id !== n.id),
+							)
+						}
+					/>
+				))}
 			</div>
 
 			{isNewChatModalOpen && (

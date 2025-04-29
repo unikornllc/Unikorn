@@ -94,8 +94,8 @@ model FriendRequest {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
-  sender                Account           @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver              Account           @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender                Account           @relation("Sender", fields: [senderId], references: [username], onDelete: Cascade)
+  receiver              Account           @relation("Receiver", fields: [receiverId], references: [username], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([receiverId, status])
@@ -114,8 +114,8 @@ model BlockedUser {
   blockedId             String
   createdAt             DateTime          @default(now())
 
-  blocker               Account              @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
-  blocked               Account              @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocker               Account              @relation("Blocker", fields: [blockerId], references: [username], onDelete: Cascade)
+  blocked               Account              @relation("Blocked", fields: [blockedId], references: [username], onDelete: Cascade)
 
   @@unique([blockerId, blockedId])
   @@index([blockerId])
@@ -129,8 +129,8 @@ model ReportedUser {
   reason                String
   createdAt             DateTime          @default(now())
 
-  reporter              Account              @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported              Account              @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+  reporter              Account              @relation("Reporter", fields: [reporterId], references: [username], onDelete: Cascade)
+  reported              Account              @relation("Reported", fields: [reportedId], references: [username], onDelete: Cascade)
 
   @@index([reporterId])
   @@index([reportedId])

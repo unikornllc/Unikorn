@@ -44,8 +44,10 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 			<div className="bg-white rounded-lg shadow-lg w-full max-w-md">
-				<div className="p-4 border-b border-gray-200">
-					<h2 className="text-lg font-semibold">Create New Chat</h2>
+				<div className="p-4 border-b border-gray-100">
+					<h2 className="text-lg font-semibold text-[#6366f1]">
+						Create New Chat
+					</h2>
 				</div>
 
 				<div className="p-4">
@@ -55,7 +57,7 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 								type="checkbox"
 								checked={isGroupChat}
 								onChange={() => setIsGroupChat(!isGroupChat)}
-								className="mr-2"
+								className="mr-2 text-[#6366f1] focus:ring-[#6366f1]"
 							/>
 							<span>Create Group Chat</span>
 						</label>
@@ -71,7 +73,7 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 								value={groupName}
 								onChange={(e) => setGroupName(e.target.value)}
 								placeholder="Enter group name"
-								className="w-full p-2 border border-gray-300 rounded"
+								cclassName="w-full p-2 border border-gray-200 rounded bg-[#f8f9fe] focus:outline-none focus:ring-2 focus:ring-[#6366f1]"
 							/>
 						</div>
 					)}
@@ -87,12 +89,12 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 								{selectedUsers.map((user) => (
 									<div
 										key={user}
-										className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center text-sm"
+										className="bg-[#eef2ff] text-[#6366f1] px-2 py-1 rounded flex items-center text-sm"
 									>
 										<span>{user}</span>
 										<button
 											onClick={() => removeUser(user)}
-											className="ml-1 text-blue-500 hover:text-blue-700"
+											className="ml-1 text-[#6366f1] hover:text-[#4f46e5]"
 										>
 											×
 										</button>
@@ -107,26 +109,26 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							placeholder="Search users..."
-							className="w-full p-2 border border-gray-300 rounded"
+							className="w-full p-2 border border-gray-200 rounded bg-[#f8f9fe] focus:outline-none focus:ring-2 focus:ring-[#6366f1]"
 						/>
 					</div>
 
 					{/* User list */}
-					<div className="max-h-60 overflow-y-auto border border-gray-200 rounded">
+					<div className="max-h-60 overflow-y-auto border border-gray-100 rounded bg-[#f8f9fe]">
 						{users.length === 0 ? (
 							<div className="p-3 text-center text-gray-500">
 								{searchTerm ? "No users found" : "No users available"}
 							</div>
 						) : (
-							<ul className="divide-y divide-gray-200">
+							<ul className="divide-y divide-gray-100">
 								{users.map((user) => (
 									<li
 										key={user}
 										onClick={() => selectUser(user)}
-										className="p-3 hover:bg-gray-50 cursor-pointer"
+										className="p-3 hover:bg-[#eef2ff] cursor-pointer"
 									>
-										<div className="font-medium">{user}</div>
-										<div className="text-sm text-gray-500">{user}</div>
+										<div className="font-medium text-gray-800">{user}</div>
+										<div className="text-sm text-gray-500">@{user}</div>
 									</li>
 								))}
 							</ul>
@@ -134,16 +136,16 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 					</div>
 				</div>
 
-				<div className="p-4 border-t border-gray-200 flex justify-end space-x-3">
+				<div className="p-4 border-t border-gray-100 flex justify-end space-x-3">
 					<button
 						onClick={onClose}
-						className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+						className="px-4 py-2 border border-gray-200 rounded hover:bg-gray-50 text-gray-700"
 					>
 						Cancel
 					</button>
 					<button
 						onClick={handleCreateChat}
-						className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+						className="px-4 py-2 bg-[#6366f1] text-white rounded hover:bg-[#4f46e5] shadow-sm"
 						disabled={
 							selectedUsers.length === 0 || (isGroupChat && !groupName.trim())
 						}
