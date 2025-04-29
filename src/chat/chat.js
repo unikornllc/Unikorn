@@ -423,7 +423,7 @@ io.on("connection", async (socket) => {
 
 			await prisma.readReceipt.upsert({
 				where: {
-					messageId_userId: {
+					messageId_username: {
 						messageId: messageId,
 						username: userId,
 					},
@@ -433,7 +433,7 @@ io.on("connection", async (socket) => {
 				},
 				create: {
 					messageId: messageId,
-					userId: userId,
+					username: userId,
 				},
 			});
 

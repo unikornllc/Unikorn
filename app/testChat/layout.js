@@ -1,10 +1,10 @@
 export default function ChatTestLayout({ children }) {
 	return (
-		<div className="h-screen flex flex-col">
-			<header className="bg-white border-b border-gray-200 p-4">
-				<h1 className="text-xl font-bold">Chat Test Page</h1>
+		<div className="h-screen flex flex-col bg-[#f8f9fe]">
+			<header className="bg-white border-b border-gray-100 p-4 shadow-sm">
+				<h1 className="text-xl font-bold text-[#6366f1]">Chat</h1>
 				<p className="text-sm text-gray-500">
-					Test your chat functionality here
+					Connect with users and companies
 				</p>
 			</header>
 

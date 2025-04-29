@@ -26,7 +26,7 @@ export default function ChatTestPage() {
 	}, []);
 
 	return (
-		<div className="h-screen bg-gray-50">
+		<div className="h-full flex flex-1 overflow-hidden">
 			<ChatInterface userId={username} username={username} />
 		</div>
 	);
