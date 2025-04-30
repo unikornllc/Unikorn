@@ -109,6 +109,17 @@ function ChatApp({ userId, username }) {
 			);
 		});
 
+		socket.on("message read", ({ chatId, username: reader }) => {
+			// If the current user is the one who read the message
+			if (reader === username) {
+				setChats((prevChats) =>
+					prevChats.map((chat) =>
+						chat.chatID === chatId ? { ...chat, unreadCount: 0 } : chat,
+					),
+				);
+			}
+		});
+
 		return () => {
 			socket.off("chats");
 			socket.off("new message");
@@ -116,8 +127,27 @@ function ChatApp({ userId, username }) {
 			socket.off("users");
 			socket.off("chat unread update");
 			socket.off("updated chat");
+			socket.off("message read");
 		};
-	}, [socket, selectedChat]);
+	}, [socket, selectedChat, username]);
+
+	const handleSelectChat = (chat) => {
+		setSelectedChat(chat);
+		setMessages(chat.messages || []);
+
+		// Mark the latest message as read when opening a chat
+		if (chat.messages?.length > 0 && chat.unreadCount > 0) {
+			const latestMessage = chat.messages[chat.messages.length - 1];
+			handleMarkAsRead(chat.chatID, latestMessage.id);
+
+			// Immediately update the UI to show chat as read
+			setChats((prevChats) =>
+				prevChats.map((c) =>
+					c.chatID === chat.chatID ? { ...c, unreadCount: 0 } : c,
+				),
+			);
+		}
+	};
 
 	const handleCreateChat = ({ participants, isGroupChat, name }) => {
 		if (!socket) return;
@@ -189,22 +219,7 @@ function ChatApp({ userId, username }) {
 
 				<ChatList
 					chats={chats}
-					onSelectChat={(chat) => {
-						setSelectedChat(chat);
-						setMessages(chat.messages || []);
-
-						// setChats((prevChats) =>
-						// 	prevChats.map((c) =>
-						// 		c.chatID === chat.chatID ? { ...c, unreadCount: 0 } : c,
-						// 	),
-						// );
-
-						if (chat.messages?.length > 0) {
-							const latestMessage = chat.messages[chat.messages.length - 1];
-							console.log(latestMessage);
-							handleMarkAsRead(chat.chatID, latestMessage.id);
-						}
-					}}
+					onSelectChat={handleSelectChat}
 				/>
 			</div>
 

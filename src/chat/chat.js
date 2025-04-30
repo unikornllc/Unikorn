@@ -69,6 +69,36 @@ io.on("connection", async (socket) => {
 					take: 30,
 				});
 
+				// First, get the timestamp of the last read message if it exists
+				let lastReadTimestamp = null;
+				if (chatParticipant.lastReadMessageId) {
+					const lastReadMessage = await prisma.message.findUnique({
+						where: { id: chatParticipant.lastReadMessageId },
+						select: { createdAt: true },
+					});
+					if (lastReadMessage) {
+						lastReadTimestamp = lastReadMessage.createdAt;
+					}
+				}
+
+				const unreadCount = await prisma.message.count({
+					where: {
+						chatId: chatParticipant.chatId,
+						isDeleted: false,
+						senderId: { not: userId },
+						NOT: {
+							readReceipts: {
+								some: {
+									username: userId,
+								},
+							},
+						},
+						...(lastReadTimestamp && {
+							createdAt: { gt: lastReadTimestamp },
+						}),
+					},
+				});
+
 				const otherParticipants = chatParticipant.chat.participants
 					.filter((p) => p.username !== userId)
 					.map((p) => ({
@@ -91,6 +121,7 @@ io.on("connection", async (socket) => {
 					participants: otherParticipants,
 					messages: recentMessages.reverse(),
 					lastReadMessageId: chatParticipant.lastReadMessageId,
+					unreadCount: unreadCount,
 				};
 			}),
 		);
@@ -131,38 +162,8 @@ io.on("connection", async (socket) => {
 				},
 			});
 
-			let unreadCount = 0;
-			if (participant.lastReadMessageId) {
-				const lastReadMessage = await prisma.message.findUnique({
-					where: { id: participant.lastReadMessageId },
-				});
-				const lastReadTime = lastReadMessage?.createdAt || new Date(0);
-
-				unreadCount = await prisma.message.count({
-					where: {
-						chatId: chatId,
-						isDeleted: false,
-						senderId: { not: userId },
-						createdAt: { gt: lastReadTime },
-					},
-				});
-			} else {
-				unreadCount = await prisma.message.count({
-					where: {
-						chatId: chatId,
-						isDeleted: false,
-						senderId: { not: userId },
-					},
-				});
-			}
-			console.log(
-				`On connect, lastReadMessageId =`,
-				participant.lastReadMessageId,
-			);
-
 			socket.emit("updated chat", {
 				chatID: chatId,
-				unreadCount: unreadCount,
 			});
 		} catch (err) {
 			console.error("Failed to send updated chat:", err);
