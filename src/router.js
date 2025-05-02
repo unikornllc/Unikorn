@@ -186,7 +186,7 @@ import {
 
 import {
 	uploadFile,
-	getAllFile,
+	getAllFiles,
 	getFile,
 	deleteFile,
 } from "./controllers/file.js";
@@ -319,7 +319,7 @@ router.delete("/deleteActivity", deleteOneActivity);
 //userFile
 router.post("/uploadFile", upload.single("file"), uploadFile);
 router.get("/getFile", getFile);
-router.get("/getAllFiles", getAllFile);
+router.get("/getAllFiles", getAllFiles);
 router.delete("/deleteFile", deleteFile);
 
 //calendlyIntegration
