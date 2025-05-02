@@ -1,14 +1,15 @@
 import fileStorage from "../fileStorage.js";
 import prisma from "../db.js";
+import path from "path";
 
-export const uploadUserFile = async (req, res) => {
+export const uploadFile = async (req, res) => {
 	try {
 		if (!req.file) {
 			return res.status(400).json({ message: "No file uploaded" });
 		}
 
 		const savedPath = await fileStorage.saveFile(
-			"user",
+			req.account.role.toLowerCase(),
 			req.account.id,
 			req.body.fileName,
 			req.file,
@@ -28,18 +29,18 @@ export const uploadUserFile = async (req, res) => {
 		// 	},
 		// });
 
-		const file = await prisma.userFile.upsert({
+		const file = await prisma.file.upsert({
 			where: {
-				fileName_userId: {
+				fileName_accountId: {
 					fileName: req.body.fileName,
-					userId: req.account.id,
+					accountId: req.account.id,
 				},
 			},
 			create: {
 				fileName: req.body.fileName,
 				filePath: savedPath,
 				fileType: req.file.mimetype,
-				user: {
+				account: {
 					connect: { id: req.account.id },
 				},
 			},
@@ -50,7 +51,7 @@ export const uploadUserFile = async (req, res) => {
 		});
 
 		res.status(200).json({
-			file: (({ userId, filePath, ...safe }) => safe)(file),
+			file: (({ accountId, filePath, ...safe }) => safe)(file),
 		});
 	} catch (error) {
 		console.error(error);
@@ -58,27 +59,21 @@ export const uploadUserFile = async (req, res) => {
 	}
 };
 
-export const getUserFile = async (req, res) => {
+export const getFile = async (req, res) => {
 	try {
-		const user = await prisma.user.findFirst({
-			where: {
-				account: {
-					username: req.query.username,
+		const account = await prisma.account.findUnique({
+			where: { username: req.query.username },
+			include: {
+				file: {
+					where: { fileName: req.query.fileName },
 				},
 			},
 		});
 
-		if (!user) {
-			return res.status(400).json({ message: "User not found" });
+		if (!account) {
+			return res.status(400).json({ message: "Account not found" });
 		}
-		const file = await prisma.userFile.findUnique({
-			where: {
-				fileName_userId: {
-					userId: user.id,
-					fileName: req.query.fileName,
-				},
-			},
-		});
+		const file = account.file[0] ? account.file[0] : null;
 
 		if (!file) {
 			return res.status(200).json({ message: "File not found" });
@@ -87,7 +82,7 @@ export const getUserFile = async (req, res) => {
 		if (!fileContent) {
 			return res.status(400).json({ message: "File content not found" });
 		}
-		const fileData = (({ userId, filePath, ...safe }) => safe)(file);
+		const fileData = (({ accountId, filePath, ...safe }) => safe)(file);
 		res.status(200).json({
 			...fileData,
 			fileContent: fileContent.toString("base64"),
@@ -98,35 +93,33 @@ export const getUserFile = async (req, res) => {
 	}
 };
 
-export const getAllUserFile = async (req, res) => {
+export const getAllFiles = async (req, res) => {
 	try {
-		const user = await prisma.user.findFirst({
+		const account = await prisma.account.findUnique({
 			where: {
-				account: {
-					username: req.query.username,
-				},
+				username: req.query.username,
 			},
 			include: {
-				userFile: true,
+				file: true,
 			},
 		});
-		if (!user) {
-			return res.status(400).json({ message: "User not found" });
+		if (!account) {
+			return res.status(400).json({ message: "Account not found" });
 		}
 		res.status(200).json({
-			file: user.userFile.map(({ userId, filePath, ...rest }) => rest),
+			file: account.file.map(({ accountId, filePath, ...rest }) => rest),
 		});
 	} catch (error) {
-		res.status(400).json({ message: "Error getting user files" });
+		res.status(400).json({ message: "Error getting account files" });
 	}
 };
 
-export const deleteUserFile = async (req, res) => {
+export const deleteFile = async (req, res) => {
 	try {
-		const deleted = await prisma.userFile.delete({
+		const deleted = await prisma.file.delete({
 			where: {
-				fileName_userId: {
-					userId: req.account.id,
+				fileName_accountId: {
+					accountId: req.account.id,
 					fileName: req.query.fileName,
 				},
 			},
@@ -141,7 +134,7 @@ export const deleteUserFile = async (req, res) => {
 		await fileStorage.deleteFile(deleted.filePath);
 
 		res.status(200).json({
-			deleted: (({ userId, filePath, ...safe }) => safe)(deleted),
+			deleted: (({ accountId, filePath, ...safe }) => safe)(deleted),
 		});
 	} catch (error) {
 		console.error(error);

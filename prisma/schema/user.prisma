@@ -46,7 +46,6 @@ model User {
   certificationsCourses CertificationsCourses[]
   language              Language[]
   socialMedia           SocialMedia[]
-  userFile              UserFile[]
   calendlyIntegration   CalendlyIntegration?
   fundraiser            Fundraiser[]            @relation("UserInvestments")
   investmentOffers      InvestmentOffer[]       @relation("UserOffers")
@@ -119,16 +118,4 @@ model SocialMedia {
   url      String
   user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   String
-}
-
-model UserFile {
-  id         String   @id @default(uuid())
-  fileName   String
-  filePath   String
-  fileType   String
-  uploadedAt DateTime @default(now())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([fileName, userId])
 }

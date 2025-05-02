@@ -127,13 +127,6 @@ import {
 } from "./controllers/activity.js";
 
 import {
-	uploadUserFile,
-	getAllUserFile,
-	getUserFile,
-	deleteUserFile,
-} from "./controllers/userFile.js";
-
-import {
 	authorizeCalendly,
 	eventTypeCalendly,
 	createEventTypeCalendly,
@@ -190,6 +183,13 @@ import {
 	getJournalsFiltered,
 	getTransactionsFiltered,
 } from "./controllers/admin.js";
+
+import {
+	uploadFile,
+	getAllFile,
+	getFile,
+	deleteFile,
+} from "./controllers/file.js";
 
 const router = Router();
 
@@ -317,10 +317,10 @@ router.get("/getOneActivity", getOneActivity);
 router.delete("/deleteActivity", deleteOneActivity);
 
 //userFile
-router.post("/uploadUserFile", upload.single("file"), uploadUserFile);
-router.get("/getUserFile", getUserFile);
-router.get("/getAllUserFile", getAllUserFile);
-router.delete("/deleteUserFile", deleteUserFile);
+router.post("/uploadFile", upload.single("file"), uploadFile);
+router.get("/getFile", getFile);
+router.get("/getAllFiles", getAllFile);
+router.delete("/deleteFile", deleteFile);
 
 //calendlyIntegration
 router.get("/calendly/auth", authorizeCalendly);
