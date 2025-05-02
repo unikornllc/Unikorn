@@ -162,8 +162,38 @@ io.on("connection", async (socket) => {
 				},
 			});
 
+			let unreadCount = 0;
+			if (participant.lastReadMessageId) {
+				const lastReadMessage = await prisma.message.findUnique({
+					where: { id: participant.lastReadMessageId },
+				});
+				const lastReadTime = lastReadMessage?.createdAt || new Date(0);
+
+				unreadCount = await prisma.message.count({
+					where: {
+						chatId: chatId,
+						isDeleted: false,
+						senderId: { not: userId },
+						createdAt: { gt: lastReadTime },
+					},
+				});
+			} else {
+				unreadCount = await prisma.message.count({
+					where: {
+						chatId: chatId,
+						isDeleted: false,
+						senderId: { not: userId },
+					},
+				});
+			}
+			console.log(
+				`On connect, lastReadMessageId =`,
+				participant.lastReadMessageId,
+			);
+
 			socket.emit("updated chat", {
 				chatID: chatId,
+				unreadCount: unreadCount,
 			});
 		} catch (err) {
 			console.error("Failed to send updated chat:", err);
