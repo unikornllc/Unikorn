@@ -8,7 +8,7 @@ model Account {
   username      String         @unique
   email         String         @unique
   password      String
-  mobileNumber  String?         @unique
+  mobileNumber  String?        @unique
   emailVerified Boolean        @default(false)
   role          AccountType
   company       Company?
@@ -19,15 +19,28 @@ model Account {
   transaction   Transaction[]  @relation("Transaction")
   following     Follow[]       @relation("follower")
   followedBy    Follow[]       @relation("following")
+  file          File[]
 
   //chat relations
-  sentMessages          Message[]         @relation("SentMessages")
-  participantIn         ChatParticipant[]  // change name 3ashan yahia medaye2
-  readReceipts          ReadReceipt[]
-  sentFriendRequests    FriendRequest[]   @relation("Sender")
-  receivedFriendRequests FriendRequest[]  @relation("Receiver")
-  blockedUsers          BlockedUser[]     @relation("Blocker")
-  blockedBy             BlockedUser[]     @relation("Blocked")
-  reportedUsers         ReportedUser[]    @relation("Reporter")
-  reportedBy            ReportedUser[]    @relation("Reported")
+  sentMessages           Message[]         @relation("SentMessages")
+  participantIn          ChatParticipant[] // change name 3ashan yahia medaye2
+  readReceipts           ReadReceipt[]
+  sentFriendRequests     FriendRequest[]   @relation("Sender")
+  receivedFriendRequests FriendRequest[]   @relation("Receiver")
+  blockedUsers           BlockedUser[]     @relation("Blocker")
+  blockedBy              BlockedUser[]     @relation("Blocked")
+  reportedUsers          ReportedUser[]    @relation("Reporter")
+  reportedBy             ReportedUser[]    @relation("Reported")
+}
+
+model File {
+  id         String   @id @default(uuid())
+  fileName   String
+  filePath   String
+  fileType   String
+  uploadedAt DateTime @default(now())
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([fileName, accountId])
 }

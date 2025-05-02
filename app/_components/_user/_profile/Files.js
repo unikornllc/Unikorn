@@ -24,14 +24,10 @@ const Files = ({ username, editable }) => {
 		try {
 			setLoading(true);
 			await axios
-				.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/uploadUserFile`,
-					formData,
-					{
-						withCredentials: true,
-						headers: { "Content-Type": "multipart/form-data" },
-					},
-				)
+				.post(`${process.env.NEXT_PUBLIC_SERVER}/api/uploadFile`, formData, {
+					withCredentials: true,
+					headers: { "Content-Type": "multipart/form-data" },
+				})
 				.then((response) => {
 					const uploadedFile = {
 						id: response.data.id || Date.now(),
@@ -52,13 +48,10 @@ const Files = ({ username, editable }) => {
 	const deleteFile = async (fileName) => {
 		try {
 			setLoading(true);
-			await axios.delete(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`,
-				{
-					params: { username, fileName },
-					withCredentials: true,
-				},
-			);
+			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteFile`, {
+				params: { username, fileName },
+				withCredentials: true,
+			});
 
 			setUserFiles((prevFiles) =>
 				prevFiles.filter((file) => file.fileName !== fileName),
@@ -73,7 +66,7 @@ const Files = ({ username, editable }) => {
 	const downloadFile = async (fileName) => {
 		try {
 			const response = await axios.get(
-				`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/getFile`,
 				{
 					params: { username, fileName },
 					withCredentials: true,
@@ -116,7 +109,7 @@ const Files = ({ username, editable }) => {
 		const fetchUserFiles = async () => {
 			try {
 				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getFile`,
 					{
 						params: { username, fileName: "resume" },
 						withCredentials: true,

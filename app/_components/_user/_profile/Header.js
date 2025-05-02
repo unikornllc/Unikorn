@@ -43,7 +43,7 @@ const Header = ({ user, editable }) => {
 
 			try {
 				const response = await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/uploadUserFile`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/uploadFile`,
 					formData,
 					{
 						withCredentials: true,
@@ -63,13 +63,10 @@ const Header = ({ user, editable }) => {
 	const deleteProfilePicture = async (fileId) => {
 		try {
 			if (userFile) {
-				await axios.delete(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/deleteUserFile`,
-					{
-						params: { username, fileName: "profile_picture" },
-						withCredentials: true,
-					},
-				);
+				await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteFile`, {
+					params: { username, fileName: "profile_picture" },
+					withCredentials: true,
+				});
 				window.location.reload();
 			}
 		} catch (error) {
@@ -134,7 +131,7 @@ const Header = ({ user, editable }) => {
 		const fetchUserFile = async () => {
 			try {
 				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getFile`,
 					{
 						params: { username, fileName: "profile_picture" },
 						withCredentials: true,

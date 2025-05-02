@@ -33,7 +33,6 @@ model Company {
   productInformation ProductInformation[]
   financials         Financial?
   activities         Activity[]
-  companyFile        CompanyFile[]
   raisingFunds       RaisingFunds[]
   fundraiser         Fundraiser[]         @relation("CompanyInvestments")
   investmentOffers   InvestmentOffer[]    @relation("CompanyOffers")
@@ -73,16 +72,4 @@ model Activity {
   description String  @db.VarChar(500)
   company     Company @relation(fields: [companyId], references: [id])
   companyId   String
-}
-
-model CompanyFile {
-  id         String   @id @default(uuid())
-  fileName   String
-  filePath   String
-  fileType   String
-  uploadedAt DateTime @default(now())
-  companyId  String
-  company    Company  @relation(fields: [companyId], references: [id])
-
-  @@unique([fileName, companyId])
 }

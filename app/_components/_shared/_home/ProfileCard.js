@@ -22,7 +22,7 @@ export default function ProfileCard({ profile, isCompany }) {
 		const fetchUserFile = async () => {
 			try {
 				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/getUserFile`,
+					`${process.env.NEXT_PUBLIC_SERVER}/api/getFile`,
 					{
 						params: {
 							username: profile.account.username,
