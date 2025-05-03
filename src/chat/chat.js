@@ -322,6 +322,12 @@ io.on("connection", async (socket) => {
 			socket.emit("error", { message: "Failed to create chat" });
 		}
 	});
+	const getAttachmentType = (mimeType) => {
+		if (mimeType && mimeType.startsWith("image/")) {
+			return "IMAGE";
+		}
+		return "FILE";
+	};
 
 	socket.on("send message", async ({ chatId, content, attachments = [] }) => {
 		try {
@@ -383,11 +389,11 @@ io.on("connection", async (socket) => {
 					isRequestMessage: isRequestMessage,
 					attachments: {
 						create: attachments.map((attachment) => ({
-							type: attachment.type,
+							type: getAttachmentType(attachment.mimeType || attachment.type),
 							url: attachment.url,
 							fileName: attachment.fileName,
-							fileSize: attachment.fileSize,
-							mimeType: attachment.mimeType,
+							fileSize: attachment.fileSize || 0,
+							mimeType: attachment.mimeType || attachment.type,
 						})),
 					},
 				},

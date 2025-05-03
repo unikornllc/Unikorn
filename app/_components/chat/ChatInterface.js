@@ -62,13 +62,6 @@ function ChatApp({ userId, username }) {
 						text: `New message from ${message.sender.username}`,
 					},
 				]);
-				// setChats((prevChats) =>
-				// 	prevChats.map((chat) =>
-				// 		chat.chatID === chatId
-				// 			? { ...chat, unreadCount: (chat.unreadCount || 0) + 1 }
-				// 			: chat,
-				// 	),
-				// );
 			}
 
 			setChats((prevChats) =>
@@ -129,28 +122,15 @@ function ChatApp({ userId, username }) {
 		});
 	};
 
-	const handleSendMessage = (content) => {
-		if (!content.trim() || !selectedChat || !socket) return;
+	const handleSendMessage = (content, attachment = null) => {
+		if ((!content.trim() && !attachment) || !selectedChat || !socket) return;
+
 		socket.emit("send message", {
 			chatId: selectedChat.chatID,
 			content,
+			attachments: attachment ? [attachment] : [],
 		});
 	};
-
-	// useEffect(() => {
-	// 	if (!selectedChat || !socket || messages.length === 0) return;
-
-	// 	const latestMessage = messages[messages.length - 1];
-
-	// 	if (!latestMessage) return;
-
-	// 	console.log("📬 Marking as read:", latestMessage.id);
-
-	// 	socket.emit("mark as read", {
-	// 		chatId: selectedChat.chatID,
-	// 		messageId: latestMessage.id,
-	// 	});
-	// }, [selectedChat, messages]);
 
 	const handleMarkAsRead = (chatId, messageId) => {
 		if (!socket) return;
@@ -212,6 +192,7 @@ function ChatApp({ userId, username }) {
 					chat={selectedChat}
 					messages={messages}
 					userId={userId}
+					username={username}
 					onSendMessage={handleSendMessage}
 				/>
 			</div>
