@@ -86,7 +86,7 @@ export default async function CompanyProfile({ params }) {
 						company.isFollowing = response.data.isFollowing;
 					});
 				await axios
-					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/getCompanyTier`, {
+					.get(`${process.env.NEXT_PUBLIC_SERVER}/api/getTier`, {
 						headers: {
 							cookie: cookie || "",
 						},
