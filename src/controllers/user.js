@@ -222,7 +222,9 @@ export const updateUserItem = async (req, res) => {
 				message: "Model type, item ID and update data are required.",
 			});
 		}
-		const updatedItem = await prisma[capitalizeFirstLetter(model)].update({
+		const updatedItem = await prisma[
+			model.charAt(0).toUpperCase() + model.slice(1)
+		].update({
 			where: { id, user: { id: req.account.id } },
 			data: sanitizeData(model, data),
 		});
@@ -240,10 +242,6 @@ export const updateUserItem = async (req, res) => {
 		console.error(`Error updating ${req.body.model}:`, error);
 		res.status(400).json({ message: `Error updating ${req.body.model}.` });
 	}
-};
-
-const capitalizeFirstLetter = (string) => {
-	return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
 const sanitizeData = (model, data) => {

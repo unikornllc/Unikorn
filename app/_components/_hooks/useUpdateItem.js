@@ -118,7 +118,6 @@ export const useUpdateItem = () => {
 	const { toast } = useToast();
 
 	const updateItem = async (modelType, itemId, updateData) => {
-		// Validate data first
 		console.log(updateData);
 		const validationErrors = validateData(modelType, updateData);
 		if (validationErrors.length > 0) {

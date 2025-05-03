@@ -86,10 +86,7 @@ import {
 	isCurrentCompany,
 	getOneCompanyProfile,
 	updateCompanyProfile,
-	getCompanyTier,
 	getCurrentCompany,
-	updatePersonnel,
-	deletePersonnel,
 } from "./controllers/companyProfile.js";
 
 import {
@@ -272,11 +269,7 @@ router.put("/updateCompanyProfile", updateCompanyProfile);
 router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
-router.get("/getCompanyTier", getCompanyTier);
 router.get("/getCurrentCompany", getCurrentCompany);
-
-router.put("/updatePersonnel", updatePersonnel);
-router.delete("/deletePersonnel", deletePersonnel);
 
 //get all companies that the user is following
 //returns an array of usernames
@@ -378,5 +371,22 @@ router.get("/admin/journals", getJournalsFiltered);
 router.get("/admin/transactions", getTransactionsFiltered);
 
 router.post("/logout", logout);
+
+import {
+	updatePersonnel,
+	deletePersonnel,
+	getCompanyOverview,
+	updateCompanyOverview,
+	// getFinancialInfo,
+	addCompanyActivity,
+	getProductInfo,
+} from "./controllers/company.js";
+
+router.put("/updatePersonnel", updatePersonnel);
+router.delete("/deletePersonnel", deletePersonnel);
+router.get("/getCompanyOverview", getCompanyOverview);
+router.put("/updateCompanyOverview", updateCompanyOverview);
+router.post("/addCompanyActivity", addCompanyActivity);
+router.get("/getCompanyProductInfo", getProductInfo);
 
 export default router;

@@ -1,5 +1,116 @@
 import prisma from "../db.js";
 
+export const updateCompanyProfile = async (req, res) => {
+	try {
+		const id = req.account.id;
+		const { fieldName, fieldValue } = req.body;
+
+		if (!id) {
+			return res
+				.status(400)
+				.json({ message: "Username is required to update the profile." });
+		}
+
+		const allowedFields = [
+			"name",
+			"email",
+			"username",
+			"description",
+			"website",
+			"founded",
+			"hqlocation",
+			"hunter",
+			"industry",
+			"type",
+			// "boardMembers",
+			// "advisors",
+			"activities",
+			// "founders",
+			// "keyEmployees",
+			// "personnel",
+			"productInformation",
+			"financials",
+		];
+
+		if (!allowedFields.includes(fieldName)) {
+			return res.status(400).json({ error: "Invalid field name" });
+		}
+
+		const company = await prisma.company.findUnique({
+			where: { id },
+		});
+		if (!company) {
+			return res.status(404).json({ error: "Company not found" });
+		}
+
+		let updateData = {};
+
+		if (fieldName === "activities") {
+			updateData = {
+				activities: {
+					upsert: fieldValue.map((activity) => ({
+						where: { id: activity.id || "" },
+						create: {
+							title: activity.title,
+							description: activity.description,
+						},
+						update: {
+							title: activity.title,
+							description: activity.description,
+						},
+					})),
+				},
+			};
+			// } else if (fieldName === "keyEmployees") {
+			// 	updateData = {
+			// 		keyEmployees: {
+			// 			upsert: fieldValue.map((key_employee) => ({
+			// 				where: { id: key_employee.id || "" },
+			// 				create: {
+			// 					name: key_employee.name,
+			// 					role: key_employee.role,
+			// 				},
+			// 				update: {
+			// 					name: key_employee.name,
+			// 					role: key_employee.role,
+			// 				},
+			// 			})),
+			// 		},
+			// 	};
+		} else if (fieldName === "productInformation") {
+			updateData = {
+				productInformation: {
+					upsert: fieldValue.map((productInformation) => ({
+						where: { id: productInformation.id || "" },
+						create: {
+							product: productInformation.product,
+							market: productInformation.market,
+							partnerships: productInformation.partnerships,
+						},
+						update: {
+							product: productInformation.product,
+							market: productInformation.market,
+							partnerships: productInformation.partnerships,
+						},
+					})),
+				},
+			};
+		} else {
+			updateData[fieldName] = fieldValue;
+		}
+
+		const updatedCompany = await prisma.company.update({
+			where: { id },
+			data: updateData,
+		});
+
+		res.json({ company: updatedCompany });
+	} catch (error) {
+		console.error("Error updating company profile:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+};
+
 export const getAllCompanies = async (req, res) => {
 	try {
 		const companies = await prisma.company.findMany();
@@ -166,205 +277,5 @@ export const getOneCompanyProfile = async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error fetching Profile" });
-	}
-};
-
-export const updateCompanyProfile = async (req, res) => {
-	try {
-		const id = req.account.id;
-		const { fieldName, fieldValue } = req.body;
-
-		if (!id) {
-			return res
-				.status(400)
-				.json({ message: "Username is required to update the profile." });
-		}
-
-		const allowedFields = [
-			"name",
-			"email",
-			"username",
-			"description",
-			"website",
-			"founded",
-			"hqlocation",
-			"hunter",
-			"industry",
-			"type",
-			// "boardMembers",
-			// "advisors",
-			"activities",
-			// "founders",
-			// "keyEmployees",
-			// "personnel",
-			"productInformation",
-			"financials",
-		];
-
-		if (!allowedFields.includes(fieldName)) {
-			return res.status(400).json({ error: "Invalid field name" });
-		}
-
-		const company = await prisma.company.findUnique({
-			where: { id },
-		});
-		if (!company) {
-			return res.status(404).json({ error: "Company not found" });
-		}
-
-		let updateData = {};
-
-		if (fieldName === "activities") {
-			updateData = {
-				activities: {
-					upsert: fieldValue.map((activity) => ({
-						where: { id: activity.id || "" },
-						create: {
-							title: activity.title,
-							description: activity.description,
-						},
-						update: {
-							title: activity.title,
-							description: activity.description,
-						},
-					})),
-				},
-			};
-			// } else if (fieldName === "keyEmployees") {
-			// 	updateData = {
-			// 		keyEmployees: {
-			// 			upsert: fieldValue.map((key_employee) => ({
-			// 				where: { id: key_employee.id || "" },
-			// 				create: {
-			// 					name: key_employee.name,
-			// 					role: key_employee.role,
-			// 				},
-			// 				update: {
-			// 					name: key_employee.name,
-			// 					role: key_employee.role,
-			// 				},
-			// 			})),
-			// 		},
-			// 	};
-		} else if (fieldName === "productInformation") {
-			updateData = {
-				productInformation: {
-					upsert: fieldValue.map((productInformation) => ({
-						where: { id: productInformation.id || "" },
-						create: {
-							product: productInformation.product,
-							market: productInformation.market,
-							partnerships: productInformation.partnerships,
-						},
-						update: {
-							product: productInformation.product,
-							market: productInformation.market,
-							partnerships: productInformation.partnerships,
-						},
-					})),
-				},
-			};
-		} else {
-			updateData[fieldName] = fieldValue;
-		}
-
-		const updatedCompany = await prisma.company.update({
-			where: { id },
-			data: updateData,
-		});
-
-		res.json({ company: updatedCompany });
-	} catch (error) {
-		console.error("Error updating company profile:", error);
-		res.status(500).json({ error: "Internal server error" });
-	}
-};
-
-export const updatePersonnel = async (req, res) => {
-	try {
-		const person = req.body.formData;
-		let userId = null;
-
-		if (person.username) {
-			const account = await prisma.account.findUnique({
-				where: { id: person.user.id },
-				include: { user: true },
-			});
-
-			if (account && account.user) {
-				userId = account.user.id;
-			}
-		}
-		const upsertedPersonnel = await prisma.personnel.upsert({
-			where: { id: person.id || "" },
-			create: {
-				name: person.name,
-				role: person.role,
-				crunchBaseLink: person.crunchBaseLink,
-				user: userId ? { connect: { id: userId } } : undefined,
-				company: { connect: { id: req.account.id } },
-			},
-			update: {
-				name: person.name,
-				role: person.role,
-				crunchBaseLink: person.crunchBaseLink,
-				user: userId ? { connect: { id: userId } } : undefined,
-			},
-		});
-
-		res.status(200).json({ personnel: upsertedPersonnel });
-	} catch (error) {
-		console.error("Error updating personnel:", error);
-		res.status(400).json({ message: "Error updating personnel" });
-	}
-};
-
-export const deletePersonnel = async (req, res) => {
-	try {
-		const deleted = await prisma.personnel.delete({
-			where: {
-				companyId: req.account.id,
-				id: req.query.personnelId,
-			},
-		});
-
-		if (deleted.count === 0) {
-			return res.status(401).json({
-				message:
-					"Personnel not found or you don't have permission to delete it.",
-			});
-		}
-		res.status(200).json({ message: "Personnel deleted successfully" });
-	} catch (e) {
-		res.status(400).json({ message: "Error deleting personnel" });
-	}
-};
-
-export const getCompanyTier = async (req, res) => {
-	try {
-		if (req.account.role == "User") {
-			const user = await prisma.user.findUnique({
-				where: {
-					id: req.account.id,
-				},
-				select: {
-					tier: true,
-				},
-			});
-			res.status(200).json({ tier: user.tier });
-		} else {
-			const company = await prisma.company.findUnique({
-				where: {
-					id: req.account.id,
-				},
-				select: {
-					tier: true,
-				},
-			});
-			res.status(200).json({ tier: company.tier });
-		}
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching company tier" });
 	}
 };

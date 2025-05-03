@@ -2,6 +2,53 @@ import fileStorage from "../fileStorage.js";
 import prisma from "../db.js";
 import path from "path";
 
+export const uploadProfilePicture = async (req, res) => {
+	try {
+		if (!req.file) {
+			return res.status(400).json({ message: "No profile picture uploaded" });
+		}
+		let fileName = req.body.fileName;
+
+		let [type, subtype] = req.file.mimetype.split("/");
+
+		if (subtype != "jpg" && subtype != "png" && subtype != "jpeg") {
+			return res.status(400).json({ message: "Incorrect image Format" });
+		}
+
+		const savedPath = await fileStorage.saveFile(
+			req.account.role.toLowerCase(),
+			path.join(req.account.id, "profile"),
+			fileName,
+			req.file,
+		);
+		const file = await prisma.file.upsert({
+			where: {
+				fileName_accountId: {
+					fileName,
+					accountId: req.account.id,
+				},
+			},
+			create: {
+				fileName,
+				filePath: savedPath,
+				fileType: req.file.mimetype,
+				account: { connect: { id: req.account.id } },
+			},
+			update: {
+				filePath: savedPath,
+				fileType: req.file.mimetype,
+			},
+		});
+
+		res.status(200).json({
+			file: (({ accountId, filePath, ...safe }) => safe)(file),
+		});
+	} catch (error) {
+		console.error(error);
+		res.status(400).json({ message: "Failed to upload profile picture" });
+	}
+};
+
 export const uploadFile = async (req, res) => {
 	try {
 		if (!req.file) {

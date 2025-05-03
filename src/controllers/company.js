@@ -1,0 +1,281 @@
+import prisma from "../db.js";
+
+const sanitizeData = (model, data) => {
+	switch (model) {
+		case "activities":
+			return {
+				title: data.title,
+				description: data.description,
+			};
+
+		case "productInformation":
+			return {
+				product: data.product,
+				market: data.market,
+				partnerships: data.partnerships,
+			};
+		default:
+			throw new Error("Invalid model type");
+	}
+};
+export const updateCompanyItem = async (req, res) => {
+	try {
+		const { model, id, data } = req.body;
+
+		if (!model || !id || !data) {
+			return res.status(400).json({
+				message: "Model type, item ID and update data are required.",
+			});
+		}
+		const existingItem = await prisma[
+			model.charAt(0).toUpperCase() + model.slice(1)
+		].findUnique({
+			where: { id },
+			select: { companyId: true },
+		});
+
+		if (existingItem && existingItem.companyId !== req.account.id) {
+			return res.status(401).json({
+				message: "Not authorized to update this item.",
+			});
+		}
+		const updatedItem = await prisma[
+			model.charAt(0).toUpperCase() + model.slice(1)
+		].upsert({
+			where: { id },
+			create: {
+				...sanitizeData(model, data),
+				company: { connect: { id: req.account.id } },
+			},
+			update: {
+				...sanitizeData(model, data),
+			},
+		});
+		// console.log(updatedItem)
+		if (!updatedItem) {
+			return res.status(401).json({
+				message: "Not authorized to update this item or item not found.",
+			});
+		}
+
+		res.status(200).json({
+			[model]: updatedItem,
+		});
+	} catch (error) {
+		console.error(`Error updating ${req.body.model}:`, error);
+		res.status(400).json({ message: `Error updating ${req.body.model}.` });
+	}
+};
+
+export const updatePersonnel = async (req, res) => {
+	try {
+		const person = req.body.formData;
+		let userId = null;
+
+		if (person.username && person.username !== "") {
+			const account = await prisma.account.findUnique({
+				where: { id: person.user.id },
+				include: { user: true },
+			});
+
+			if (account && account.user) {
+				userId = account.user.id;
+			}
+		}
+		const upsertedPersonnel = await prisma.personnel.upsert({
+			where: { id: person.id || "" },
+			create: {
+				name: person.name,
+				role: person.role,
+				crunchBaseLink: person.crunchBaseLink,
+				user: userId ? { connect: { id: userId } } : undefined,
+				company: { connect: { id: req.account.id } },
+			},
+			update: {
+				name: person.name,
+				role: person.role,
+				crunchBaseLink: person.crunchBaseLink,
+				user: userId ? { connect: { id: userId } } : undefined,
+			},
+		});
+
+		res.status(200).json({ personnel: upsertedPersonnel });
+	} catch (error) {
+		console.error("Error updating personnel:", error);
+		res.status(400).json({ message: "Error updating personnel" });
+	}
+};
+
+export const deletePersonnel = async (req, res) => {
+	try {
+		const deleted = await prisma.personnel.delete({
+			where: {
+				companyId: req.account.id,
+				id: req.query.personnelId,
+			},
+		});
+
+		if (deleted.count === 0) {
+			return res.status(401).json({
+				message:
+					"Personnel not found or you don't have permission to delete it.",
+			});
+		}
+		res.status(200).json({ message: "Personnel deleted successfully" });
+	} catch (e) {
+		res.status(400).json({ message: "Error deleting personnel" });
+	}
+};
+export const updateCompanyOverview = async (req, res) => {
+	try {
+		const { ...updateData } = req.body;
+
+		const updatedCompany = await prisma.company.update({
+			where: {
+				id: req.account.id,
+			},
+			data: updateData,
+		});
+		res.status(200).json({
+			user: (({ id, ...safe }) => safe)(updatedCompany),
+		});
+	} catch (error) {
+		console.error("Error updating company:", error);
+		res.status(400).json({ message: "Error updating company." });
+	}
+};
+
+export const getCompanyOverview = async (req, res) => {
+	try {
+		const company = await prisma.company.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			include: {
+				founded: true,
+				name: true,
+				website: true,
+				description: true,
+				type: true,
+				industry: true,
+				hqLocation: true,
+				activities: true,
+				//add range of employees here
+			},
+		});
+		if (!company) {
+			return res.status(400).json({ message: "Company not found." });
+		} else {
+			res.status(200).json({ company: company });
+		}
+	} catch (error) {
+		console.error("Error fetching company overview:", error);
+		res.status(400).json({ message: "Error fetching company overview." });
+	}
+};
+
+// export const getFinancialInfo = async (req, res) => {
+// 	try {
+// 		const financialInfo = await prisma.company.findUnique({
+// 			where: {
+// 				username: req.params.username,
+// 			},
+// 		});
+// 		if (!financialInfo) {
+// 			return res.status(400).json({ message: "Financial info not found." });
+// 		} else {
+// 			res.status(200).json({ financialInfo: financialInfo });
+// 		}
+// 	} catch (error) {
+// 		console.error("Error fetching financial info:", error);
+// 		res.status(400).json({ message: "Error fetching financial info." });
+// 	}
+// };
+
+export const addCompanyActivity = async (req, res) => {
+	try {
+		const { title, description, companyId } = req.body;
+		const activity = await prisma.activity.create({
+			data: {
+				title,
+				description,
+				companyId,
+			},
+		});
+		res.status(200).json({ message: "Activity added successfully" });
+	} catch (error) {
+		console.error("Error adding activity:", error);
+		res.status(400).json({ message: "Error adding activity." });
+	}
+};
+
+export const getProductInfo = async (req, res) => {
+	try {
+		const productInfo = await prisma.company.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			include: {
+				productInformation: true,
+			},
+		});
+		if (!productInfo) {
+			return res.status(400).json({ message: "Product info not found." });
+		} else {
+			res.status(200).json({ productInfo: productInfo });
+		}
+	} catch (error) {
+		console.error("Error fetching product info:", error);
+		res.status(400).json({ message: "Error fetching product info." });
+	}
+};
+
+// export const updateProductInfo = async (req, res) => {
+// 	try {
+// 		const { id, product, market, partnerships, companyId } = req.body;
+// 		const productInfo = await prisma.productInformation.upsert({
+// 			where: { id },
+// 			create: {
+// 				product,
+// 				market,
+// 				partnerships,
+// 				company: { connect: { id: companyId } },
+// 			},
+// 			update: {
+// 				product,
+// 				market,
+// 				partnerships,
+// 			},
+// 		});
+// 		if (!productInfo) {
+// 			return res.status(401).json({
+// 				message: "Not authorized to update this item or item not found.",
+// 			});
+// 		}
+// 		res.status(200).json({
+// 			message: "Product information updated successfully",
+// 		});
+// 	} catch (error) {
+// 		console.error("Error updating product info:", error);
+// 		res.status(400).json({ message: "Error updating product info." });
+// 	}
+// };
+
+// export const addProductInfo = async (req, res) => {
+//     try {
+//         const { product, market, partnerships, companyId } = req.body;
+//         const productInfo = await prisma.productInformation.create({
+//             data: {
+//                 product,
+//                 market,
+//                 partnerships,
+//                 company: { connect: { id: companyId } },
+//             },
+//         });
+//         res.status(200).json({ message: "Product information added successfully" });
+//     } catch (error) {
+//         console.error("Error adding product info:", error);
+//         res.status(400).json({ message: "Error adding product info." });
+//     }
+// };
+// //export const updateFinancialInfo = async (req, res) => {}

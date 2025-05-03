@@ -13,3 +13,33 @@ export function formatCurrency(amount) {
 		maximumFractionDigits: 0,
 	}).format(amount);
 }
+export function formatDate(date) {
+	return new Intl.DateTimeFormat("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	}).format(new Date(date));
+}
+
+export function truncateText(text, maxLength) {
+	maxLength = maxLength || 100;
+	if (!text || text.length <= maxLength) return text;
+	return text.slice(0, maxLength) + "...";
+}
+
+export function calculateFundingProgress(fund) {
+	if (!fund) return 0;
+	const progress =
+		((fund.totalPortions - fund.remainingPortions) / fund.totalPortions) * 100;
+	return Math.round(progress);
+}
+
+export function getInitials(name) {
+	if (!name) return "";
+	return name
+		.split(" ")
+		.map((part) => part.charAt(0))
+		.join("")
+		.toUpperCase()
+		.slice(0, 2);
+}
