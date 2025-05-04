@@ -32,7 +32,12 @@ import {
 import EditableField from "@/app/_components/_company/_profile/EditableField";
 import { formatDate } from "@/app/_utils/utils";
 
-export default function AboutSection({ company, isOwner, updateCompany }) {
+export default function AboutSection({
+	company,
+	isOwner,
+	updateCompany,
+	updateCompanyProfile,
+}) {
 	const [isEditingAbout, setIsEditingAbout] = useState(false);
 	const [isEditingProduct, setIsEditingProduct] = useState(false);
 	const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -47,6 +52,8 @@ export default function AboutSection({ company, isOwner, updateCompany }) {
 		industry: company.industry,
 		tier: company.tier,
 	});
+
+	const [products, setProducts] = useState(company.productInformation);
 
 	const [productInfo, setProductInfo] = useState(
 		company.productInformation && company.productInformation.length > 0
@@ -71,6 +78,7 @@ export default function AboutSection({ company, isOwner, updateCompany }) {
 
 	const handleSaveAbout = () => {
 		updateCompany(aboutInfo);
+		updateCompanyProfile(aboutInfo);
 		setIsEditingAbout(false);
 	};
 
@@ -94,7 +102,19 @@ export default function AboutSection({ company, isOwner, updateCompany }) {
 				)
 			: [updatedProduct];
 
-		updateCompany({ productInformation: updatedProductInfo });
+		updateCompany({
+			model: "productInformation",
+			id: updatedProduct.id,
+			data: {
+				product: updatedProduct.product,
+				market: updatedProduct.market,
+				partnerships: updatedProduct.partnerships,
+			},
+		});
+
+		setProducts((prev) =>
+			prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+		);
 		setIsEditingProduct(false);
 	};
 
@@ -118,8 +138,16 @@ export default function AboutSection({ company, isOwner, updateCompany }) {
 			? [...company.productInformation, product]
 			: [product];
 
-		updateCompany({ productInformation: updatedProductInfo });
-		setNewProduct({ product: "", market: "", partnerships: "" });
+		updateCompany({
+			model: "productInformation",
+			id: product.id,
+			data: {
+				product: product.product,
+				market: product.market,
+				partnerships: product.partnerships,
+			},
+		});
+		setProducts([...updatedProductInfo]);
 		setIsAddingProduct(false);
 	};
 
@@ -274,10 +302,9 @@ export default function AboutSection({ company, isOwner, updateCompany }) {
 					)}
 				</CardHeader>
 				<CardContent>
-					{company.productInformation &&
-					company.productInformation.length > 0 ? (
+					{products && products.length > 0 ? (
 						<div className="space-y-6">
-							{company.productInformation.map((product) => (
+							{products.map((product) => (
 								<Card key={product.id}>
 									<CardContent className="p-6">
 										<div>
