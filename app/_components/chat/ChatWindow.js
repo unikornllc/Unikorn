@@ -14,11 +14,42 @@ export default function ChatWindow({
 	const messagesEndRef = useRef(null);
 	const [loadingAttachments, setLoadingAttachments] = useState({});
 	const [attachmentCache, setAttachmentCache] = useState({});
+	const [imageModal, setImageModal] = useState({
+		isOpen: false,
+		src: "",
+		alt: "",
+	});
 
 	useEffect(() => {
 		if (!messagesEndRef.current) return;
 		messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
+
+	const openImageModal = (src, alt) => {
+		console.log("Opening modal with src:", src, "alt:", alt);
+		if (!src) {
+			console.error("No image source provided to modal");
+			return;
+		}
+
+		setImageModal({
+			isOpen: true,
+			src: src,
+			alt: alt || "Image attachment",
+		});
+		// Prevent background scrolling when modal is open
+		document.body.style.overflow = "hidden";
+	};
+
+	const closeImageModal = () => {
+		setImageModal({
+			isOpen: false,
+			src: "",
+			alt: "",
+		});
+		// Restore background scrolling
+		document.body.style.overflow = "";
+	};
 
 	const renderAttachment = (attachment) => {
 		if (!attachment) return null;
@@ -113,13 +144,26 @@ export default function ChatWindow({
 		}
 
 		// Render based on attachment type from the database
+		// When setting up the image rendering part, update the onClick handler:
+
 		if (attachment.type === "IMAGE" && cachedAttachment) {
 			return (
 				<div className="mt-2">
 					<img
 						src={cachedAttachment.objectUrl || "/placeholder.svg"}
 						alt={cachedAttachment.originalName || "Image attachment"}
-						className="max-w-xs rounded-md border border-gray-200"
+						className="max-w-xs max-h-60 object-contain rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+						style={{ maxWidth: "100%" }}
+						onClick={() => {
+							console.log(
+								"Opening image modal with:",
+								cachedAttachment.objectUrl,
+							);
+							openImageModal(
+								cachedAttachment.objectUrl,
+								cachedAttachment.originalName || "Image attachment",
+							);
+						}}
 					/>
 				</div>
 			);
@@ -128,21 +172,29 @@ export default function ChatWindow({
 			if (cachedAttachment.type === "application/pdf") {
 				return (
 					<div className="mt-2">
-						<div className="p-2 bg-gray-100 rounded-md mb-2">
-							<a
-								href={cachedAttachment.objectUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-[#6366f1] hover:underline"
+						<a
+							href={cachedAttachment.objectUrl}
+							download={cachedAttachment.originalName}
+							className="flex items-center p-2 bg-[#eef2ff] rounded-md text-[#6366f1] hover:bg-[#dbeafe]"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="h-5 w-5 mr-2"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
 							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+								/>
+							</svg>
+							<span className="text-sm truncate">
 								{cachedAttachment.originalName || "PDF document"}
-							</a>
-						</div>
-						<iframe
-							src={cachedAttachment.objectUrl}
-							className="w-full h-64 rounded-md border border-gray-200"
-							title={cachedAttachment.originalName || "PDF document"}
-						/>
+							</span>
+						</a>
 					</div>
 				);
 			} else {
@@ -263,6 +315,49 @@ export default function ChatWindow({
 			<div className="p-4 border-t border-gray-200 bg-white">
 				<MessageInput onSendMessage={onSendMessage} username={username} />
 			</div>
+
+			{/* Image Modal */}
+			{/* Image Modal */}
+			{imageModal.isOpen && (
+				<div
+					className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+					onClick={closeImageModal}
+				>
+					<div className="relative max-w-4xl max-h-[90vh] w-auto">
+						{imageModal.src ? (
+							<img
+								src={imageModal.src}
+								alt={imageModal.alt || "Image preview"}
+								className="max-h-[90vh] max-w-full object-contain"
+								onClick={(e) => e.stopPropagation()}
+							/>
+						) : (
+							<div className="bg-white p-4 rounded">
+								Image could not be loaded
+							</div>
+						)}
+						<button
+							className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70"
+							onClick={closeImageModal}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								className="h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
