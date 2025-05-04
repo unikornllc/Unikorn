@@ -186,6 +186,7 @@ import {
 	getAllFiles,
 	getFile,
 	deleteFile,
+	uploadProfilePicture,
 } from "./controllers/file.js";
 
 const router = Router();
@@ -380,6 +381,7 @@ import {
 	// getFinancialInfo,
 	addCompanyActivity,
 	getProductInfo,
+	updateCompanyItem,
 } from "./controllers/company.js";
 
 router.put("/updatePersonnel", updatePersonnel);
@@ -388,5 +390,13 @@ router.get("/getCompanyOverview", getCompanyOverview);
 router.put("/updateCompanyOverview", updateCompanyOverview);
 router.post("/addCompanyActivity", addCompanyActivity);
 router.get("/getCompanyProductInfo", getProductInfo);
+router.post("/updateCompanyItem", updateCompanyItem);
+router.post(
+	"/uploadProfilePicture",
+	upload.single("file"),
+	uploadProfilePicture,
+);
+// router.get("/getProfilePicture", getFile);
+// router.delete("/deleteProfilePicture", deleteFile);
 
 export default router;

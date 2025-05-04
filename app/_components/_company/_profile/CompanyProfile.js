@@ -25,6 +25,10 @@ import {
 	BasicProfileSkeleton,
 	BasicCardSkeleton,
 } from "@/app/_components/_ui/_loading/Skeleton";
+import {
+	updateCompanyProfile,
+	updateCompnanyItem,
+} from "@/app/_utils/_api/companyAPIs";
 
 const COMPANY_SECTIONS = [
 	"profile",
@@ -228,7 +232,8 @@ function CompanyProfileContent({ company, isOwner }) {
 						{renderSection("about", AboutSection, {
 							company: companyData,
 							isOwner,
-							updateCompany: updateCompanyData,
+							updateCompany: updateCompnanyItem,
+							updateCompanyProfile: updateCompanyProfile,
 						})}
 					</TabsContent>
 

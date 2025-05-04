@@ -27,6 +27,22 @@ export const fetchCompanyOverview = async (username) => {
 	}
 };
 
+export const updateCompnanyItem = async (data) => {
+	try {
+		const response = await axios.post(
+			`${API_BASE_URL}/updateCompanyItem`,
+			data,
+			{
+				withCredentials: true,
+			},
+		);
+		return response.data;
+	} catch (error) {
+		console.log("Error updating company item:", error);
+		throw error;
+	}
+};
+
 export const fetchCompanyProductInfo = async (username) => {
 	try {
 		const response = await axios.get(`${API_BASE_URL}/getCompanyProductInfo`, {
