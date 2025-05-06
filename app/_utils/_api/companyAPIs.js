@@ -14,6 +14,35 @@ export const fetchCurrentCompanyData = async () => {
 	}
 };
 
+export const deleteCompanyPersonnel = async (personnelId) => {
+	try {
+		const response = await axios.delete(`${API_BASE_URL}/deletePersonnel`, {
+			withCredentials: true,
+			data: { personnelId },
+		});
+		return response.data;
+	} catch (error) {
+		console.log("Error deleting company personnel:", error);
+		throw error;
+	}
+};
+
+export const deleteCompanyProduct = async (id) => {
+	try {
+		const response = await axios.delete(
+			`${API_BASE_URL}/deleteCompanyProduct`,
+			{
+				withCredentials: true,
+				data: { id },
+			},
+		);
+		return response.data;
+	} catch (error) {
+		console.log("Error deleting company product:", error);
+		throw error;
+	}
+};
+
 export const fetchCompanyOverview = async (username) => {
 	try {
 		const respnse = await axios.get(`${API_BASE_URL}/getCompanyOverview`, {

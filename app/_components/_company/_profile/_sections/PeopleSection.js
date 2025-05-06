@@ -32,39 +32,30 @@ import { Input } from "@/app/_components/_ui/Input";
 import { Plus, Edit, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-export default function PeopleSection({ company, isOwner, updateCompany }) {
+export default function PeopleSection({
+	company,
+	isOwner,
+	updateCompany,
+	deletePersonnel,
+}) {
 	const [activeTab, setActiveTab] = useState("leadership");
 	const [isAddingPerson, setIsAddingPerson] = useState(false);
 	const [isEditingPerson, setIsEditingPerson] = useState(false);
 	const [selectedPerson, setSelectedPerson] = useState(null);
 
-	// Mock data for employees
-	const [employees, setEmployees] = useState([
-		{
-			id: "1",
-			name: "Jane Smith",
-			role: "Software Engineer",
-			avatar: "/placeholder.svg",
-		},
-		{
-			id: "2",
-			name: "John Doe",
-			role: "Product Manager",
-			avatar: "/placeholder.svg",
-		},
-		{
-			id: "3",
-			name: "Emily Johnson",
-			role: "UX Designer",
-			avatar: "/placeholder.svg",
-		},
-		{
-			id: "4",
-			name: "Michael Brown",
-			role: "Marketing Specialist",
-			avatar: "/placeholder.svg",
-		},
-	]);
+	const leaderRoles = ["Founder", "Advisor", "BoardMember"];
+
+	const [leaders, setLeaders] = useState(
+		company.personnel
+			.filter((person) => leaderRoles.includes(person.role))
+			.map((person) => ({ ...person, avatar: "/placeholder.svg" })),
+	);
+
+	const [employees, setEmployees] = useState(
+		company.personnel
+			.filter((person) => person.role === "KeyEmployee")
+			.map((person) => ({ ...person, avatar: "/placeholder.svg" })),
+	);
 
 	// Mock data for investors
 	const [investors, setInvestors] = useState([
@@ -112,8 +103,30 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 			companyId: company.id,
 		};
 
-		const updatedPersonnel = [...(company.personnel || []), person];
-		updateCompany({ personnel: updatedPersonnel });
+		// First call updateCompany with the model and id for upsert
+		updateCompany({
+			model: "personnel",
+			id: person.id,
+			data: person,
+		});
+
+		// Then update the local state based on the role
+		if (newPerson.role === "KeyEmployee") {
+			setEmployees((prev) => [
+				...prev,
+				{ ...person, avatar: "/placeholder.svg" },
+			]);
+		} else if (leaderRoles.includes(newPerson.role)) {
+			setLeaders((prev) => [
+				...prev,
+				{ ...person, avatar: "/placeholder.svg" },
+			]);
+		} else {
+			// For investors, keep the original behavior
+			const updatedPersonnel = [...(company.personnel || []), person];
+			updateCompany({ personnel: updatedPersonnel });
+		}
+
 		setNewPerson({ name: "", role: "Founder", crunchBaseLink: "" });
 		setIsAddingPerson(false);
 	};
@@ -140,29 +153,82 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 			companyId: company.id,
 		};
 
-		const updatedPersonnel = company.personnel.map((p) =>
-			p.id === updatedPerson.id ? updatedPerson : p,
-		);
+		if (editPerson.role === "KeyEmployee") {
+			updateCompany({
+				model: "personnel",
+				id: editPerson.id,
+				data: updatedPerson,
+			});
 
-		updateCompany({ personnel: updatedPersonnel });
+			setEmployees((prev) =>
+				prev.map((person) =>
+					person.id === editPerson.id
+						? { ...person, ...updatedPerson, avatar: person.avatar }
+						: person,
+				),
+			);
+
+			setLeaders((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
+		} else if (leaderRoles.includes(editPerson.role)) {
+			updateCompany({
+				model: "personnel",
+				id: editPerson.id,
+				data: updatedPerson,
+			});
+			setLeaders((prev) =>
+				prev.map((person) =>
+					person.id === editPerson.id
+						? { ...person, ...updatedPerson, avatar: person.avatar } // Preserve avatar and other properties
+						: person,
+				),
+			);
+			setEmployees((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
+
+			// If the person wasn't in leaders before (role changed), add them
+			if (!leaders.some((person) => person.id === editPerson.id)) {
+				setLeaders((prev) => [
+					...prev,
+					{ ...updatedPerson, avatar: "/placeholder.svg" },
+				]);
+			}
+		} else {
+			setInvestors((prev) =>
+				prev.map((person) =>
+					person.id === editPerson.id
+						? { ...person, ...updatedPerson, avatar: person.avatar }
+						: person,
+				),
+			);
+		}
+
 		setIsEditingPerson(false);
 	};
 
-	const handleDeletePerson = (id) => {
-		const updatedPersonnel = company.personnel.filter((p) => p.id !== id);
-		updateCompany({ personnel: updatedPersonnel });
+	const handleDeletePerson = (id, role) => {
+		if (role === "KeyEmployee") {
+			deletePersonnel(id);
+			setEmployees((prev) => prev.filter((person) => person.id !== id));
+		} else if (leaderRoles.includes(role)) {
+			deletePersonnel(id);
+			setLeaders((prev) => prev.filter((person) => person.id !== id));
+		} else {
+			// Handle investor deletion here
+			setInvestors((prev) => prev.filter((person) => person.id !== id));
+		}
 	};
 
 	const handleAddEmployee = () => {
-		// In a real app, this would open a dialog to add an employee
-		const newEmployee = {
-			id: Date.now().toString(),
-			name: "New Employee",
-			role: "Role",
-			avatar: "/placeholder.svg",
-		};
+		setNewPerson({ name: "", role: "KeyEmployee", crunchBaseLink: "" });
+		setIsAddingPerson(true);
+	};
 
-		setEmployees([...employees, newEmployee]);
+	const handleAddLeader = () => {
+		setNewPerson({ name: "", role: "Founder", crunchBaseLink: "" });
+		setIsAddingPerson(true);
 	};
 
 	const handleAddInvestor = () => {
@@ -187,16 +253,6 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 							Leadership, employees, and investors
 						</CardDescription>
 					</div>
-					{isOwner && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setIsAddingPerson(true)}
-						>
-							<Plus className="h-4 w-4 mr-2" />
-							Add Person
-						</Button>
-					)}
 				</CardHeader>
 				<CardContent>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -204,7 +260,7 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 							<CardContent className="pt-6">
 								<div className="text-center">
 									<h3 className="text-2xl font-bold text-purple-600">
-										{company.personnel?.length || 0}
+										{leaders?.length || 0}
 									</h3>
 									<p className="text-sm text-gray-500 mt-1">Leadership Team</p>
 								</div>
@@ -246,9 +302,18 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 						</TabsList>
 
 						<TabsContent value="leadership" className="pt-6">
-							{company.personnel && company.personnel.length > 0 ? (
+							<div className="flex justify-between items-center mb-4">
+								<h3 className="text-lg font-medium">Company Leaders</h3>
+								{isOwner && (
+									<Button variant="outline" size="sm" onClick={handleAddLeader}>
+										<Plus className="h-4 w-4 mr-2" />
+										Add leaders
+									</Button>
+								)}
+							</div>
+							{leaders && leaders.length > 0 ? (
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									{company.personnel.map((person) => (
+									{leaders.map((person) => (
 										<Card key={person.id}>
 											<CardContent className="p-6">
 												<div className="flex items-center gap-4">
@@ -293,7 +358,9 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 																variant="ghost"
 																size="icon"
 																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-																onClick={() => handleDeletePerson(person.id)}
+																onClick={() =>
+																	handleDeletePerson(person.id, person.role)
+																}
 															>
 																<Trash2 className="h-4 w-4" />
 															</Button>
@@ -311,7 +378,7 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 										<Button
 											variant="outline"
 											className="mt-4"
-											onClick={() => setIsAddingPerson(true)}
+											onClick={handleAddLeader}
 										>
 											<Plus className="h-4 w-4 mr-2" />
 											Add Team Member
@@ -335,31 +402,79 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 									</Button>
 								)}
 							</div>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-								{employees.map((employee) => (
-									<Card key={employee.id}>
-										<CardContent className="p-6">
-											<div className="flex items-center gap-4">
-												<Avatar className="h-12 w-12">
-													<AvatarImage
-														src={employee.avatar || "/placeholder.svg"}
-														alt={employee.name}
-													/>
-													<AvatarFallback>
-														{employee.name.charAt(0)}
-													</AvatarFallback>
-												</Avatar>
-												<div>
-													<h3 className="font-medium">{employee.name}</h3>
-													<p className="text-sm text-gray-500">
-														{employee.role}
-													</p>
+							{employees && employees.length > 0 ? (
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									{employees.map((employee) => (
+										<Card key={employee.id}>
+											<CardContent className="p-6">
+												<div className="flex items-center gap-4">
+													<Avatar className="h-12 w-12">
+														<AvatarImage
+															src={employee.avatar || "/placeholder.svg"}
+															alt={employee.name}
+														/>
+														<AvatarFallback>
+															{employee.name.charAt(0)}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1">
+														<h3 className="font-medium">{employee.name}</h3>
+														<p className="text-sm text-gray-500">
+															{employee.role}
+														</p>
+														{employee.crunchBaseLink && (
+															<Link
+																href={employee.crunchBaseLink}
+																target="_blank"
+																className="text-xs text-blue-600 hover:underline flex items-center mt-1"
+															>
+																View on CrunchBase
+																<ExternalLink className="h-3 w-3 ml-1" />
+															</Link>
+														)}
+													</div>
+													{isOwner && (
+														<div className="flex flex-col gap-2">
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8"
+																onClick={() => handleEditPerson(employee)}
+															>
+																<Edit className="h-4 w-4" />
+															</Button>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+																onClick={() =>
+																	handleDeletePerson(employee.id, employee.role)
+																}
+															>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</div>
+													)}
 												</div>
-											</div>
-										</CardContent>
-									</Card>
-								))}
-							</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500">
+									<p>No employees added yet</p>
+									{isOwner && (
+										<Button
+											variant="outline"
+											className="mt-4"
+											onClick={handleAddEmployee}
+										>
+											<Plus className="h-4 w-4 mr-2" />
+											Add Employee
+										</Button>
+									)}
+								</div>
+							)}
 						</TabsContent>
 
 						<TabsContent value="investors" className="pt-6">
@@ -376,31 +491,69 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 									</Button>
 								)}
 							</div>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-								{investors.map((investor) => (
-									<Card key={investor.id}>
-										<CardContent className="p-6">
-											<div className="flex items-center gap-4">
-												<Avatar className="h-12 w-12">
-													<AvatarImage
-														src={investor.avatar || "/placeholder.svg"}
-														alt={investor.name}
-													/>
-													<AvatarFallback>
-														{investor.name.charAt(0)}
-													</AvatarFallback>
-												</Avatar>
-												<div>
-													<h3 className="font-medium">{investor.name}</h3>
-													<p className="text-sm text-gray-500">
-														{investor.role}
-													</p>
+							{investors && investors.length > 0 ? (
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									{investors.map((investor) => (
+										<Card key={investor.id}>
+											<CardContent className="p-6">
+												<div className="flex items-center gap-4">
+													<Avatar className="h-12 w-12">
+														<AvatarImage
+															src={investor.avatar || "/placeholder.svg"}
+															alt={investor.name}
+														/>
+														<AvatarFallback>
+															{investor.name.charAt(0)}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1">
+														<h3 className="font-medium">{investor.name}</h3>
+														<p className="text-sm text-gray-500">
+															{investor.role}
+														</p>
+													</div>
+													{isOwner && (
+														<div className="flex flex-col gap-2">
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8"
+																onClick={() => handleEditPerson(investor)}
+															>
+																<Edit className="h-4 w-4" />
+															</Button>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+																onClick={() =>
+																	handleDeletePerson(investor.id, "investor")
+																}
+															>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</div>
+													)}
 												</div>
-											</div>
-										</CardContent>
-									</Card>
-								))}
-							</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500">
+									<p>No investors added yet</p>
+									{isOwner && (
+										<Button
+											variant="outline"
+											className="mt-4"
+											onClick={handleAddInvestor}
+										>
+											<Plus className="h-4 w-4 mr-2" />
+											Add Investor
+										</Button>
+									)}
+								</div>
+							)}
 						</TabsContent>
 					</Tabs>
 				</CardContent>
@@ -430,19 +583,41 @@ export default function PeopleSection({ company, isOwner, updateCompany }) {
 							<Label htmlFor="person-role" className="text-right">
 								Role
 							</Label>
-							<select
-								id="person-role"
-								value={newPerson.role}
-								onChange={(e) =>
-									setNewPerson({ ...newPerson, role: e.target.value })
-								}
-								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								<option value="Founder">Founder</option>
-								<option value="Advisor">Advisor</option>
-								<option value="BoardMember">Board Member</option>
-								<option value="KeyEmployee">Key Employee</option>
-							</select>
+							{activeTab === "employees" ? (
+								<Input
+									id="person-role"
+									value="KeyEmployee"
+									readOnly
+									className="col-span-3 bg-gray-50"
+								/>
+							) : activeTab === "leadership" ? (
+								<select
+									id="person-role"
+									value={newPerson.role}
+									onChange={(e) =>
+										setNewPerson({ ...newPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Founder">Founder</option>
+									<option value="Advisor">Advisor</option>
+									<option value="BoardMember">Board Member</option>
+								</select>
+							) : (
+								<select
+									id="person-role"
+									value={newPerson.role}
+									onChange={(e) =>
+										setNewPerson({ ...newPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Founder">Founder</option>
+									<option value="Advisor">Advisor</option>
+									<option value="BoardMember">Board Member</option>
+									<option value="KeyEmployee">Key Employee</option>
+								</select>
+							)}
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="person-crunchbase" className="text-right">

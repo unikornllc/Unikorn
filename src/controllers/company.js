@@ -14,8 +14,36 @@ const sanitizeData = (model, data) => {
 				market: data.market,
 				partnerships: data.partnerships,
 			};
+		case "personnel":
+			return {
+				name: data.name,
+				role: data.role,
+				crunchBaseLink: data.crunchBaseLink,
+			};
 		default:
 			throw new Error("Invalid model type");
+	}
+};
+
+export const deleteCompanyProduct = async (req, res) => {
+	try {
+		const { id } = req.body;
+		const deletedProduct = await prisma.productInformation.delete({
+			where: {
+				id,
+			},
+		});
+		if (!deletedProduct) {
+			return res.status(401).json({
+				message: "Not authorized to delete this product or product not found.",
+			});
+		}
+		res.status(200).json({
+			message: "Product deleted successfully",
+		});
+	} catch (error) {
+		console.error("Error deleting company product:", error);
+		res.status(400).json({ message: "Error deleting company product." });
 	}
 };
 export const updateCompanyItem = async (req, res) => {
@@ -111,18 +139,20 @@ export const deletePersonnel = async (req, res) => {
 		const deleted = await prisma.personnel.delete({
 			where: {
 				companyId: req.account.id,
-				id: req.query.personnelId,
+				id: req.body.personnelId,
 			},
 		});
-
+		console.log(deleted);
 		if (deleted.count === 0) {
 			return res.status(401).json({
 				message:
 					"Personnel not found or you don't have permission to delete it.",
 			});
 		}
+		console.log("deleted personnel", deleted);
 		res.status(200).json({ message: "Personnel deleted successfully" });
 	} catch (e) {
+		console.error("Error deleting personnel:", e);
 		res.status(400).json({ message: "Error deleting personnel" });
 	}
 };
@@ -160,6 +190,7 @@ export const getCompanyOverview = async (req, res) => {
 				industry: true,
 				hqLocation: true,
 				activities: true,
+				companySize: true,
 				//add range of employees here
 			},
 		});
@@ -171,6 +202,37 @@ export const getCompanyOverview = async (req, res) => {
 	} catch (error) {
 		console.error("Error fetching company overview:", error);
 		res.status(400).json({ message: "Error fetching company overview." });
+	}
+};
+
+export const getCompanyPersonnel = async (req, res) => {
+	try {
+		const personnel = await prisma.account.findUnique({
+			where: {
+				username: req.query.username,
+			},
+			select: {
+				company: {
+					select: {
+						personnel: {
+							select: {
+								id: true,
+								name: true,
+								role: true,
+								crunchBaseLink: true,
+							},
+						},
+					},
+				},
+			},
+		});
+		if (!personnel) {
+			return res.status(400).json({ message: "Personnel not found." });
+		}
+		return res.status(200).json({ personnel: personnel.company.personnel });
+	} catch (error) {
+		console.error("Error fetching company personnel:", error);
+		res.status(400).json({ message: "Error fetching company personnel." });
 	}
 };
 

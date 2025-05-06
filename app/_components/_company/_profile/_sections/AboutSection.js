@@ -20,23 +20,24 @@ import { Label } from "@/app/_components/_ui/Label";
 import { Input } from "@/app/_components/_ui/Input";
 import { Textarea } from "@/app/_components/_ui/Textarea";
 import {
-	Edit,
 	Building,
 	Globe,
 	MapPin,
 	Calendar,
 	Users,
 	Briefcase,
-	Plus,
 } from "lucide-react";
+import { PencilIcon, PlusIcon } from "@heroicons/react/24/solid";
 import EditableField from "@/app/_components/_company/_profile/EditableField";
 import { formatDate } from "@/app/_utils/utils";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
 export default function AboutSection({
 	company,
 	isOwner,
 	updateCompany,
 	updateCompanyProfile,
+	deleteCompanyProduct,
 }) {
 	const [isEditingAbout, setIsEditingAbout] = useState(false);
 	const [isEditingProduct, setIsEditingProduct] = useState(false);
@@ -51,6 +52,7 @@ export default function AboutSection({
 		type: company.type,
 		industry: company.industry,
 		tier: company.tier,
+		companySize: company.companySize,
 	});
 
 	const [products, setProducts] = useState(company.productInformation);
@@ -156,18 +158,16 @@ export default function AboutSection({
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
 					<div>
-						<CardTitle>About {company.name}</CardTitle>
+						<CardTitle>About {aboutInfo.name}</CardTitle>
 						<CardDescription>Company overview and details</CardDescription>
 					</div>
 					{isOwner && (
-						<Button
-							variant="outline"
-							size="sm"
+						<button
+							className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
 							onClick={() => setIsEditingAbout(true)}
 						>
-							<Edit className="h-4 w-4 mr-2" />
-							Edit
-						</Button>
+							<PencilIcon className="w-5 h-5 text-gray-600" />
+						</button>
 					)}
 				</CardHeader>
 				<CardContent>
@@ -176,13 +176,13 @@ export default function AboutSection({
 							<h3 className="text-lg font-medium mb-2">Overview</h3>
 							{isOwner ? (
 								<EditableField
-									value={company.description}
+									value={aboutInfo.description}
 									onSave={(value) => updateCompany({ description: value })}
 									multiline
 									className="text-gray-600"
 								/>
 							) : (
-								<p className="text-gray-600">{company.description}</p>
+								<p className="text-gray-600">{aboutInfo.description}</p>
 							)}
 						</div>
 
@@ -194,7 +194,7 @@ export default function AboutSection({
 										<Building className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Legal Name</h4>
-											<p className="text-gray-600">{company.name}</p>
+											<p className="text-gray-600">{aboutInfo.name}</p>
 										</div>
 									</div>
 
@@ -202,7 +202,7 @@ export default function AboutSection({
 										<Globe className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Website</h4>
-											<p className="text-gray-600">{company.website}</p>
+											<p className="text-gray-600">{aboutInfo.website}</p>
 										</div>
 									</div>
 
@@ -210,7 +210,7 @@ export default function AboutSection({
 										<MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Headquarters</h4>
-											<p className="text-gray-600">{company.hqLocation}</p>
+											<p className="text-gray-600">{aboutInfo.hqLocation}</p>
 										</div>
 									</div>
 
@@ -219,7 +219,7 @@ export default function AboutSection({
 										<div>
 											<h4 className="font-medium">Founded</h4>
 											<p className="text-gray-600">
-												{formatDate(company.founded)}
+												{formatDate(aboutInfo.founded)}
 											</p>
 										</div>
 									</div>
@@ -235,7 +235,7 @@ export default function AboutSection({
 										<Briefcase className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Company Type</h4>
-											<p className="text-gray-600">{company.type}</p>
+											<p className="text-gray-600">{aboutInfo.type}</p>
 										</div>
 									</div>
 
@@ -243,7 +243,9 @@ export default function AboutSection({
 										<Users className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Company Size</h4>
-											<p className="text-gray-600">51-200 employees</p>
+											<p className="text-gray-600">
+												{aboutInfo.companySize} Employees
+											</p>
 										</div>
 									</div>
 
@@ -251,7 +253,7 @@ export default function AboutSection({
 										<Building className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Industry</h4>
-											<p className="text-gray-600">{company.industry}</p>
+											<p className="text-gray-600">{aboutInfo.industry}</p>
 										</div>
 									</div>
 
@@ -259,7 +261,7 @@ export default function AboutSection({
 										<Building className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Tier</h4>
-											<p className="text-gray-600">{company.tier}</p>
+											<p className="text-gray-600">{aboutInfo.tier}</p>
 										</div>
 									</div>
 								</div>
@@ -279,25 +281,12 @@ export default function AboutSection({
 					</div>
 					{isOwner && (
 						<div className="flex gap-2">
-							{company.productInformation &&
-								company.productInformation.length > 0 && (
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => setIsEditingProduct(true)}
-									>
-										<Edit className="h-4 w-4 mr-2" />
-										Edit
-									</Button>
-								)}
-							<Button
-								variant="outline"
-								size="sm"
+							<button
+								className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
 								onClick={() => setIsAddingProduct(true)}
 							>
-								<Plus className="h-4 w-4 mr-2" />
-								Add Product
-							</Button>
+								<PlusIcon className="w-5 h-5 text-gray-600" />
+							</button>
 						</div>
 					)}
 				</CardHeader>
@@ -306,28 +295,46 @@ export default function AboutSection({
 						<div className="space-y-6">
 							{products.map((product) => (
 								<Card key={product.id}>
+									<CardHeader className="flex flex-row items-center justify-between">
+										<div>
+											<CardTitle>{product.product}</CardTitle>
+										</div>
+										{isOwner && (
+											<button
+												className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+												onClick={() => {
+													setProductInfo({
+														id: product.id,
+														product: product.product,
+														market: product.market,
+														partnerships: product.partnerships.join(", "),
+													});
+													setIsEditingProduct(true);
+												}}
+											>
+												<PencilIcon className="w-5 h-5 text-gray-600" />
+											</button>
+										)}
+									</CardHeader>
 									<CardContent className="p-6">
-										<div>
-											<h3 className="text-lg font-medium">Product</h3>
-											<p className="text-gray-600">{product.product}</p>
-										</div>
+										<div className="space-y-4">
+											<div>
+												<h3 className="text-lg font-medium">Market</h3>
+												<p className="text-gray-600">{product.market}</p>
+											</div>
 
-										<div>
-											<h3 className="text-lg font-medium">Market</h3>
-											<p className="text-gray-600">{product.market}</p>
-										</div>
-
-										<div>
-											<h3 className="text-lg font-medium">Partnerships</h3>
-											<div className="flex flex-wrap gap-2 mt-2">
-												{product.partnerships.map((partnership, index) => (
-													<div
-														key={index}
-														className="bg-gray-100 px-3 py-1 rounded-full text-sm"
-													>
-														{partnership}
-													</div>
-												))}
+											<div>
+												<h3 className="text-lg font-medium">Partnerships</h3>
+												<div className="flex flex-wrap gap-2 mt-2">
+													{product.partnerships.map((partnership, index) => (
+														<div
+															key={index}
+															className="bg-gray-100 px-3 py-1 rounded-full text-sm"
+														>
+															{partnership}
+														</div>
+													))}
+												</div>
 											</div>
 										</div>
 									</CardContent>{" "}
@@ -442,6 +449,25 @@ export default function AboutSection({
 							/>
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="about-company-size" className="text-right">
+								Company Size
+							</Label>
+							<select
+								id="about-company-size"
+								value={aboutInfo.companySize}
+								onChange={(e) =>
+									setAboutInfo({ ...aboutInfo, companySize: e.target.value })
+								}
+								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							>
+								<option value="1-50">1-50 employees</option>
+								<option value="51-200">51-200 employees</option>
+								<option value="201-500">201-500 employees</option>
+								<option value="501-1000">501-1000 employees</option>
+								<option value="1000+">1000+ employees</option>
+							</select>
+						</div>
+						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="about-tier" className="text-right">
 								Tier
 							</Label>
@@ -518,15 +544,29 @@ export default function AboutSection({
 							/>
 						</div>
 					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsEditingProduct(false)}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleSaveProduct}>Save Changes</Button>
-					</DialogFooter>
+					<div className="mt-6 flex items-center justify-between">
+						<DeleteButton
+							onDelete={() => {
+								deleteCompanyProduct(productInfo.id);
+								const updatedProducts = products.filter(
+									(p) => p.id !== productInfo.id,
+								);
+								setProducts(updatedProducts);
+								setIsEditingProduct(false);
+							}}
+							itemType="Product"
+							size="small"
+						/>
+						<div className="flex gap-2">
+							<Button
+								variant="outline"
+								onClick={() => setIsEditingProduct(false)}
+							>
+								Cancel
+							</Button>
+							<Button onClick={handleSaveProduct}>Save Changes</Button>
+						</div>
+					</div>
 				</DialogContent>
 			</Dialog>
 
