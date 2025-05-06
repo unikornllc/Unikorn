@@ -25,6 +25,7 @@ model Company {
   website            String
   founded            DateTime
   type               CompanyType          @default(Public)
+  companySize        String               @default("1-50")
   hqLocation         String
   industry           String
   verified           Boolean              @default(false)

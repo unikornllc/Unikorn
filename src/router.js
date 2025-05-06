@@ -382,6 +382,8 @@ import {
 	addCompanyActivity,
 	getProductInfo,
 	updateCompanyItem,
+	deleteCompanyProduct,
+	getCompanyPersonnel,
 } from "./controllers/company.js";
 
 router.put("/updatePersonnel", updatePersonnel);
@@ -396,6 +398,8 @@ router.post(
 	upload.single("file"),
 	uploadProfilePicture,
 );
+router.delete("/deleteCompanyProduct", deleteCompanyProduct);
+router.get("/getCompanyPersonnel", getCompanyPersonnel);
 // router.get("/getProfilePicture", getFile);
 // router.delete("/deleteProfilePicture", deleteFile);
 

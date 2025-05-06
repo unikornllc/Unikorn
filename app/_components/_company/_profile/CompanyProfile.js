@@ -26,6 +26,8 @@ import {
 	BasicCardSkeleton,
 } from "@/app/_components/_ui/_loading/Skeleton";
 import {
+	deleteCompanyPersonnel,
+	deleteCompanyProduct,
 	updateCompanyProfile,
 	updateCompnanyItem,
 } from "@/app/_utils/_api/companyAPIs";
@@ -234,6 +236,7 @@ function CompanyProfileContent({ company, isOwner }) {
 							isOwner,
 							updateCompany: updateCompnanyItem,
 							updateCompanyProfile: updateCompanyProfile,
+							deleteCompanyProduct: deleteCompanyProduct,
 						})}
 					</TabsContent>
 
@@ -256,7 +259,8 @@ function CompanyProfileContent({ company, isOwner }) {
 						{renderSection("people", PeopleSection, {
 							company: companyData,
 							isOwner,
-							updateCompany: updateCompanyData,
+							updateCompany: updateCompnanyItem,
+							deletePersonnel: deleteCompanyPersonnel,
 						})}
 					</TabsContent>
 

@@ -145,6 +145,17 @@ export default async function CompanyPage({ params }) {
 		const isCurrentCompany = res.data.isCurrentCompany;
 		let company = res.data.company;
 
+		await axios
+			.get(`${process.env.NEXT_PUBLIC_SERVER}/api/getCompanyPersonnel`, {
+				params: { username: company.account.username },
+				headers: {
+					cookie: cookie || "",
+				},
+			})
+			.then((response) => {
+				company.personnel = response.data.personnel;
+			});
+
 		if (!isCurrentCompany) {
 			try {
 				await axios
