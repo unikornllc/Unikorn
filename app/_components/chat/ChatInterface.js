@@ -25,6 +25,16 @@ function ChatApp({ userId, username }) {
 	const [notifications, setNotifications] = useState([]);
 
 	const { socket, connected } = useSocket();
+	const fetchReadReceipts = async (chatId) => {
+		if (!socket) return;
+
+		try {
+			// Request read receipts for this chat
+			socket.emit("get_read_receipts", { chatId });
+		} catch (error) {
+			console.error("Error fetching read receipts:", error);
+		}
+	};
 
 	useEffect(() => {
 		async function getFollowing() {
@@ -43,10 +53,19 @@ function ChatApp({ userId, username }) {
 	}, []);
 
 	useEffect(() => {
+		if (connected && selectedChat) {
+			fetchReadReceipts(selectedChat.chatID);
+		}
+	}, [connected, selectedChat]);
+
+	useEffect(() => {
 		if (!socket) return;
 		socket.on("chats", (receivedChats) => {
 			console.log("Received chats:", receivedChats);
-			setChats(receivedChats); // trust unreadCount from server
+			setChats(receivedChats);
+			if (selectedChat) {
+				fetchReadReceipts(selectedChat.chatID);
+			}
 		});
 
 		socket.on("new message", ({ chatId, message }) => {
@@ -54,6 +73,12 @@ function ChatApp({ userId, username }) {
 
 			if (selectedChat && selectedChat.chatID === chatId) {
 				setMessages((prev) => [...prev, message]);
+				if (message.senderId !== userId) {
+					socket.emit("mark as read", {
+						chatId: chatId,
+						messageId: message.id,
+					});
+				}
 			} else {
 				setNotifications((prev) => [
 					...prev,
@@ -71,6 +96,66 @@ function ChatApp({ userId, username }) {
 							...chat,
 							messages: [...(chat.messages || []), message],
 						};
+					}
+					return chat;
+				}),
+			);
+		});
+
+		socket.on("message read", ({ chatId, messageId, readBy }) => {
+			console.log(
+				`Message ${messageId} in chat ${chatId} was read by ${readBy}`,
+			);
+
+			setMessages((prevMessages) =>
+				prevMessages.map((message) => {
+					if (message.id === messageId) {
+						return {
+							...message,
+							readReceipts: [
+								...(message.readReceipts || []),
+								{ username: readBy, readAt: new Date() },
+							],
+						};
+					}
+					return message;
+				}),
+			);
+		});
+		socket.on("read_receipts", ({ chatId, receipts }) => {
+			console.log(`Received read receipts for chat ${chatId}:`, receipts);
+
+			setMessages((prevMessages) =>
+				prevMessages.map((message) => {
+					const messageReceipts = receipts.filter(
+						(r) => r.messageId === message.id,
+					);
+					if (messageReceipts.length > 0) {
+						return {
+							...message,
+							readReceipts: messageReceipts,
+						};
+					}
+					return message;
+				}),
+			);
+
+			setChats((prevChats) =>
+				prevChats.map((chat) => {
+					if (chat.chatID === chatId) {
+						const updatedMessages = chat.messages.map((message) => {
+							const messageReceipts = receipts.filter(
+								(r) => r.messageId === message.id,
+							);
+							if (messageReceipts.length > 0) {
+								return {
+									...message,
+									readReceipts: messageReceipts,
+								};
+							}
+							return message;
+						});
+						return { ...chat, messages: updatedMessages };
 					}
 					return chat;
 				}),
@@ -109,8 +194,10 @@ function ChatApp({ userId, username }) {
 			socket.off("users");
 			socket.off("chat unread update");
 			socket.off("updated chat");
+			socket.off("message read");
+			socket.off("read_receipts");
 		};
-	}, [socket, selectedChat]);
+	}, [socket, selectedChat, userId]);
 
 	const handleCreateChat = ({ participants, isGroupChat, name }) => {
 		if (!socket) return;
@@ -182,6 +269,7 @@ function ChatApp({ userId, username }) {
 							const latestMessage = chat.messages[chat.messages.length - 1];
 							console.log(latestMessage);
 							handleMarkAsRead(chat.chatID, latestMessage.id);
+							fetchReadReceipts(chat.chatID);
 						}
 					}}
 				/>

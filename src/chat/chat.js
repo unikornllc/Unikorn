@@ -669,6 +669,35 @@ io.on("connection", async (socket) => {
 			socket.emit("error", { message: "Failed to update chat settings" });
 		}
 	});
+	socket.on("get_read_receipts", async ({ chatId }) => {
+		try {
+			const messages = await prisma.message.findMany({
+				where: {
+					chatId: chatId,
+					isDeleted: false,
+				},
+				select: {
+					id: true,
+					readReceipts: true,
+				},
+			});
+			const receipts = messages.flatMap((message) =>
+				message.readReceipts.map((receipt) => ({
+					messageId: message.id,
+					username: receipt.username,
+					readAt: receipt.readAt,
+				})),
+			);
+
+			socket.emit("read_receipts", {
+				chatId: chatId,
+				receipts: receipts,
+			});
+		} catch (error) {
+			console.error("Error fetching read receipts:", error);
+			socket.emit("error", { message: "Failed to fetch read receipts" });
+		}
+	});
 
 	socket.on("disconnect", () => {
 		console.log(`User disconnected: ${userId}`);
