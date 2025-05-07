@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import MessageInput from "./MessageInput";
 import axios from "axios";
+import { Check, CheckCheck } from "lucide-react";
 
 export default function ChatWindow({
 	chat,
@@ -14,11 +15,47 @@ export default function ChatWindow({
 	const messagesEndRef = useRef(null);
 	const [loadingAttachments, setLoadingAttachments] = useState({});
 	const [attachmentCache, setAttachmentCache] = useState({});
+	const [readReceipts, setReadReceipts] = useState({});
 	const [imageModal, setImageModal] = useState({
 		isOpen: false,
 		src: "",
 		alt: "",
 	});
+
+	useEffect(() => {
+		if (!messages || messages.length === 0) return;
+
+		const receipts = {};
+		messages.forEach((message) => {
+			if (message.readReceipts && message.readReceipts.length > 0) {
+				receipts[message.id] = message.readReceipts.map(
+					(receipt) => receipt.username,
+				);
+			}
+		});
+		setReadReceipts(receipts);
+	}, [messages]);
+
+	const renderReadReceipt = (message) => {
+		if (message.senderId !== userId) return null;
+
+		const receiptsForMessage = readReceipts[message.id] || [];
+		const isRead = receiptsForMessage.length > 0;
+
+		const isLastMessage = messages[messages.length - 1]?.id === message.id;
+
+		if (!isLastMessage && !isRead) return null;
+
+		return (
+			<span className="ml-1 inline-flex items-center">
+				{isRead ? (
+					<CheckCheck size={14} className="text-green-500" />
+				) : (
+					<Check size={14} className="text-gray-400" />
+				)}
+			</span>
+		);
+	};
 
 	useEffect(() => {
 		if (!messagesEndRef.current) return;
@@ -247,6 +284,11 @@ export default function ChatWindow({
 		};
 	}, [attachmentCache]);
 
+	const isLastMessageFromSender = (index) => {
+		if (index === messages.length - 1) return true;
+		return messages[index].senderId !== messages[index + 1]?.senderId;
+	};
+
 	if (!chat) {
 		return (
 			<div className="flex-1 flex items-center justify-center bg-[#f8f9fe] text-gray-500">
@@ -277,7 +319,7 @@ export default function ChatWindow({
 						<p>No messages yet. Say hello!</p>
 					</div>
 				) : (
-					messages.map((message) => (
+					messages.map((message, index) => (
 						<div
 							key={message.id}
 							className={`flex ${message.senderId === userId ? "justify-end" : "justify-start"} mb-2`}
@@ -298,11 +340,15 @@ export default function ChatWindow({
 										<div key={index}>{renderAttachment(attachment)}</div>
 									))}
 
-								<div className="text-[10px] text-right mt-1 opacity-70">
-									{new Date(message.createdAt).toLocaleTimeString([], {
-										hour: "2-digit",
-										minute: "2-digit",
-									})}
+								<div className="text-[10px] text-right mt-1 opacity-70 flex items-center justify-end">
+									<span>
+										{new Date(message.createdAt).toLocaleTimeString([], {
+											hour: "2-digit",
+											minute: "2-digit",
+										})}
+									</span>
+
+									{isLastMessageFromSender(index) && renderReadReceipt(message)}
 								</div>
 							</div>
 						</div>
