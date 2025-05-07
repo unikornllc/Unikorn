@@ -19,6 +19,7 @@ const sanitizeData = (model, data) => {
 				name: data.name,
 				role: data.role,
 				crunchBaseLink: data.crunchBaseLink,
+				user: data.userId ? { connect: { id: data.userId } } : undefined,
 			};
 		default:
 			throw new Error("Invalid model type");
@@ -220,6 +221,8 @@ export const getCompanyPersonnel = async (req, res) => {
 								name: true,
 								role: true,
 								crunchBaseLink: true,
+								user: true,
+								userId: true,
 							},
 						},
 					},
