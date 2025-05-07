@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
 	Card,
 	CardContent,
@@ -29,8 +29,18 @@ import {
 } from "@/app/_components/_ui/Dialog";
 import { Label } from "@/app/_components/_ui/Label";
 import { Input } from "@/app/_components/_ui/Input";
-import { Plus, Edit, ExternalLink, Trash2 } from "lucide-react";
+import {
+	Plus,
+	Edit,
+	ExternalLink,
+	Trash2,
+	Search,
+	X,
+	User,
+	Loader2,
+} from "lucide-react";
 import Link from "next/link";
+import axios from "axios";
 
 export default function PeopleSection({
 	company,
@@ -83,6 +93,8 @@ export default function PeopleSection({
 		name: "",
 		role: "Founder",
 		crunchBaseLink: "",
+		userId: null,
+		user: null,
 	});
 
 	const [editPerson, setEditPerson] = useState({
@@ -90,7 +102,166 @@ export default function PeopleSection({
 		name: "",
 		role: "",
 		crunchBaseLink: "",
+		userId: null,
+		user: null,
 	});
+
+	// User search state
+	const [searchTerm, setSearchTerm] = useState("");
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [users, setUsers] = useState([]);
+	const [selectedUser, setSelectedUser] = useState(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState(null);
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const dropdownRef = useRef(null);
+	const observerRef = useRef(null);
+	const searchTimeoutRef = useRef(null);
+
+	const debouncedSearch = useCallback((term) => {
+		if (searchTimeoutRef.current) {
+			clearTimeout(searchTimeoutRef.current);
+		}
+
+		searchTimeoutRef.current = setTimeout(() => {
+			setUsers([]);
+			setPage(1);
+			setHasMore(true);
+			fetchUsers(term, 1);
+		}, 300);
+	}, []);
+
+	const fetchUsers = async (term, pageNum) => {
+		if (!term.trim() && pageNum === 1) {
+			setUsers([]);
+			setIsLoading(false);
+			return;
+		}
+
+		setIsLoading(true);
+		setError(null);
+
+		try {
+			const response = await axios.get(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/searchUsers`,
+				{
+					params: { term, pageNum, limit: 2 },
+					withCredentials: true,
+				},
+			);
+			const data = response.data;
+
+			if (pageNum === 1) {
+				setUsers(data.users);
+			} else {
+				setUsers((prevUsers) => [...prevUsers, ...data.users]);
+			}
+
+			setHasMore(data.hasMore);
+		} catch (err) {
+			console.error("Failed to fetch users:", err);
+			setError("Failed to load users. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		if (searchTerm.trim()) {
+			debouncedSearch(searchTerm);
+		} else {
+			setUsers([]);
+		}
+
+		return () => {
+			if (searchTimeoutRef.current) {
+				clearTimeout(searchTimeoutRef.current);
+			}
+		};
+	}, [searchTerm, debouncedSearch]);
+
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (
+					entries[0].isIntersecting &&
+					hasMore &&
+					!isLoading &&
+					searchTerm.trim()
+				) {
+					setPage((prevPage) => prevPage + 1);
+				}
+			},
+			{ threshold: 1.0 },
+		);
+
+		if (observerRef.current) {
+			observer.observe(observerRef.current);
+		}
+
+		return () => {
+			if (observerRef.current) {
+				observer.unobserve(observerRef.current);
+			}
+		};
+	}, [hasMore, isLoading, searchTerm]);
+
+	useEffect(() => {
+		if (page > 1 && searchTerm.trim()) {
+			fetchUsers(searchTerm, page);
+		}
+	}, [page]);
+
+	useEffect(() => {
+		function handleClickOutside(event) {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+				setShowDropdown(false);
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
+
+	const handleUserSelect = (user, isNewPerson = true) => {
+		setSelectedUser(user);
+		if (user) {
+			if (isNewPerson) {
+				setNewPerson({
+					...newPerson,
+					name: newPerson.name || user.name,
+					userId: user.id,
+					user: user,
+				});
+			} else {
+				setEditPerson({
+					...editPerson,
+					name: editPerson.name || user.name,
+					userId: user.id,
+					user: user,
+				});
+			}
+		} else {
+			if (isNewPerson) {
+				setNewPerson({
+					...newPerson,
+					userId: null,
+					user: null,
+				});
+			} else {
+				setEditPerson({
+					...editPerson,
+					userId: null,
+					user: null,
+				});
+			}
+		}
+		setShowDropdown(false);
+		setSearchTerm("");
+	};
 
 	const handleAddPerson = () => {
 		if (!newPerson.name) return;
@@ -101,6 +272,8 @@ export default function PeopleSection({
 			role: newPerson.role,
 			crunchBaseLink: newPerson.crunchBaseLink,
 			companyId: company.id,
+			userId: newPerson.userId,
+			user: newPerson.user,
 		};
 
 		// First call updateCompany with the model and id for upsert
@@ -114,12 +287,12 @@ export default function PeopleSection({
 		if (newPerson.role === "KeyEmployee") {
 			setEmployees((prev) => [
 				...prev,
-				{ ...person, avatar: "/placeholder.svg" },
+				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
 			]);
 		} else if (leaderRoles.includes(newPerson.role)) {
 			setLeaders((prev) => [
 				...prev,
-				{ ...person, avatar: "/placeholder.svg" },
+				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
 			]);
 		} else {
 			// For investors, keep the original behavior
@@ -127,7 +300,14 @@ export default function PeopleSection({
 			updateCompany({ personnel: updatedPersonnel });
 		}
 
-		setNewPerson({ name: "", role: "Founder", crunchBaseLink: "" });
+		setNewPerson({
+			name: "",
+			role: "Founder",
+			crunchBaseLink: "",
+			userId: null,
+			user: null,
+		});
+		setSelectedUser(null);
 		setIsAddingPerson(false);
 	};
 
@@ -137,7 +317,10 @@ export default function PeopleSection({
 			name: person.name,
 			role: person.role,
 			crunchBaseLink: person.crunchBaseLink || "",
+			userId: person.userId || null,
+			user: person.user || null,
 		});
+		setSelectedUser(person.user || null);
 		setSelectedPerson(person);
 		setIsEditingPerson(true);
 	};
@@ -151,6 +334,8 @@ export default function PeopleSection({
 			role: editPerson.role,
 			crunchBaseLink: editPerson.crunchBaseLink,
 			companyId: company.id,
+			userId: editPerson.userId,
+			user: editPerson.user,
 		};
 
 		if (editPerson.role === "KeyEmployee") {
@@ -163,7 +348,14 @@ export default function PeopleSection({
 			setEmployees((prev) =>
 				prev.map((person) =>
 					person.id === editPerson.id
-						? { ...person, ...updatedPerson, avatar: person.avatar }
+						? {
+								...person,
+								...updatedPerson,
+								avatar:
+									updatedPerson.user?.avatar ||
+									person.avatar ||
+									"/placeholder.svg",
+							}
 						: person,
 				),
 			);
@@ -180,7 +372,14 @@ export default function PeopleSection({
 			setLeaders((prev) =>
 				prev.map((person) =>
 					person.id === editPerson.id
-						? { ...person, ...updatedPerson, avatar: person.avatar } // Preserve avatar and other properties
+						? {
+								...person,
+								...updatedPerson,
+								avatar:
+									updatedPerson.user?.avatar ||
+									person.avatar ||
+									"/placeholder.svg",
+							}
 						: person,
 				),
 			);
@@ -192,19 +391,30 @@ export default function PeopleSection({
 			if (!leaders.some((person) => person.id === editPerson.id)) {
 				setLeaders((prev) => [
 					...prev,
-					{ ...updatedPerson, avatar: "/placeholder.svg" },
+					{
+						...updatedPerson,
+						avatar: updatedPerson.user?.avatar || "/placeholder.svg",
+					},
 				]);
 			}
 		} else {
 			setInvestors((prev) =>
 				prev.map((person) =>
 					person.id === editPerson.id
-						? { ...person, ...updatedPerson, avatar: person.avatar }
+						? {
+								...person,
+								...updatedPerson,
+								avatar:
+									updatedPerson.user?.avatar ||
+									person.avatar ||
+									"/placeholder.svg",
+							}
 						: person,
 				),
 			);
 		}
 
+		setSelectedUser(null);
 		setIsEditingPerson(false);
 	};
 
@@ -222,12 +432,26 @@ export default function PeopleSection({
 	};
 
 	const handleAddEmployee = () => {
-		setNewPerson({ name: "", role: "KeyEmployee", crunchBaseLink: "" });
+		setNewPerson({
+			name: "",
+			role: "KeyEmployee",
+			crunchBaseLink: "",
+			userId: null,
+			user: null,
+		});
+		setSelectedUser(null);
 		setIsAddingPerson(true);
 	};
 
 	const handleAddLeader = () => {
-		setNewPerson({ name: "", role: "Founder", crunchBaseLink: "" });
+		setNewPerson({
+			name: "",
+			role: "Founder",
+			crunchBaseLink: "",
+			userId: null,
+			user: null,
+		});
+		setSelectedUser(null);
 		setIsAddingPerson(true);
 	};
 
@@ -319,7 +543,7 @@ export default function PeopleSection({
 												<div className="flex items-center gap-4">
 													<Avatar className="h-16 w-16">
 														<AvatarImage
-															src="/placeholder.svg"
+															src={person.user?.avatar || "/placeholder.svg"}
 															alt={person.name}
 														/>
 														<AvatarFallback>
@@ -342,6 +566,11 @@ export default function PeopleSection({
 																View on CrunchBase
 																<ExternalLink className="h-3 w-3 ml-1" />
 															</Link>
+														)}
+														{person.user && (
+															<div className="mt-1 text-xs text-gray-500">
+																Linked to: @{person.user.name}
+															</div>
 														)}
 													</div>
 													{isOwner && (
@@ -410,7 +639,11 @@ export default function PeopleSection({
 												<div className="flex items-center gap-4">
 													<Avatar className="h-12 w-12">
 														<AvatarImage
-															src={employee.avatar || "/placeholder.svg"}
+															src={
+																employee.user?.avatar ||
+																employee.avatar ||
+																"/placeholder.svg"
+															}
 															alt={employee.name}
 														/>
 														<AvatarFallback>
@@ -431,6 +664,11 @@ export default function PeopleSection({
 																View on CrunchBase
 																<ExternalLink className="h-3 w-3 ml-1" />
 															</Link>
+														)}
+														{employee.user && (
+															<div className="mt-1 text-xs text-gray-500">
+																Linked to: @{employee.user.name}
+															</div>
 														)}
 													</div>
 													{isOwner && (
@@ -633,6 +871,148 @@ export default function PeopleSection({
 								className="col-span-3"
 							/>
 						</div>
+
+						{/* User search field */}
+						<div className="grid grid-cols-4 items-start gap-4">
+							<Label htmlFor="userSearch" className="text-right pt-2">
+								Link to User
+							</Label>
+							<div className="relative col-span-3" ref={dropdownRef}>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+										<Search className="h-4 w-4 text-gray-400" />
+									</div>
+
+									<Input
+										id="userSearch"
+										className="pl-10 pr-10"
+										placeholder="Search by name or username"
+										value={searchTerm}
+										onChange={(e) => {
+											setSearchTerm(e.target.value);
+											setShowDropdown(true);
+										}}
+										onFocus={() => setShowDropdown(true)}
+									/>
+
+									{selectedUser && (
+										<button
+											type="button"
+											className="absolute inset-y-0 right-0 flex items-center pr-3"
+											onClick={() => handleUserSelect(null, true)}
+										>
+											<X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+										</button>
+									)}
+								</div>
+
+								{showDropdown && (
+									<div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200">
+										<div className="py-1">
+											<button
+												type="button"
+												className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+												onClick={() => handleUserSelect(null, true)}
+											>
+												<div className="flex items-center">
+													<div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+														<User className="h-4 w-4 text-gray-500" />
+													</div>
+													<div className="ml-3">
+														<p className="font-medium">None</p>
+														<p className="text-xs text-gray-500">
+															No user association
+														</p>
+													</div>
+												</div>
+											</button>
+
+											{users.map((user) => (
+												<button
+													key={user.id}
+													type="button"
+													className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+													onClick={() => handleUserSelect(user, true)}
+												>
+													<div className="flex items-center">
+														<Avatar className="h-8 w-8">
+															<AvatarImage
+																src={
+																	user.avatar ||
+																	"/placeholder.svg?height=40&width=40"
+																}
+																alt={user.name}
+															/>
+															<AvatarFallback>
+																{user.name.charAt(0)}
+															</AvatarFallback>
+														</Avatar>
+														<div className="ml-3">
+															<p className="font-medium">{user.name}</p>
+															<p className="text-xs text-gray-500">
+																@{user.account.username}
+															</p>
+														</div>
+													</div>
+												</button>
+											))}
+
+											{users.length === 0 &&
+												!isLoading &&
+												searchTerm.trim() && (
+													<div className="px-4 py-2 text-sm text-gray-500">
+														No users found
+													</div>
+												)}
+
+											{isLoading && (
+												<div className="flex justify-center items-center py-2">
+													<Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+												</div>
+											)}
+
+											{error && (
+												<div className="px-4 py-2">
+													<p className="text-sm text-red-500">{error}</p>
+												</div>
+											)}
+
+											{hasMore && !isLoading && users.length > 0 && (
+												<div ref={observerRef} className="h-4" />
+											)}
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
+
+						{/* Selected user display */}
+						{selectedUser && (
+							<div className="grid grid-cols-4 gap-4">
+								<div className="col-start-2 col-span-3">
+									<div className="flex items-center p-2 bg-gray-50 rounded-md">
+										<Avatar className="h-8 w-8">
+											<AvatarImage
+												src={
+													selectedUser.avatar ||
+													"/placeholder.svg?height=40&width=40"
+												}
+												alt={selectedUser.name}
+											/>
+											<AvatarFallback>
+												{selectedUser.name.charAt(0)}
+											</AvatarFallback>
+										</Avatar>
+										<div className="ml-3">
+											<p className="text-sm font-medium">{selectedUser.name}</p>
+											<p className="text-xs text-gray-500">
+												@{selectedUser.account.username}
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsAddingPerson(false)}>
@@ -698,6 +1078,148 @@ export default function PeopleSection({
 								className="col-span-3"
 							/>
 						</div>
+
+						{/* User search field for edit */}
+						<div className="grid grid-cols-4 items-start gap-4">
+							<Label htmlFor="editUserSearch" className="text-right pt-2">
+								Link to User
+							</Label>
+							<div className="relative col-span-3" ref={dropdownRef}>
+								<div className="relative">
+									<div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+										<Search className="h-4 w-4 text-gray-400" />
+									</div>
+
+									<Input
+										id="editUserSearch"
+										className="pl-10 pr-10"
+										placeholder="Search by name or username"
+										value={searchTerm}
+										onChange={(e) => {
+											setSearchTerm(e.target.value);
+											setShowDropdown(true);
+										}}
+										onFocus={() => setShowDropdown(true)}
+									/>
+
+									{selectedUser && (
+										<button
+											type="button"
+											className="absolute inset-y-0 right-0 flex items-center pr-3"
+											onClick={() => handleUserSelect(null, false)}
+										>
+											<X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+										</button>
+									)}
+								</div>
+
+								{showDropdown && (
+									<div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg max-h-60 overflow-auto border border-gray-200">
+										<div className="py-1">
+											<button
+												type="button"
+												className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+												onClick={() => handleUserSelect(null, false)}
+											>
+												<div className="flex items-center">
+													<div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+														<User className="h-4 w-4 text-gray-500" />
+													</div>
+													<div className="ml-3">
+														<p className="font-medium">None</p>
+														<p className="text-xs text-gray-500">
+															No user association
+														</p>
+													</div>
+												</div>
+											</button>
+
+											{users.map((user) => (
+												<button
+													key={user.id}
+													type="button"
+													className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+													onClick={() => handleUserSelect(user, false)}
+												>
+													<div className="flex items-center">
+														<Avatar className="h-8 w-8">
+															<AvatarImage
+																src={
+																	user.avatar ||
+																	"/placeholder.svg?height=40&width=40"
+																}
+																alt={user.name}
+															/>
+															<AvatarFallback>
+																{user.name.charAt(0)}
+															</AvatarFallback>
+														</Avatar>
+														<div className="ml-3">
+															<p className="font-medium">{user.name}</p>
+															<p className="text-xs text-gray-500">
+																@{user.account.username}
+															</p>
+														</div>
+													</div>
+												</button>
+											))}
+
+											{users.length === 0 &&
+												!isLoading &&
+												searchTerm.trim() && (
+													<div className="px-4 py-2 text-sm text-gray-500">
+														No users found
+													</div>
+												)}
+
+											{isLoading && (
+												<div className="flex justify-center items-center py-2">
+													<Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+												</div>
+											)}
+
+											{error && (
+												<div className="px-4 py-2">
+													<p className="text-sm text-red-500">{error}</p>
+												</div>
+											)}
+
+											{hasMore && !isLoading && users.length > 0 && (
+												<div ref={observerRef} className="h-4" />
+											)}
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
+
+						{/* Selected user display for edit */}
+						{selectedUser && (
+							<div className="grid grid-cols-4 gap-4">
+								<div className="col-start-2 col-span-3">
+									<div className="flex items-center p-2 bg-gray-50 rounded-md">
+										<Avatar className="h-8 w-8">
+											<AvatarImage
+												src={
+													selectedUser.avatar ||
+													"/placeholder.svg?height=40&width=40"
+												}
+												alt={selectedUser.name}
+											/>
+											<AvatarFallback>
+												{selectedUser.name.charAt(0)}
+											</AvatarFallback>
+										</Avatar>
+										<div className="ml-3">
+											<p className="text-sm font-medium">{selectedUser.name}</p>
+											<p className="text-xs text-gray-500">
+												@{selectedUser.account.username}
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsEditingPerson(false)}>
