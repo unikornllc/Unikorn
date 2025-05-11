@@ -96,20 +96,10 @@ const HomeSection = ({ user, investments = [], editable }) => {
 								</div>
 							</div>
 						)}
-
-						<div className="flex items-start gap-3">
-							<Users className="h-5 w-5 text-blue-500 mt-1" />
-							<div>
-								<h3 className="font-medium">Network</h3>
-								<p className="text-gray-700">
-									Connected with 128 professionals
-								</p>
-							</div>
-						</div>
 					</CardContent>
 				</Card>
 
-				<Card>
+				{/* <Card>
 					<CardHeader>
 						<CardTitle>Recent Activity</CardTitle>
 					</CardHeader>
@@ -141,7 +131,7 @@ const HomeSection = ({ user, investments = [], editable }) => {
 							</div>
 						</div>
 					</CardContent>
-				</Card>
+				</Card> */}
 			</div>
 
 			<div className="md:col-span-1 space-y-6">
@@ -163,7 +153,9 @@ const HomeSection = ({ user, investments = [], editable }) => {
 										<Building className="h-5 w-5 text-blue-600" />
 									</div>
 									<div>
-										<p className="font-medium">Company {index + 1}</p>
+										<p className="font-medium">
+											{investment.raisingFunds.company.name}
+										</p>
 										<p className="text-sm text-gray-500">
 											{investment.equityPercentage}% equity • $
 											{investment.fundingAmount}
@@ -187,7 +179,7 @@ const HomeSection = ({ user, investments = [], editable }) => {
 					</CardContent>
 				</Card>
 
-				<Card>
+				{/* <Card>
 					<CardHeader>
 						<CardTitle>Recommendations</CardTitle>
 					</CardHeader>
@@ -212,7 +204,7 @@ const HomeSection = ({ user, investments = [], editable }) => {
 							</div>
 						</div>
 					</CardContent>
-				</Card>
+				</Card> */}
 			</div>
 		</div>
 	);

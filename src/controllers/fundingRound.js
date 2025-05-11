@@ -91,10 +91,47 @@ export const getAllFundingRound = async (req, res) => {
 			where: {
 				financialId: financials.id,
 			},
+			include: {
+				raisingFunds: {
+					select: {
+						id: true,
+						status: true,
+						fundraisers: {
+							include: {
+								investorUser: {
+									select: {
+										name: true,
+									},
+								},
+								investorCompany: {
+									select: {
+										name: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		});
 		for (let round of fundingRounds) {
 			if (round.raisingFundsId) {
 				round.external = false;
+				round.internalInvestors = round.raisingFunds.fundraisers.map(
+					(fundraiser) => {
+						if (fundraiser.investorUser) {
+							return {
+								name: fundraiser.investorUser.name,
+								amount: fundraiser.fundingAmount,
+							};
+						} else if (fundraiser.investorCompany) {
+							return {
+								name: fundraiser.investorCompany.name,
+								amount: fundraiser.fundingAmount,
+							};
+						}
+					},
+				);
 			} else {
 				round.external = true;
 			}
