@@ -123,8 +123,6 @@ function ChatApp({ userId, username }) {
 			);
 		});
 		socket.on("read_receipts", ({ chatId, receipts }) => {
-			console.log(`Received read receipts for chat ${chatId}:`, receipts);
-
 			setMessages((prevMessages) =>
 				prevMessages.map((message) => {
 					const messageReceipts = receipts.filter(
@@ -169,6 +167,36 @@ function ChatApp({ userId, username }) {
 			setMessages(newChat.messages || []);
 			setIsNewChatModalOpen(false);
 		});
+		socket.on("chat deleted", ({ chatId, deletedAt }) => {
+			console.log("Chat cleared:", chatId, "at", deletedAt);
+
+			setChats((prev) =>
+				prev.map((chat) => {
+					if (chat.chatID === chatId) {
+						return {
+							...chat,
+							messages: [],
+						};
+					}
+					return chat;
+				}),
+			);
+
+			if (selectedChat && selectedChat.chatID === chatId) {
+				setMessages([]);
+				setSelectedChat((prev) => ({
+					...prev,
+					messages: [],
+				}));
+				setNotifications((prev) => [
+					...prev,
+					{
+						id: Date.now(),
+						text: "Chat history has been cleared",
+					},
+				]);
+			}
+		});
 
 		socket.on("users", (onlineUsers) => {
 			setUsers(onlineUsers);
@@ -191,6 +219,7 @@ function ChatApp({ userId, username }) {
 			socket.off("chats");
 			socket.off("new message");
 			socket.off("chat created");
+			socket.off("chat deleted");
 			socket.off("users");
 			socket.off("chat unread update");
 			socket.off("updated chat");
@@ -208,7 +237,11 @@ function ChatApp({ userId, username }) {
 			name: isGroupChat ? name : undefined,
 		});
 	};
+	const handleDeleteChat = (chatId) => {
+		if (!socket) return;
 
+		socket.emit("delete chat", { chatId });
+	};
 	const handleSendMessage = (content, attachment = null) => {
 		if ((!content.trim() && !attachment) || !selectedChat || !socket) return;
 
@@ -255,6 +288,7 @@ function ChatApp({ userId, username }) {
 
 				<ChatList
 					chats={chats}
+					selectedChatId={selectedChat?.chatID}
 					onSelectChat={(chat) => {
 						setSelectedChat(chat);
 						setMessages(chat.messages || []);
@@ -272,6 +306,7 @@ function ChatApp({ userId, username }) {
 							fetchReadReceipts(chat.chatID);
 						}
 					}}
+					onDeleteChat={handleDeleteChat}
 				/>
 			</div>
 

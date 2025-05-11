@@ -46,10 +46,12 @@ io.on("connection", async (socket) => {
 
 		const chatsWithMessages = await Promise.all(
 			userChats.map(async (chatParticipant) => {
+				const deletedAt = chatParticipant.deletedAt;
 				const recentMessages = await prisma.message.findMany({
 					where: {
 						chatId: chatParticipant.chatId,
 						isDeleted: false,
+						...(deletedAt && { createdAt: { gt: deletedAt } }),
 					},
 					include: {
 						sender: {
@@ -490,6 +492,7 @@ io.on("connection", async (socket) => {
 					isDeleted: false,
 					createdAt: {
 						lt: referenceMessage.createdAt,
+						...(deletedAt && { gt: deletedAt }),
 					},
 				},
 				include: {
@@ -604,6 +607,26 @@ io.on("connection", async (socket) => {
 		} catch (error) {
 			console.error("Error deleting message:", error);
 			socket.emit("error", { message: "Failed to delete message" });
+		}
+	});
+	socket.on("delete chat", async ({ chatId }) => {
+		try {
+			const updated = await prisma.chatParticipant.update({
+				where: {
+					username_chatId: {
+						username: userId,
+						chatId: chatId,
+					},
+				},
+				data: {
+					deletedAt: new Date(),
+				},
+			});
+
+			socket.emit("chat deleted", { chatId, deletedAt: updated.deletedAt });
+		} catch (err) {
+			console.error("Error deleting chat for user:", err);
+			socket.emit("error", { message: "Failed to delete chat" });
 		}
 	});
 
