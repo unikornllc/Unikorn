@@ -32,20 +32,29 @@ import { Label } from "@/app/_components/_ui/Label";
 import { Input } from "@/app/_components/_ui/Input";
 import { Textarea } from "@/app/_components/_ui/Textarea";
 import { formatDate, formatCurrency } from "@/app/_utils/utils";
-import { TrendingUp, Plus, Edit } from "lucide-react";
+import { TrendingUp, Plus, Edit, Trash2 } from "lucide-react";
 import {
-	updateCompanyFundingRound,
 	addCompanyFundingRound,
 	fetchCompanyFinancialInfo,
 } from "@/app/_utils/_api/companyAPIs";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
-export default function FundingSection({ company, isOwner, updateCompany }) {
+export default function FundingSection({
+	company,
+	isOwner,
+	updateCompany,
+	updateFunding,
+	deleteFundingRound,
+}) {
 	const [activeTab, setActiveTab] = useState("rounds");
 	const [isEditingFinancials, setIsEditingFinancials] = useState(false);
 	const [isAddingRound, setIsAddingRound] = useState(false);
+	const [isEditingRound, setIsEditingRound] = useState(false);
 	const [isStartingFundraising, setIsStartingFundraising] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [financials, setFinancials] = useState(null);
+	const [selectedRound, setSelectedRound] = useState(null);
+
 	const investors = [
 		{
 			id: "1",
@@ -71,16 +80,24 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 	];
 
 	const [financialInfo, setFinancialInfo] = useState({
-		valuation: financials?.valuation || 0,
-		totalFundingAmount: financials?.totalFundingAmount || 0,
-		investors: financials?.investors?.join(", ") || "",
-		fundingRounds: financials?.fundingRounds || [],
+		valuation: 0,
+		totalFundingAmount: 0,
+		investors: "",
+		fundingRounds: [],
 	});
 
 	const [newRound, setNewRound] = useState({
 		type: "Seed",
 		fundingAmount: "",
 		roundDate: new Date().toISOString().split("T")[0],
+		leadInvestors: "",
+	});
+
+	const [editRound, setEditRound] = useState({
+		id: "",
+		type: "Seed",
+		fundingAmount: "",
+		roundDate: "",
 		leadInvestors: "",
 	});
 
@@ -91,8 +108,9 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 		totalPortions: "",
 		status: "Active",
 	});
+
 	const handleSaveFinancials = () => {
-		const financials = {
+		const financialsToSave = {
 			id: financials?.id || "f" + Date.now(),
 			valuation: Number.parseFloat(financialInfo.valuation) || 0,
 			totalFundingAmount:
@@ -105,7 +123,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 			companyId: company.id,
 		};
 
-		updateCompany({ financials });
+		updateCompany({ financials: financialsToSave });
 		setIsEditingFinancials(false);
 	};
 
@@ -124,6 +142,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 				financialsId: financials?.id || "f" + Date.now(),
 			};
 			await addCompanyFundingRound(round);
+			round.external = true;
 			setFinancials((prev) => ({
 				id: prev?.id || "f" + Date.now(),
 				valuation: prev?.valuation || 0,
@@ -146,6 +165,73 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 		} finally {
 			setIsAddingRound(false);
 		}
+	};
+
+	const handleEditRound = (round) => {
+		setSelectedRound(round);
+		setEditRound({
+			id: round.id,
+			type: round.type,
+			fundingAmount: round.fundingAmount.toString(),
+			roundDate: new Date(round.roundDate).toISOString().split("T")[0],
+			leadInvestors: round.leadInvestors.join(", "),
+		});
+		setIsEditingRound(true);
+	};
+
+	const handleSaveEditRound = async () => {
+		try {
+			if (!editRound.type || !editRound.fundingAmount) return;
+
+			const updatedRound = {
+				fundingRoundId: editRound.id,
+				type: editRound.type,
+				fundingAmount: Number.parseFloat(editRound.fundingAmount) || 0,
+				roundDate: editRound.roundDate,
+				leadInvestors: editRound.leadInvestors
+					.split(",")
+					.map((i) => i.trim())
+					.filter((i) => i),
+			};
+			await updateFunding(updatedRound);
+			setFinancials((prev) => {
+				const oldRound = prev.fundingRounds.find((r) => r.id === editRound.id);
+				const amountDiff = updatedRound.fundingAmount - oldRound.fundingAmount;
+
+				return {
+					...prev,
+					totalFundingAmount: prev.totalFundingAmount + amountDiff,
+					fundingRounds: prev.fundingRounds.map((round) =>
+						round.id === editRound.id
+							? {
+									...round,
+									type: updatedRound.type,
+									fundingAmount: updatedRound.fundingAmount,
+									roundDate: new Date(updatedRound.roundDate),
+									leadInvestors: updatedRound.leadInvestors,
+								}
+							: round,
+					),
+				};
+			});
+
+			setIsEditingRound(false);
+		} catch (error) {
+			console.error("Error updating funding round:", error);
+		}
+	};
+
+	const handleDeleteRound = async (id) => {
+		await deleteFundingRound(id);
+		setFinancials((prev) => {
+			const roundToDelete = prev.fundingRounds.find((r) => r.id === id);
+			return {
+				...prev,
+				totalFundingAmount:
+					prev.totalFundingAmount - roundToDelete.fundingAmount,
+				fundingRounds: prev.fundingRounds.filter((round) => round.id !== id),
+			};
+		});
 	};
 
 	const handleStartFundraising = () => {
@@ -199,12 +285,19 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 			});
 		}
 	};
+
 	useEffect(() => {
 		const fetchFinancials = async () => {
 			try {
 				const response = await fetchCompanyFinancialInfo(company.username);
 				if (response.financials) {
 					setFinancials(response.financials);
+					setFinancialInfo({
+						valuation: response.financials?.valuation || 0,
+						totalFundingAmount: response.financials?.totalFundingAmount || 0,
+						investors: response.financials?.investors?.join(", ") || "",
+						fundingRounds: response.financials?.fundingRounds || [],
+					});
 					console.log("Fetched financials:", response.financials);
 				}
 			} catch (error) {
@@ -223,6 +316,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 			</div>
 		);
 	}
+
 	return (
 		<div className="space-y-6">
 			<Card>
@@ -233,14 +327,6 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 					</div>
 					{isOwner && (
 						<div className="flex gap-2">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setIsEditingFinancials(true)}
-							>
-								<Edit className="h-4 w-4 mr-2" />
-								Edit Financials
-							</Button>
 							<Button
 								variant="outline"
 								size="sm"
@@ -319,6 +405,9 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 														<th className="text-left py-3 px-4">
 															Lead Investors
 														</th>
+														{isOwner && (
+															<th className="text-right py-3 px-4">Actions</th>
+														)}
 													</tr>
 												</thead>
 												<tbody>
@@ -345,6 +434,30 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 																	)}
 																</div>
 															</td>
+															{isOwner && round.external && (
+																<td className="py-3 px-4 text-right">
+																	<div className="flex justify-end gap-2">
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			className="h-8 w-8"
+																			onClick={() => handleEditRound(round)}
+																		>
+																			<Edit className="h-4 w-4" />
+																		</Button>
+																		<Button
+																			variant="ghost"
+																			size="icon"
+																			className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+																			onClick={() =>
+																				handleDeleteRound(round.id)
+																			}
+																		>
+																			<Trash2 className="h-4 w-4" />
+																		</Button>
+																	</div>
+																</td>
+															)}
 														</tr>
 													))}
 												</tbody>
@@ -517,10 +630,12 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 										</span>
 									</div>
 
-									<Button className="w-full bg-purple-600 hover:bg-purple-700">
-										<TrendingUp className="h-4 w-4 mr-2" />
-										Invest Now
-									</Button>
+									{!isOwner && (
+										<Button className="w-full bg-purple-600 hover:bg-purple-700">
+											<TrendingUp className="h-4 w-4 mr-2" />
+											Invest Now
+										</Button>
+									)}
 								</div>
 							))}
 						</div>
@@ -688,6 +803,98 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 							Cancel
 						</Button>
 						<Button onClick={handleAddRound}>Add Round</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Edit Funding Round Dialog */}
+			<Dialog open={isEditingRound} onOpenChange={setIsEditingRound}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Edit Funding Round</DialogTitle>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="edit-round-type" className="text-right">
+								Round Type
+							</Label>
+							<select
+								id="edit-round-type"
+								value={editRound.type}
+								onChange={(e) =>
+									setEditRound({ ...editRound, type: e.target.value })
+								}
+								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+							>
+								<option value="Seed">Seed</option>
+								<option value="Series A">Series A</option>
+								<option value="Series B">Series B</option>
+								<option value="Series C">Series C</option>
+								<option value="Series D">Series D</option>
+								<option value="IPO">IPO</option>
+							</select>
+						</div>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="edit-round-amount" className="text-right">
+								Amount ($)
+							</Label>
+							<Input
+								id="edit-round-amount"
+								type="number"
+								value={editRound.fundingAmount}
+								onChange={(e) =>
+									setEditRound({ ...editRound, fundingAmount: e.target.value })
+								}
+								className="col-span-3"
+							/>
+						</div>
+						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="edit-round-date" className="text-right">
+								Date
+							</Label>
+							<Input
+								id="edit-round-date"
+								type="date"
+								value={editRound.roundDate}
+								onChange={(e) =>
+									setEditRound({ ...editRound, roundDate: e.target.value })
+								}
+								className="col-span-3"
+							/>
+						</div>
+						<div className="grid grid-cols-4 items-start gap-4">
+							<Label htmlFor="edit-round-investors" className="text-right pt-2">
+								Lead Investors
+							</Label>
+							<Textarea
+								id="edit-round-investors"
+								value={editRound.leadInvestors}
+								onChange={(e) =>
+									setEditRound({ ...editRound, leadInvestors: e.target.value })
+								}
+								placeholder="Comma-separated list of lead investors"
+								className="col-span-3"
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<DeleteButton
+							onDelete={() => {
+								handleDeleteRound(editRound.id);
+								setIsEditingRound(false);
+							}}
+							itemType="Funding Round"
+							size="small"
+						/>
+						<div className="flex gap-2">
+							<Button
+								variant="outline"
+								onClick={() => setIsEditingRound(false)}
+							>
+								Cancel
+							</Button>
+							<Button onClick={handleSaveEditRound}>Save Changes</Button>
+						</div>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

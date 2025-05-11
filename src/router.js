@@ -109,6 +109,7 @@ import {
 	deleteOneFundingRound,
 	getAllFundingRound,
 	getOneFundingRound,
+	getUserInvestments,
 	updateFundingRound,
 } from "./controllers/fundingRound.js";
 import {
@@ -404,5 +405,7 @@ router.delete("/deleteCompanyProduct", deleteCompanyProduct);
 router.get("/getCompanyPersonnel", getCompanyPersonnel);
 // router.get("/getProfilePicture", getFile);
 // router.delete("/deleteProfilePicture", deleteFile);
+
+router.get("/getUserInvestments", getUserInvestments);
 
 export default router;

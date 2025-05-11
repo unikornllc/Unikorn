@@ -35,6 +35,16 @@ export default async function UserProfile({ params }) {
 		);
 		const isCurrentUser = res.data.isCurrentUser;
 		const user = res.data.user;
+		const investments = await axios.get(
+			`${process.env.NEXT_PUBLIC_SERVER}/api/getUserInvestments`,
+			{
+				params: { username },
+				headers: {
+					cookie: cookie || "",
+				},
+			},
+		);
+		user.investments = investments.data.investments;
 		if (!isCurrentUser) {
 			try {
 				user.wallet = null;

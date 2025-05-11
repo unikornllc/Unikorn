@@ -27,6 +27,8 @@ import {
 import {
 	deleteCompanyPersonnel,
 	deleteCompanyProduct,
+	deleteFundingRound,
+	updateCompanyFundingRound,
 	updateCompanyProfile,
 	updateCompnanyItem,
 } from "@/app/_utils/_api/companyAPIs";
@@ -234,6 +236,8 @@ function CompanyProfileContent({ company, isOwner }) {
 								company: companyData,
 								isOwner,
 								updateCompany: updateCompanyData,
+								updateFunding: updateCompanyFundingRound,
+								deleteFundingRound: deleteFundingRound,
 							})}
 						</TabsContent>
 
