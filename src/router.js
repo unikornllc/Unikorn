@@ -109,6 +109,7 @@ import {
 	deleteOneFundingRound,
 	getAllFundingRound,
 	getOneFundingRound,
+	updateFundingRound,
 } from "./controllers/fundingRound.js";
 import {
 	createProductInformation,
@@ -294,7 +295,8 @@ router.get("/getAllFinancial", getAllFinancial);
 
 //funding_round
 router.post("/createFundingRound", createFundingRound);
-router.get("/getAllFundingRound", getAllFundingRound);
+router.put("/updateFundingRound", updateFundingRound);
+router.get("/getCompanyFinancialInfo", getAllFundingRound);
 router.get("/getOneFundingRound", getOneFundingRound);
 router.delete("/deleteFundingRound", deleteOneFundingRound);
 

@@ -54,7 +54,12 @@ export const uploadFile = async (req, res) => {
 		if (!req.file) {
 			return res.status(400).json({ message: "No file uploaded" });
 		}
-
+		if (
+			req.body.fileName == "cover_picture" ||
+			req.body.fileName == "profile_picture"
+		) {
+			return res.status(400).json({ message: "Invalid file name" });
+		}
 		const savedPath = await fileStorage.saveFile(
 			req.account.role.toLowerCase(),
 			req.account.id,

@@ -31,6 +31,7 @@ model RaisingFunds {
   fundraisers       Fundraiser[]
   investmentOffers  InvestmentOffer[]
   journal           Journal?
+  FundingRound      FundingRound[]
 }
 
 model Fundraiser {
@@ -79,13 +80,15 @@ model InvestmentOffer {
 }
 
 model FundingRound {
-  id            String    @id @default(uuid())
-  type          String
-  fundingAmount Float
-  roundDate     DateTime
-  leadInvestors String[]
-  financial     Financial @relation(fields: [financialId], references: [id])
-  financialId   String
+  id             String        @id @default(uuid())
+  type           String
+  fundingAmount  Float
+  roundDate      DateTime
+  leadInvestors  String[]
+  financial      Financial     @relation(fields: [financialId], references: [id])
+  financialId    String
+  raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
+  raisingFundsId String?
 }
 
 model Financial {

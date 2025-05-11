@@ -1,29 +1,30 @@
 model Chat {
-  id                    String            @id @default(uuid())
-  isGroupChat           Boolean           @default(false)
-  name                  String?           // Only for group chats
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id          String   @id @default(uuid())
+  isGroupChat Boolean  @default(false)
+  name        String? // Only for group chats
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  participants          ChatParticipant[]
-  messages              Message[]
+  participants ChatParticipant[]
+  messages     Message[]
 }
 
 model ChatParticipant {
-  id                    String            @id @default(uuid())
-  username              String
-  chatId                String
-  isAdmin               Boolean           @default(false)  // For group chats
-  isFavorited           Boolean           @default(false)
-  isMuted               Boolean           @default(false)
-  isArchived            Boolean           @default(false)
-  lastReadMessageId     String?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id                String    @id @default(uuid())
+  username          String
+  chatId            String
+  isAdmin           Boolean   @default(false) // For group chats
+  isFavorited       Boolean   @default(false)
+  isMuted           Boolean   @default(false)
+  isArchived        Boolean   @default(false)
+  lastReadMessageId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
-  account               Account           @relation(fields: [username], references: [username], onDelete: Cascade)
-  chat                  Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  lastReadMessage       Message?          @relation("LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+  account         Account  @relation(fields: [username], references: [username], onDelete: Cascade)
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  lastReadMessage Message? @relation("LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
 
   @@unique([username, chatId])
   @@index([chatId])
@@ -31,37 +32,36 @@ model ChatParticipant {
 }
 
 model Message {
-  id                    String            @id @default(uuid())
-  chatId                String
-  senderId              String
-  content               String?
-  isRequestMessage      Boolean           @default(false)  // For messages from non-friends
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  isDeleted             Boolean           @default(false)
+  id               String   @id @default(uuid())
+  chatId           String
+  senderId         String
+  content          String?
+  isRequestMessage Boolean  @default(false) // For messages from non-friends
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  isDeleted        Boolean  @default(false)
 
-  
-  chat                  Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  sender                Account           @relation("SentMessages", fields: [senderId], references: [username], onDelete: Cascade)
-  attachments           Attachment[]
-  readReceipts          ReadReceipt[]
-  lastReadBy            ChatParticipant[] @relation("LastReadMessage")
+  chat         Chat              @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender       Account           @relation("SentMessages", fields: [senderId], references: [username], onDelete: Cascade)
+  attachments  Attachment[]
+  readReceipts ReadReceipt[]
+  lastReadBy   ChatParticipant[] @relation("LastReadMessage")
 
   @@index([chatId, createdAt(sort: Desc)])
   @@index([senderId])
 }
 
 model Attachment {
-  id                    String            @id @default(uuid())
-  messageId             String
-  type                  AttachmentType
-  url                   String
-  fileName              String?
-  fileSize              Int?
-  mimeType              String?
-  createdAt             DateTime          @default(now())
+  id        String         @id @default(uuid())
+  messageId String
+  type      AttachmentType
+  url       String
+  fileName  String?
+  fileSize  Int?
+  mimeType  String?
+  createdAt DateTime       @default(now())
 
-  message               Message           @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
 }
@@ -73,13 +73,13 @@ enum AttachmentType {
 }
 
 model ReadReceipt {
-  id                    String            @id @default(uuid())
-  messageId             String
-  username               String
-  readAt                DateTime          @default(now())
+  id        String   @id @default(uuid())
+  messageId String
+  username  String
+  readAt    DateTime @default(now())
 
-  message               Message           @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  account               Account           @relation(fields: [username], references: [username], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [username], references: [username], onDelete: Cascade)
 
   @@unique([messageId, username])
   @@index([username])
@@ -87,15 +87,15 @@ model ReadReceipt {
 }
 
 model FriendRequest {
-  id                    String            @id @default(uuid())
-  senderId              String
-  receiverId            String
-  status                RequestStatus     @default(PENDING)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id         String        @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
-  sender                Account           @relation("Sender", fields: [senderId], references: [username], onDelete: Cascade)
-  receiver              Account           @relation("Receiver", fields: [receiverId], references: [username], onDelete: Cascade)
+  sender   Account @relation("Sender", fields: [senderId], references: [username], onDelete: Cascade)
+  receiver Account @relation("Receiver", fields: [receiverId], references: [username], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
   @@index([receiverId, status])
@@ -109,13 +109,13 @@ enum RequestStatus {
 }
 
 model BlockedUser {
-  id                    String            @id @default(uuid())
-  blockerId             String
-  blockedId             String
-  createdAt             DateTime          @default(now())
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
 
-  blocker               Account              @relation("Blocker", fields: [blockerId], references: [username], onDelete: Cascade)
-  blocked               Account              @relation("Blocked", fields: [blockedId], references: [username], onDelete: Cascade)
+  blocker Account @relation("Blocker", fields: [blockerId], references: [username], onDelete: Cascade)
+  blocked Account @relation("Blocked", fields: [blockedId], references: [username], onDelete: Cascade)
 
   @@unique([blockerId, blockedId])
   @@index([blockerId])
@@ -123,14 +123,14 @@ model BlockedUser {
 }
 
 model ReportedUser {
-  id                    String            @id @default(uuid())
-  reporterId            String
-  reportedId            String
-  reason                String
-  createdAt             DateTime          @default(now())
+  id         String   @id @default(uuid())
+  reporterId String
+  reportedId String
+  reason     String
+  createdAt  DateTime @default(now())
 
-  reporter              Account              @relation("Reporter", fields: [reporterId], references: [username], onDelete: Cascade)
-  reported              Account              @relation("Reported", fields: [reportedId], references: [username], onDelete: Cascade)
+  reporter Account @relation("Reporter", fields: [reporterId], references: [username], onDelete: Cascade)
+  reported Account @relation("Reported", fields: [reportedId], references: [username], onDelete: Cascade)
 
   @@index([reporterId])
   @@index([reportedId])
