@@ -55,29 +55,30 @@ export default function FundingSection({
 	const [financials, setFinancials] = useState(null);
 	const [selectedRound, setSelectedRound] = useState(null);
 
-	const investors = [
-		{
-			id: "1",
-			name: "Sequoia Capital",
-			logo: "/placeholder.svg",
-			amount: 5000000,
-			round: "Series A",
-		},
-		{
-			id: "2",
-			name: "Andreessen Horowitz",
-			logo: "/placeholder.svg",
-			amount: 3000000,
-			round: "Series A",
-		},
-		{
-			id: "3",
-			name: "Y Combinator",
-			logo: "/placeholder.svg",
-			amount: 500000,
-			round: "Seed",
-		},
-	];
+	const [investors, setInvestors] = useState([]);
+	// const investors = [
+	// 	{
+	// 		id: "1",
+	// 		name: "Sequoia Capital",
+	// 		logo: "/placeholder.svg",
+	// 		amount: 5000000,
+	// 		round: "Series A",
+	// 	},
+	// 	{
+	// 		id: "2",
+	// 		name: "Andreessen Horowitz",
+	// 		logo: "/placeholder.svg",
+	// 		amount: 3000000,
+	// 		round: "Series A",
+	// 	},
+	// 	{
+	// 		id: "3",
+	// 		name: "Y Combinator",
+	// 		logo: "/placeholder.svg",
+	// 		amount: 500000,
+	// 		round: "Seed",
+	// 	},
+	// ];
 
 	const [financialInfo, setFinancialInfo] = useState({
 		valuation: 0,
@@ -291,7 +292,9 @@ export default function FundingSection({
 			try {
 				const response = await fetchCompanyFinancialInfo(company.username);
 				if (response.financials) {
+					console.log("Fetched financials:", response.financials);
 					setFinancials(response.financials);
+
 					setFinancialInfo({
 						valuation: response.financials?.valuation || 0,
 						totalFundingAmount: response.financials?.totalFundingAmount || 0,
