@@ -87,6 +87,16 @@ const ManageSub = ({ tier, wallet }) => {
 			console.error(err);
 		}
 	};
+	// useEffect(() => {
+	// 	if (showModal || showWallet) {
+	// 		document.body.style.overflow = "hidden";
+	// 	} else {
+	// 		document.body.style.overflow = "";
+	// 	}
+	// 	return () => {
+	// 		document.body.style.overflow = "";
+	// 	};
+	// }, [showModal, showWallet]);
 
 	return (
 		<div className="relative mb-6">
@@ -113,8 +123,8 @@ const ManageSub = ({ tier, wallet }) => {
 						isOpen={showModal}
 						onRequestClose={() => setShowModal(false)}
 						contentLabel="Manage Subscription"
-						className="z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-md mx-auto relative"
-						overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-md mx-auto relative overflow-auto"
+						overlayClassName="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
 						ariaHideApp={false}
 					>
 						<button
@@ -191,8 +201,8 @@ const ManageSub = ({ tier, wallet }) => {
 						isOpen={showWallet}
 						onRequestClose={() => setShowWallet(false)}
 						contentLabel="Manage Wallet"
-						className="z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-lg mx-auto relative"
-						overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-white rounded-lg p-8 shadow-lg max-w-lg mx-auto relative overflow-auto"
+						overlayClassName="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
 						ariaHideApp={false}
 					>
 						<button

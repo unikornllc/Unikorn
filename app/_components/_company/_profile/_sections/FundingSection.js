@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Card,
 	CardContent,
@@ -33,14 +33,19 @@ import { Input } from "@/app/_components/_ui/Input";
 import { Textarea } from "@/app/_components/_ui/Textarea";
 import { formatDate, formatCurrency } from "@/app/_utils/utils";
 import { TrendingUp, Plus, Edit } from "lucide-react";
+import {
+	updateCompanyFundingRound,
+	addCompanyFundingRound,
+	fetchCompanyFinancialInfo,
+} from "@/app/_utils/_api/companyAPIs";
 
 export default function FundingSection({ company, isOwner, updateCompany }) {
 	const [activeTab, setActiveTab] = useState("rounds");
 	const [isEditingFinancials, setIsEditingFinancials] = useState(false);
 	const [isAddingRound, setIsAddingRound] = useState(false);
 	const [isStartingFundraising, setIsStartingFundraising] = useState(false);
-
-	// Mock data for investors
+	const [loading, setLoading] = useState(true);
+	const [financials, setFinancials] = useState(null);
 	const investors = [
 		{
 			id: "1",
@@ -66,9 +71,10 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 	];
 
 	const [financialInfo, setFinancialInfo] = useState({
-		valuation: company.financials?.valuation || 0,
-		totalFundingAmount: company.financials?.totalFundingAmount || 0,
-		investors: company.financials?.investors?.join(", ") || "",
+		valuation: financials?.valuation || 0,
+		totalFundingAmount: financials?.totalFundingAmount || 0,
+		investors: financials?.investors?.join(", ") || "",
+		fundingRounds: financials?.fundingRounds || [],
 	});
 
 	const [newRound, setNewRound] = useState({
@@ -85,10 +91,9 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 		totalPortions: "",
 		status: "Active",
 	});
-
 	const handleSaveFinancials = () => {
 		const financials = {
-			id: company.financials?.id || "f" + Date.now(),
+			id: financials?.id || "f" + Date.now(),
 			valuation: Number.parseFloat(financialInfo.valuation) || 0,
 			totalFundingAmount:
 				Number.parseFloat(financialInfo.totalFundingAmount) || 0,
@@ -96,7 +101,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 				.split(",")
 				.map((i) => i.trim())
 				.filter((i) => i),
-			fundingRounds: company.financials?.fundingRounds || [],
+			fundingRounds: financials?.fundingRounds || [],
 			companyId: company.id,
 		};
 
@@ -104,40 +109,43 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 		setIsEditingFinancials(false);
 	};
 
-	const handleAddRound = () => {
-		if (!newRound.type || !newRound.fundingAmount) return;
+	const handleAddRound = async () => {
+		try {
+			if (!newRound.type || !newRound.fundingAmount) return;
+			const round = {
+				id: Date.now().toString(),
+				type: newRound.type,
+				fundingAmount: Number.parseFloat(newRound.fundingAmount) || 0,
+				roundDate: new Date(newRound.roundDate),
+				leadInvestors: newRound.leadInvestors
+					.split(",")
+					.map((i) => i.trim())
+					.filter((i) => i),
+				financialsId: financials?.id || "f" + Date.now(),
+			};
+			await addCompanyFundingRound(round);
+			setFinancials((prev) => ({
+				id: prev?.id || "f" + Date.now(),
+				valuation: prev?.valuation || 0,
+				totalFundingAmount:
+					(prev?.totalFundingAmount || 0) +
+					(Number.parseFloat(newRound.fundingAmount) || 0),
+				investors: prev?.investors || [],
+				fundingRounds: [...(prev?.fundingRounds || []), round],
+				companyId: company.id,
+			}));
 
-		const round = {
-			id: Date.now().toString(),
-			type: newRound.type,
-			fundingAmount: Number.parseFloat(newRound.fundingAmount) || 0,
-			roundDate: new Date(newRound.roundDate),
-			leadInvestors: newRound.leadInvestors
-				.split(",")
-				.map((i) => i.trim())
-				.filter((i) => i),
-			financialId: company.financials?.id || "f" + Date.now(),
-		};
-
-		const financials = {
-			id: company.financials?.id || "f" + Date.now(),
-			valuation: company.financials?.valuation || 0,
-			totalFundingAmount:
-				(company.financials?.totalFundingAmount || 0) +
-				(Number.parseFloat(newRound.fundingAmount) || 0),
-			investors: company.financials?.investors || [],
-			fundingRounds: [...(company.financials?.fundingRounds || []), round],
-			companyId: company.id,
-		};
-
-		updateCompany({ financials });
-		setNewRound({
-			type: "Seed",
-			fundingAmount: "",
-			roundDate: new Date().toISOString().split("T")[0],
-			leadInvestors: "",
-		});
-		setIsAddingRound(false);
+			setNewRound({
+				type: "Seed",
+				fundingAmount: "",
+				roundDate: new Date().toISOString().split("T")[0],
+				leadInvestors: "",
+			});
+		} catch (error) {
+			console.error("Error updating funding round:", error);
+		} finally {
+			setIsAddingRound(false);
+		}
 	};
 
 	const handleStartFundraising = () => {
@@ -178,7 +186,6 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 		setIsStartingFundraising(false);
 	};
 
-	// Function to calculate portions from funding amount and price per portion
 	const calculatePortions = () => {
 		const fundingAmount = Number.parseFloat(fundraisingInfo.fundingAmount) || 0;
 		const pricePerPortion =
@@ -192,7 +199,30 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 			});
 		}
 	};
+	useEffect(() => {
+		const fetchFinancials = async () => {
+			try {
+				const response = await fetchCompanyFinancialInfo(company.username);
+				if (response.financials) {
+					setFinancials(response.financials);
+					console.log("Fetched financials:", response.financials);
+				}
+			} catch (error) {
+				console.error("Error fetching financials:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchFinancials();
+	}, []);
 
+	if (loading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			</div>
+		);
+	}
 	return (
 		<div className="space-y-6">
 			<Card>
@@ -223,14 +253,14 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 					)}
 				</CardHeader>
 				<CardContent>
-					{company.financials ? (
+					{financials ? (
 						<div className="space-y-6">
 							<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 								<Card>
 									<CardContent className="pt-6">
 										<div className="text-center">
 											<h3 className="text-2xl font-bold text-purple-600">
-												{formatCurrency(company.financials.totalFundingAmount)}
+												{formatCurrency(financials.totalFundingAmount)}
 											</h3>
 											<p className="text-sm text-gray-500 mt-1">
 												Total Funding Amount
@@ -243,7 +273,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 									<CardContent className="pt-6">
 										<div className="text-center">
 											<h3 className="text-2xl font-bold text-purple-600">
-												{formatCurrency(company.financials.valuation)}
+												{formatCurrency(financials.valuation)}
 											</h3>
 											<p className="text-sm text-gray-500 mt-1">
 												Company Valuation
@@ -256,7 +286,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 									<CardContent className="pt-6">
 										<div className="text-center">
 											<h3 className="text-2xl font-bold text-purple-600">
-												{company.financials.investors.length}
+												{financials.investors.length}
 											</h3>
 											<p className="text-sm text-gray-500 mt-1">
 												Number of Investors
@@ -277,8 +307,8 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 								</TabsList>
 
 								<TabsContent value="rounds" className="pt-4">
-									{company.financials.fundingRounds &&
-									company.financials.fundingRounds.length > 0 ? (
+									{financials.fundingRounds &&
+									financials.fundingRounds.length > 0 ? (
 										<div className="overflow-x-auto">
 											<table className="w-full border-collapse">
 												<thead>
@@ -292,7 +322,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 													</tr>
 												</thead>
 												<tbody>
-													{company.financials.fundingRounds.map((round) => (
+													{financials.fundingRounds.map((round) => (
 														<tr
 															key={round.id}
 															className="border-b hover:bg-gray-50"
@@ -371,7 +401,7 @@ export default function FundingSection({ company, isOwner, updateCompany }) {
 						</div>
 					) : (
 						<div className="text-center py-8 text-gray-500">
-							<p>No financial information available</p>
+							<p>No financials information available</p>
 							{isOwner && (
 								<div className="flex flex-col items-center gap-2 mt-4">
 									<Button

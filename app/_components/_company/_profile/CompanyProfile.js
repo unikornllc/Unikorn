@@ -23,7 +23,6 @@ import {
 import {
 	AutoSkeleton,
 	BasicProfileSkeleton,
-	BasicCardSkeleton,
 } from "@/app/_components/_ui/_loading/Skeleton";
 import {
 	deleteCompanyPersonnel,
@@ -43,25 +42,6 @@ const COMPANY_SECTIONS = [
 ];
 
 function CompanyProfileContent({ company, isOwner }) {
-	const defaultCompany = {
-		id: company?.id || "new-company",
-		name: company?.name || "New Company",
-		description: company?.description || "Company description goes here",
-		hqLocation: company?.hqLocation || "Location",
-		founded: company?.founded || new Date().toISOString(),
-		type: company?.type || "Private",
-		industry: company?.industry || "Technology",
-		website: company?.website || "https://example.com",
-		tier: company?.tier || "Hunter",
-		verified: company?.verified || false,
-		activities: company?.activities || [],
-		personnel: company?.personnel || [],
-		productInformation: company?.productInformation || [],
-		financials: company?.financials || null,
-		raisingFunds: company?.raisingFunds || [],
-		...company,
-	};
-
 	const [activeTab, setActiveTab] = useState(isOwner ? "about" : "home");
 	const [companyData, setCompanyData] = useState(company);
 	const {
@@ -72,8 +52,8 @@ function CompanyProfileContent({ company, isOwner }) {
 		initializeSections,
 	} = useLoading();
 
-	// Track which sections have been rendered at least once
 	const [renderedSections, setRenderedSections] = useState({});
+	const [tabContentHeight, setTabContentHeight] = useState("auto");
 
 	useEffect(() => {
 		initializeSections(COMPANY_SECTIONS, true);
@@ -116,17 +96,10 @@ function CompanyProfileContent({ company, isOwner }) {
 		}
 	};
 
-	// Function to fetch section data - replace with actual API calls
 	const fetchSectionData = async (section) => {
 		setSectionLoading(section, true);
 
 		try {
-			// Replace with actual API call based on section
-			// const response = await axios.get(`/api/company/${companyData.id}/${section}`);
-			// const data = response.data;
-			// Update relevant part of companyData based on section
-
-			// For now, just set loading to false after a brief delay
 			setSectionLoading(section, false);
 		} catch (error) {
 			console.error(`Error fetching ${section} data:`, error);
@@ -135,53 +108,18 @@ function CompanyProfileContent({ company, isOwner }) {
 	};
 
 	const handleTabChange = (value) => {
+		const currentTabContent = document.querySelector('[data-state="active"]');
+		if (currentTabContent) {
+			setTabContentHeight(`${currentTabContent.scrollHeight}px`);
+		}
+
 		setActiveTab(value);
 		fetchSectionData(value);
 	};
 
-	// useEffect to mark sections as rendered after they've loaded
-	// useEffect(() => {
-	// 	const sectionsToUpdate = Object.keys(sectionLoading).filter(
-	// 		(sectionName) =>
-	// 			!sectionLoading[sectionName] && renderedSections[sectionName] === false,
-	// 	);
-
-	// 	if (sectionsToUpdate.length > 0) {
-	// 		setRenderedSections((prev) => {
-	// 			const updatedSections = { ...prev };
-	// 			sectionsToUpdate.forEach((sectionName) => {
-	// 				updatedSections[sectionName] = true;
-	// 			});
-	// 			return updatedSections;
-	// 		});
-	// 	}
-	// }, [sectionLoading, renderedSections]);
-
 	const renderSection = (sectionName, SectionComponent, props) => {
 		const isCurrentlyLoading = sectionLoading[sectionName];
 		const hasBeenRenderedBefore = renderedSections[sectionName];
-
-		// If it's loading but has been rendered before, use AutoSkeleton
-		// if (isCurrentlyLoading && hasBeenRenderedBefore) {
-		// 	return (
-		// 		<AutoSkeleton isLoading={true}>
-		// 			<SectionComponent {...props} />
-		// 		</AutoSkeleton>
-		// 	);
-		// }
-
-		// // If it's loading and has never been rendered, use a basic skeleton
-		// if (isCurrentlyLoading && !hasBeenRenderedBefore) {
-		// 	return (
-		// 		<div className="space-y-6">
-		// 			{Array(2)
-		// 				.fill(0)
-		// 				.map((_, i) => (
-		// 					<BasicCardSkeleton key={i} />
-		// 				))}
-		// 		</div>
-		// 	);
-		// }
 
 		return <SectionComponent {...props} />;
 	};
@@ -211,66 +149,123 @@ function CompanyProfileContent({ company, isOwner }) {
 					onValueChange={handleTabChange}
 					className="w-full"
 				>
-					<TabsList className="grid w-full grid-cols-6 mb-8">
-						{!isOwner && <TabsTrigger value="home">Home</TabsTrigger>}
-						<TabsTrigger value="about">About</TabsTrigger>
-						<TabsTrigger value="posts">Posts</TabsTrigger>
-						<TabsTrigger value="funding">Funding</TabsTrigger>
-						<TabsTrigger value="people">People</TabsTrigger>
-						<TabsTrigger value="news">News</TabsTrigger>
-					</TabsList>
+					<div className="sticky top-0 z-10 bg-gray-50 pt-2 pb-4 shadow-sm">
+						<TabsList className="grid w-full grid-cols-6 mb-2 rounded-xl bg-gray-100/80 backdrop-blur-sm">
+							{!isOwner && (
+								<TabsTrigger value="home" className="rounded-lg">
+									Home
+								</TabsTrigger>
+							)}
+							<TabsTrigger value="about" className="rounded-lg">
+								About
+							</TabsTrigger>
+							<TabsTrigger value="posts" className="rounded-lg">
+								Posts
+							</TabsTrigger>
+							<TabsTrigger value="funding" className="rounded-lg">
+								Funding
+							</TabsTrigger>
+							<TabsTrigger value="people" className="rounded-lg">
+								People
+							</TabsTrigger>
+							<TabsTrigger value="news" className="rounded-lg">
+								News
+							</TabsTrigger>
+						</TabsList>
+					</div>
 
-					{!isOwner && (
-						<TabsContent value="home">
-							{renderSection("home", HomeSection, {
+					<div
+						className="tab-content-wrapper transition-all duration-300 ease-in-out"
+						style={{ minHeight: tabContentHeight }}
+					>
+						{!isOwner && (
+							<TabsContent
+								value="home"
+								className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+								onAnimationEnd={(e) => {
+									setTabContentHeight(`${e.target.scrollHeight}px`);
+								}}
+							>
+								{renderSection("home", HomeSection, {
+									company: companyData,
+									isOwner: false,
+									updateCompany: updateCompanyData,
+								})}
+							</TabsContent>
+						)}
+
+						<TabsContent
+							value="about"
+							className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+							onAnimationEnd={(e) => {
+								setTabContentHeight(`${e.target.scrollHeight}px`);
+							}}
+						>
+							{renderSection("about", AboutSection, {
 								company: companyData,
-								isOwner: false,
+								isOwner,
+								updateCompany: updateCompnanyItem,
+								updateCompanyProfile: updateCompanyProfile,
+								deleteCompanyProduct: deleteCompanyProduct,
+							})}
+						</TabsContent>
+
+						<TabsContent
+							value="posts"
+							className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+							onAnimationEnd={(e) => {
+								setTabContentHeight(`${e.target.scrollHeight}px`);
+							}}
+						>
+							{renderSection("posts", PostsSection, {
+								company: companyData,
+								isOwner,
+							})}
+						</TabsContent>
+
+						<TabsContent
+							value="funding"
+							className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+							onAnimationEnd={(e) => {
+								setTabContentHeight(`${e.target.scrollHeight}px`);
+							}}
+						>
+							{renderSection("funding", FundingSection, {
+								company: companyData,
+								isOwner,
 								updateCompany: updateCompanyData,
 							})}
 						</TabsContent>
-					)}
 
-					<TabsContent value="about">
-						{renderSection("about", AboutSection, {
-							company: companyData,
-							isOwner,
-							updateCompany: updateCompnanyItem,
-							updateCompanyProfile: updateCompanyProfile,
-							deleteCompanyProduct: deleteCompanyProduct,
-						})}
-					</TabsContent>
+						<TabsContent
+							value="people"
+							className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+							onAnimationEnd={(e) => {
+								setTabContentHeight(`${e.target.scrollHeight}px`);
+							}}
+						>
+							{renderSection("people", PeopleSection, {
+								company: companyData,
+								isOwner,
+								updateCompany: updateCompnanyItem,
+								deletePersonnel: deleteCompanyPersonnel,
+							})}
+						</TabsContent>
 
-					<TabsContent value="posts">
-						{renderSection("posts", PostsSection, {
-							company: companyData,
-							isOwner,
-						})}
-					</TabsContent>
-
-					<TabsContent value="funding">
-						{renderSection("funding", FundingSection, {
-							company: companyData,
-							isOwner,
-							updateCompany: updateCompanyData,
-						})}
-					</TabsContent>
-
-					<TabsContent value="people">
-						{renderSection("people", PeopleSection, {
-							company: companyData,
-							isOwner,
-							updateCompany: updateCompnanyItem,
-							deletePersonnel: deleteCompanyPersonnel,
-						})}
-					</TabsContent>
-
-					<TabsContent value="news">
-						{renderSection("news", NewsSection, {
-							company: companyData,
-							isOwner,
-							updateCompany: updateCompanyData,
-						})}
-					</TabsContent>
+						<TabsContent
+							value="news"
+							className="mt-6 space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
+							onAnimationEnd={(e) => {
+								setTabContentHeight(`${e.target.scrollHeight}px`);
+							}}
+						>
+							{renderSection("news", NewsSection, {
+								company: companyData,
+								isOwner,
+								updateCompany: updateCompanyData,
+							})}
+						</TabsContent>
+					</div>
 				</Tabs>
 			</div>
 		</div>

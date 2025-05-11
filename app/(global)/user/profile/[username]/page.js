@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import EditableUserProfile from "@/app/_components/_user/_profile/EditableUserProfile";
 import UserProfileView from "@/app/_components/_user/_profile/UserProfileView";
+import ModernUserProfille from "@/app/_components/_user/_profile/ModernUserProfile";
 
 export default async function UserProfile({ params }) {
 	const { username } = await params;
@@ -66,9 +67,9 @@ export default async function UserProfile({ params }) {
 		return (
 			<div>
 				{isCurrentUser ? (
-					<EditableUserProfile user={res.data.user} editable />
+					<ModernUserProfille user={res.data.user} editable />
 				) : (
-					<UserProfileView user={res.data.user} />
+					<ModernUserProfille user={res.data.user} />
 				)}
 			</div>
 		);

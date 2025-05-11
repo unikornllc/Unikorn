@@ -239,24 +239,6 @@ export const getCompanyPersonnel = async (req, res) => {
 	}
 };
 
-// export const getFinancialInfo = async (req, res) => {
-// 	try {
-// 		const financialInfo = await prisma.company.findUnique({
-// 			where: {
-// 				username: req.params.username,
-// 			},
-// 		});
-// 		if (!financialInfo) {
-// 			return res.status(400).json({ message: "Financial info not found." });
-// 		} else {
-// 			res.status(200).json({ financialInfo: financialInfo });
-// 		}
-// 	} catch (error) {
-// 		console.error("Error fetching financial info:", error);
-// 		res.status(400).json({ message: "Error fetching financial info." });
-// 	}
-// };
-
 export const addCompanyActivity = async (req, res) => {
 	try {
 		const { title, description, companyId } = req.body;
