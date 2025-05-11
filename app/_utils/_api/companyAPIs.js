@@ -139,6 +139,18 @@ export const updateCompanyFundingRound = async (data) => {
 	}
 };
 
+export const deleteFundingRound = async (id) => {
+	try {
+		const response = await axios.delete(`${API_BASE_URL}/deleteFundingRound`, {
+			withCredentials: true,
+			data: { fundingRoundId: id },
+		});
+		return response.data;
+	} catch (error) {
+		console.log("Error deleting company product:", error);
+	}
+};
+
 export const addCompanyActivity = async (data) => {
 	try {
 		const response = await axios.post(

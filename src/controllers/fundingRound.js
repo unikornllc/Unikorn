@@ -128,21 +128,58 @@ export const deleteOneFundingRound = async (req, res) => {
 		if (fundingRound.raisingFundsId) {
 			return res.status(400).send("Funding round cannot be deleted");
 		}
-		const deleted = await prisma.fundingRound.delete({
+		await prisma.fundingRound.delete({
 			where: {
 				id: req.body.fundingRoundId,
-				companyId: req.account.id,
+				// companyId: req.account.id,
 			},
 		});
-		const updatedTotalFundingAmount =
-			financial.totalFundingAmount - req.body.funding_amount;
 		await prisma.financial.update({
 			where: { id: fundingRound.financialId },
-			data: { totalFundingAmount: { decrement: req.body.fundingAmount } },
+			data: { totalFundingAmount: { decrement: fundingRound.fundingAmount } },
 		});
 		res.status(200).send("Deleted successfully");
 	} catch (e) {
 		console.log(e);
 		res.status(400).send("Failed to delete");
+	}
+};
+
+export const getUserInvestments = async (req, res) => {
+	try {
+		const investments = await prisma.fundraiser.findMany({
+			where: {
+				investorUser: {
+					account: {
+						username: req.query.username,
+					},
+				},
+			},
+			select: {
+				id: true,
+				equityPercentage: true,
+				fundingAmount: true,
+				date: true,
+				status: true,
+				raisingFunds: {
+					select: {
+						company: {
+							select: {
+								name: true,
+								account: {
+									select: {
+										username: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+		res.status(200).json({ investments });
+	} catch (e) {
+		console.log(e);
+		res.status(400).send("Failed to retrieve");
 	}
 };

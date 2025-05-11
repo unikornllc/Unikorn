@@ -23,25 +23,7 @@ import { Input } from "@/app/_components/_ui/Input";
 import { Label } from "@/app/_components/_ui/Label";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
-const Investments = ({
-	investments = [
-		{
-			id: "inv1",
-			companyName: "AI Solutions",
-			amount: 50000,
-			equityPercentage: 5,
-			date: "2022-03-15",
-		},
-		{
-			id: "inv2",
-			companyName: "BlockChain Ventures",
-			amount: 75000,
-			equityPercentage: 7.5,
-			date: "2021-11-10",
-		},
-	],
-	editable,
-}) => {
+const Investments = ({ investments, editable }) => {
 	const [isAddingInvestment, setIsAddingInvestment] = useState(false);
 	const [editingInvestmentId, setEditingInvestmentId] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -52,7 +34,6 @@ const Investments = ({
 		equityPercentage: 0,
 		date: new Date().toISOString().split("T")[0],
 	});
-
 	const [editData, setEditData] = useState({
 		companyName: "",
 		amount: 0,
@@ -159,15 +140,15 @@ const Investments = ({
 						<Card key={investment.id} className="overflow-hidden">
 							<CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-2">
 								<div className="flex justify-between items-start">
-									<CardTitle>{investment.companyName}</CardTitle>
+									<CardTitle>{investment.raisingFunds.company.name}</CardTitle>
 									{editable && (
 										<button
 											className="p-2 rounded-full bg-white hover:bg-gray-100"
 											onClick={() => {
 												setEditingInvestmentId(investment.id);
 												setEditData({
-													companyName: investment.companyName,
-													amount: investment.amount,
+													companyName: investment.raisingFunds.company.name,
+													amount: investment.fundingAmount,
 													equityPercentage: investment.equityPercentage,
 													date: new Date(investment.date)
 														.toISOString()
@@ -188,7 +169,7 @@ const Investments = ({
 									<div className="flex justify-between">
 										<span className="text-gray-500">Investment Amount:</span>
 										<span className="font-medium">
-											{formatCurrency(investment.amount)}
+											{formatCurrency(investment.fundingAmount)}
 										</span>
 									</div>
 									<div className="flex justify-between">
@@ -204,7 +185,7 @@ const Investments = ({
 									variant="outline"
 									className="bg-green-50 text-green-600 border-green-200"
 								>
-									Active Investment
+									{investment.status} Investment
 								</Badge>
 								{editable && (
 									<DeleteButton

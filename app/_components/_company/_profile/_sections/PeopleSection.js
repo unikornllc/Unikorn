@@ -557,19 +557,19 @@ export default function PeopleSection({
 														<p className="text-sm text-gray-500">
 															{person.role}
 														</p>
-														{person.crunchBaseLink && (
+														{person.username && (
 															<Link
-																href={person.crunchBaseLink}
+																href={`/user/profile/${person.username}`}
 																target="_blank"
 																className="text-xs text-blue-600 hover:underline flex items-center mt-1"
 															>
-																View on CrunchBase
+																View Profile
 																<ExternalLink className="h-3 w-3 ml-1" />
 															</Link>
 														)}
-														{person.user && (
+														{person.username && (
 															<div className="mt-1 text-xs text-gray-500">
-																Linked to: @{person.user.name}
+																Linked to: @{person.username}
 															</div>
 														)}
 													</div>

@@ -221,7 +221,15 @@ export const getCompanyPersonnel = async (req, res) => {
 								name: true,
 								role: true,
 								crunchBaseLink: true,
-								user: true,
+								user: {
+									select: {
+										account: {
+											select: {
+												username: true,
+											},
+										},
+									},
+								},
 								userId: true,
 							},
 						},
@@ -231,6 +239,12 @@ export const getCompanyPersonnel = async (req, res) => {
 		});
 		if (!personnel) {
 			return res.status(400).json({ message: "Personnel not found." });
+		}
+		for (let i = 0; i < personnel.company.personnel.length; i++) {
+			if (personnel.company.personnel[i].user) {
+				personnel.company.personnel[i].username =
+					personnel.company.personnel[i].user.account.username;
+			}
 		}
 		return res.status(200).json({ personnel: personnel.company.personnel });
 	} catch (error) {
