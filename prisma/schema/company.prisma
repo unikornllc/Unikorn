@@ -15,6 +15,9 @@ enum CompanyPersonnel {
   Advisor
   BoardMember
   KeyEmployee
+  Employee
+  Investor
+  LeadInvestor
 }
 
 model Company {
@@ -27,7 +30,8 @@ model Company {
   type               CompanyType          @default(Public)
   companySize        String               @default("1-50")
   hqLocation         String
-  industry           String
+  socialMedia        Json?
+  industry           String[]
   verified           Boolean              @default(false)
   tier               CompanyTier          @default(Holder)
   personnel          Personnel[]

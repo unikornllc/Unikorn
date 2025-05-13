@@ -78,9 +78,25 @@ export default function AboutSection({
 		partnerships: "",
 	});
 
+	const [industryInput, setIndustryInput] = useState(
+		Array.isArray(aboutInfo.industry)
+			? aboutInfo.industry.join(", ")
+			: aboutInfo.industry || "",
+	);
+
 	const handleSaveAbout = () => {
-		updateCompany(aboutInfo);
-		updateCompanyProfile(aboutInfo);
+		const processedIndustry = industryInput
+			.split(",")
+			.map((item) => item.trim())
+			.filter((item) => item);
+		const processedAboutInfo = {
+			...aboutInfo,
+			industry: processedIndustry,
+		};
+
+		setAboutInfo(processedAboutInfo);
+		updateCompany(processedAboutInfo);
+		updateCompanyProfile(processedAboutInfo);
 		setIsEditingAbout(false);
 	};
 
@@ -253,7 +269,20 @@ export default function AboutSection({
 										<Building className="h-5 w-5 text-gray-500 mt-0.5" />
 										<div>
 											<h4 className="font-medium">Industry</h4>
-											<p className="text-gray-600">{aboutInfo.industry}</p>
+											<div className="flex flex-wrap gap-2 mt-2">
+												{Array.isArray(aboutInfo.industry) ? (
+													aboutInfo.industry.map((industry, index) => (
+														<div
+															key={index}
+															className="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-600"
+														>
+															{industry}
+														</div>
+													))
+												) : (
+													<p className="text-gray-600">No industries listed</p>
+												)}
+											</div>
 										</div>
 									</div>
 
@@ -435,16 +464,15 @@ export default function AboutSection({
 								<option value="Public">Public</option>
 							</select>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="about-industry" className="text-right">
+						<div className="grid grid-cols-4 items-start gap-4">
+							<Label htmlFor="about-industry" className="text-right pt-2">
 								Industry
 							</Label>
-							<Input
+							<Textarea
 								id="about-industry"
-								value={aboutInfo.industry}
-								onChange={(e) =>
-									setAboutInfo({ ...aboutInfo, industry: e.target.value })
-								}
+								value={industryInput}
+								onChange={(e) => setIndustryInput(e.target.value)}
+								placeholder="Enter industries separated by commas (e.g. Nike, Adidas, New Balance)"
 								className="col-span-3"
 							/>
 						</div>

@@ -158,12 +158,6 @@ export default function ProfileHeader({ company, isOwner, updateCompany }) {
 							<span>{followerCount} followers</span>
 						</div>
 					</div>
-
-					<div className="flex flex-wrap gap-2 pt-2">
-						{company.industry && (
-							<Badge variant="secondary">{company.industry}</Badge>
-						)}
-					</div>
 				</div>
 
 				<div className="mt-6">
