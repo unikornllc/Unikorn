@@ -63,31 +63,21 @@ export default function PeopleSection({
 
 	const [employees, setEmployees] = useState(
 		company.personnel
-			.filter((person) => person.role === "KeyEmployee")
+			.filter(
+				(person) => person.role === "KeyEmployee" || person.role === "Employee",
+			)
 			.map((person) => ({ ...person, avatar: "/placeholder.svg" })),
 	);
 
 	// Mock data for investors
-	const [investors, setInvestors] = useState([
-		{
-			id: "1",
-			name: "Sequoia Capital",
-			role: "Lead Investor",
-			avatar: "/placeholder.svg",
-		},
-		{
-			id: "2",
-			name: "Andreessen Horowitz",
-			role: "Investor",
-			avatar: "/placeholder.svg",
-		},
-		{
-			id: "3",
-			name: "Y Combinator",
-			role: "Accelerator",
-			avatar: "/placeholder.svg",
-		},
-	]);
+	const [investors, setInvestors] = useState(
+		company.personnel
+			.filter(
+				(person) =>
+					person.role === "Investor" || person.role === "LeadInvestor",
+			)
+			.map((person) => ({ ...person, avatar: "/placeholder.svg" })),
+	);
 
 	const [newPerson, setNewPerson] = useState({
 		name: "",
@@ -274,6 +264,7 @@ export default function PeopleSection({
 			companyId: company.id,
 			userId: newPerson.userId,
 			user: newPerson.user,
+			username: newPerson.user?.account?.username,
 		};
 
 		// First call updateCompany with the model and id for upsert
@@ -284,7 +275,7 @@ export default function PeopleSection({
 		});
 
 		// Then update the local state based on the role
-		if (newPerson.role === "KeyEmployee") {
+		if (newPerson.role === "KeyEmployee" || newPerson.role === "Employee") {
 			setEmployees((prev) => [
 				...prev,
 				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
@@ -294,8 +285,16 @@ export default function PeopleSection({
 				...prev,
 				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
 			]);
+		} else if (
+			newPerson.role === "Investor" ||
+			newPerson.role === "LeadInvestor"
+		) {
+			setInvestors((prev) => [
+				...prev,
+				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
+			]);
 		} else {
-			// For investors, keep the original behavior
+			// For other roles, keep the original behavior
 			const updatedPersonnel = [...(company.personnel || []), person];
 			updateCompany({ personnel: updatedPersonnel });
 		}
@@ -320,7 +319,17 @@ export default function PeopleSection({
 			userId: person.userId || null,
 			user: person.user || null,
 		});
-		setSelectedUser(person.user || null);
+		if (person.user) {
+			setSelectedUser({
+				...person.user,
+				account: {
+					username: person.username || person.user.account?.username,
+				},
+				name: person.user.name || person.name,
+			});
+		} else {
+			setSelectedUser(null);
+		}
 		setSelectedPerson(person);
 		setIsEditingPerson(true);
 	};
@@ -336,9 +345,10 @@ export default function PeopleSection({
 			companyId: company.id,
 			userId: editPerson.userId,
 			user: editPerson.user,
+			username: editPerson.user?.account?.username,
 		};
 
-		if (editPerson.role === "KeyEmployee") {
+		if (editPerson.role === "KeyEmployee" || editPerson.role === "Employee") {
 			updateCompany({
 				model: "personnel",
 				id: editPerson.id,
@@ -361,6 +371,9 @@ export default function PeopleSection({
 			);
 
 			setLeaders((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
+			setInvestors((prev) =>
 				prev.filter((person) => person.id !== editPerson.id),
 			);
 		} else if (leaderRoles.includes(editPerson.role)) {
@@ -386,10 +399,55 @@ export default function PeopleSection({
 			setEmployees((prev) =>
 				prev.filter((person) => person.id !== editPerson.id),
 			);
+			setInvestors((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
 
 			// If the person wasn't in leaders before (role changed), add them
 			if (!leaders.some((person) => person.id === editPerson.id)) {
 				setLeaders((prev) => [
+					...prev,
+					{
+						...updatedPerson,
+						avatar: updatedPerson.user?.avatar || "/placeholder.svg",
+					},
+				]);
+			}
+		} else if (
+			editPerson.role === "Investor" ||
+			editPerson.role === "LeadInvestor"
+		) {
+			updateCompany({
+				model: "personnel",
+				id: editPerson.id,
+				data: updatedPerson,
+			});
+
+			setInvestors((prev) =>
+				prev.map((person) =>
+					person.id === editPerson.id
+						? {
+								...person,
+								...updatedPerson,
+								avatar:
+									updatedPerson.user?.avatar ||
+									person.avatar ||
+									"/placeholder.svg",
+							}
+						: person,
+				),
+			);
+
+			setLeaders((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
+			setEmployees((prev) =>
+				prev.filter((person) => person.id !== editPerson.id),
+			);
+
+			// If the person wasn't in investors before (role changed), add them
+			if (!investors.some((person) => person.id === editPerson.id)) {
+				setInvestors((prev) => [
 					...prev,
 					{
 						...updatedPerson,
@@ -427,6 +485,7 @@ export default function PeopleSection({
 			setLeaders((prev) => prev.filter((person) => person.id !== id));
 		} else {
 			// Handle investor deletion here
+			deletePersonnel(id);
 			setInvestors((prev) => prev.filter((person) => person.id !== id));
 		}
 	};
@@ -456,15 +515,15 @@ export default function PeopleSection({
 	};
 
 	const handleAddInvestor = () => {
-		// In a real app, this would open a dialog to add an investor
-		const newInvestor = {
-			id: Date.now().toString(),
-			name: "New Investor",
+		setNewPerson({
+			name: "",
 			role: "Investor",
-			avatar: "/placeholder.svg",
-		};
-
-		setInvestors([...investors, newInvestor]);
+			crunchBaseLink: "",
+			userId: null,
+			user: null,
+		});
+		setSelectedUser(null);
+		setIsAddingPerson(true);
 	};
 
 	return (
@@ -655,19 +714,19 @@ export default function PeopleSection({
 														<p className="text-sm text-gray-500">
 															{employee.role}
 														</p>
-														{employee.crunchBaseLink && (
+														{employee.username && (
 															<Link
-																href={employee.crunchBaseLink}
+																href={`/user/profile/${employee.username}`}
 																target="_blank"
 																className="text-xs text-blue-600 hover:underline flex items-center mt-1"
 															>
-																View on CrunchBase
+																View Profile
 																<ExternalLink className="h-3 w-3 ml-1" />
 															</Link>
 														)}
-														{employee.user && (
+														{employee.username && (
 															<div className="mt-1 text-xs text-gray-500">
-																Linked to: @{employee.user.name}
+																Linked to: @{employee.username}
 															</div>
 														)}
 													</div>
@@ -749,6 +808,21 @@ export default function PeopleSection({
 														<p className="text-sm text-gray-500">
 															{investor.role}
 														</p>
+														{investor.username && (
+															<Link
+																href={`/user/profile/${investor.username}`}
+																target="_blank"
+																className="text-xs text-blue-600 hover:underline flex items-center mt-1"
+															>
+																View Profile
+																<ExternalLink className="h-3 w-3 ml-1" />
+															</Link>
+														)}
+														{investor.username && (
+															<div className="mt-1 text-xs text-gray-500">
+																Linked to: @{investor.username}
+															</div>
+														)}
 													</div>
 													{isOwner && (
 														<div className="flex flex-col gap-2">
@@ -822,12 +896,17 @@ export default function PeopleSection({
 								Role
 							</Label>
 							{activeTab === "employees" ? (
-								<Input
+								<select
 									id="person-role"
-									value="KeyEmployee"
-									readOnly
-									className="col-span-3 bg-gray-50"
-								/>
+									value={newPerson.role}
+									onChange={(e) =>
+										setNewPerson({ ...newPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="KeyEmployee">Key Employee</option>
+									<option value="Employee">Employee</option>
+								</select>
 							) : activeTab === "leadership" ? (
 								<select
 									id="person-role"
@@ -840,6 +919,18 @@ export default function PeopleSection({
 									<option value="Founder">Founder</option>
 									<option value="Advisor">Advisor</option>
 									<option value="BoardMember">Board Member</option>
+								</select>
+							) : activeTab === "investors" ? (
+								<select
+									id="person-role"
+									value={newPerson.role}
+									onChange={(e) =>
+										setNewPerson({ ...newPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Investor">Investor</option>
+									<option value="LeadInvestor">Lead Investor</option>
 								</select>
 							) : (
 								<select
@@ -941,16 +1032,18 @@ export default function PeopleSection({
 																	user.avatar ||
 																	"/placeholder.svg?height=40&width=40"
 																}
-																alt={user.name}
+																alt={user.name || "User"}
 															/>
 															<AvatarFallback>
-																{user.name.charAt(0)}
+																{(user.name || "?").charAt(0)}
 															</AvatarFallback>
 														</Avatar>
 														<div className="ml-3">
-															<p className="font-medium">{user.name}</p>
+															<p className="font-medium">
+																{user.name || "Unknown User"}
+															</p>
 															<p className="text-xs text-gray-500">
-																@{user.account.username}
+																@{user.account?.username || "unknown"}
 															</p>
 														</div>
 													</div>
@@ -997,16 +1090,18 @@ export default function PeopleSection({
 													selectedUser.avatar ||
 													"/placeholder.svg?height=40&width=40"
 												}
-												alt={selectedUser.name}
+												alt={selectedUser.name || "User"}
 											/>
 											<AvatarFallback>
-												{selectedUser.name.charAt(0)}
+												{(selectedUser.name || "?").charAt(0)}
 											</AvatarFallback>
 										</Avatar>
 										<div className="ml-3">
-											<p className="text-sm font-medium">{selectedUser.name}</p>
+											<p className="text-sm font-medium">
+												{selectedUser.name || "Unknown User"}
+											</p>
 											<p className="text-xs text-gray-500">
-												@{selectedUser.account.username}
+												@{selectedUser.account?.username || "unknown"}
 											</p>
 										</div>
 									</div>
@@ -1047,19 +1142,61 @@ export default function PeopleSection({
 							<Label htmlFor="edit-person-role" className="text-right">
 								Role
 							</Label>
-							<select
-								id="edit-person-role"
-								value={editPerson.role}
-								onChange={(e) =>
-									setEditPerson({ ...editPerson, role: e.target.value })
-								}
-								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								<option value="Founder">Founder</option>
-								<option value="Advisor">Advisor</option>
-								<option value="BoardMember">Board Member</option>
-								<option value="KeyEmployee">Key Employee</option>
-							</select>
+							{activeTab === "employees" ? (
+								<select
+									id="edit-person-role"
+									value={editPerson.role}
+									onChange={(e) =>
+										setEditPerson({ ...editPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="KeyEmployee">Key Employee</option>
+									<option value="Employee">Employee</option>
+								</select>
+							) : activeTab === "leadership" ? (
+								<select
+									id="edit-person-role"
+									value={editPerson.role}
+									onChange={(e) =>
+										setEditPerson({ ...editPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Founder">Founder</option>
+									<option value="Advisor">Advisor</option>
+									<option value="BoardMember">Board Member</option>
+								</select>
+							) : activeTab === "investors" ? (
+								<select
+									id="edit-person-role"
+									value={editPerson.role}
+									onChange={(e) =>
+										setEditPerson({ ...editPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Investor">Investor</option>
+									<option value="LeadInvestor">Lead Investor</option>
+								</select>
+							) : (
+								<select
+									id="edit-person-role"
+									value={editPerson.role}
+									onChange={(e) =>
+										setEditPerson({ ...editPerson, role: e.target.value })
+									}
+									className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="Founder">Founder</option>
+									<option value="Advisor">Advisor</option>
+									<option value="BoardMember">Board Member</option>
+									<option value="KeyEmployee">Key Employee</option>
+									<option value="Employee">Employee</option>
+									<option value="Investor">Investor</option>
+									<option value="LeadInvestor">Lead Investor</option>
+								</select>
+							)}
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="edit-person-crunchbase" className="text-right">
@@ -1148,16 +1285,18 @@ export default function PeopleSection({
 																	user.avatar ||
 																	"/placeholder.svg?height=40&width=40"
 																}
-																alt={user.name}
+																alt={user.name || "User"}
 															/>
 															<AvatarFallback>
-																{user.name.charAt(0)}
+																{(user.name || "?").charAt(0)}
 															</AvatarFallback>
 														</Avatar>
 														<div className="ml-3">
-															<p className="font-medium">{user.name}</p>
+															<p className="font-medium">
+																{user.name || "Unknown User"}
+															</p>
 															<p className="text-xs text-gray-500">
-																@{user.account.username}
+																@{user.account?.username || "unknown"}
 															</p>
 														</div>
 													</div>
@@ -1204,16 +1343,18 @@ export default function PeopleSection({
 													selectedUser.avatar ||
 													"/placeholder.svg?height=40&width=40"
 												}
-												alt={selectedUser.name}
+												alt={selectedUser.name || "User"}
 											/>
 											<AvatarFallback>
-												{selectedUser.name.charAt(0)}
+												{(selectedUser.name || "?").charAt(0)}
 											</AvatarFallback>
 										</Avatar>
 										<div className="ml-3">
-											<p className="text-sm font-medium">{selectedUser.name}</p>
+											<p className="text-sm font-medium">
+												{selectedUser.name || "Unknown User"}
+											</p>
 											<p className="text-xs text-gray-500">
-												@{selectedUser.account.username}
+												@{selectedUser.account?.username || "unknown"}
 											</p>
 										</div>
 									</div>

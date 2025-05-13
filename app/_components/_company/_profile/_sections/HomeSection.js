@@ -221,9 +221,17 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 									<h3 className="text-sm font-medium text-gray-500">
 										Industry
 									</h3>
-									<p className="text-lg">
-										{company.industry || "Not specified"}
-									</p>
+									<div className="flex flex-wrap gap-2 mt-1">
+										{Array.isArray(company.industry) ? (
+											company.industry.map((industry, index) => (
+												<Badge key={index} variant="secondary">
+													{industry}
+												</Badge>
+											))
+										) : (
+											<p className="text-lg">Not specified</p>
+										)}
+									</div>
 								</div>
 							</div>
 							<div className="space-y-4">
@@ -358,13 +366,13 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 										<div>
 											<h3 className="font-medium">{person.name}</h3>
 											<p className="text-sm text-gray-500">{person.role}</p>
-											{person.crunchBaseLink && (
+											{person.username && (
 												<Link
-													href={person.crunchBaseLink}
+													href={`/user/profile/${person.username}`}
 													target="_blank"
 													className="text-xs text-blue-600 hover:underline"
 												>
-													View on CrunchBase
+													View Profile
 												</Link>
 											)}
 										</div>
@@ -579,20 +587,27 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 								<option value="Public">Public</option>
 							</select>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-industry" className="text-right">
+						<div className="grid grid-cols-4 items-start gap-4">
+							<Label htmlFor="company-industry" className="text-right pt-2">
 								Industry
 							</Label>
-							<Input
+							<Textarea
 								id="company-industry"
-								value={companyOverview.industry}
-								onChange={(e) => {
-									setCompanyOverview(
-										Object.assign({}, companyOverview, {
-											industry: e.target.value,
-										}),
-									);
-								}}
+								value={
+									Array.isArray(companyOverview.industry)
+										? companyOverview.industry.join(", ")
+										: ""
+								}
+								onChange={(e) =>
+									setCompanyOverview({
+										...companyOverview,
+										industry: e.target.value
+											.split(",")
+											.map((item) => item.trim())
+											.filter((item) => item),
+									})
+								}
+								placeholder="Enter industries separated by commas (e.g. Nike, Adidas, New Balance)"
 								className="col-span-3"
 							/>
 						</div>
