@@ -1,0 +1,106 @@
+enum PostType {
+  MEDIA
+  TEXT
+  POLL
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  OTHER
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  author    Account   @relation("AccountPosts", fields: [authorId], references: [id])
+  authorId  String
+  type      PostType
+  content   String?
+  media     Media[]
+  poll      Poll?     @relation(fields: [pollId], references: [id])
+  pollId    String?   @unique
+  createdAt DateTime  @default(now())
+  likes     Like[]
+  comments  Comment[]
+  reposts   Repost[]
+  reports   Report[]
+}
+
+model Media {
+  id       String @id @default(cuid())
+  post     Post   @relation(fields: [postId], references: [id])
+  postId   String
+  url      String
+  mimeType String
+}
+
+model Poll {
+  id       String       @id @default(cuid())
+  question String
+  options  PollOption[]
+  votes    PollVote[]
+  post     Post?
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  poll   Poll       @relation(fields: [pollId], references: [id])
+  pollId String
+  text   String
+  votes  PollVote[]
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  account   Account    @relation(fields: [accountId], references: [id])
+  accountId String
+  option    PollOption @relation(fields: [optionId], references: [id])
+  optionId  String
+  votedAt   DateTime   @default(now())
+  Poll      Poll[]
+
+  @@unique([accountId, optionId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  account   Account  @relation(fields: [accountId], references: [id])
+  accountId String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  author    Account  @relation("AccountComments", fields: [authorId], references: [id])
+  authorId  String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Repost {
+  id        String   @id @default(cuid())
+  account   Account  @relation(fields: [accountId], references: [id])
+  accountId String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+
+  @@unique([accountId, postId])
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reporter    Account      @relation("ReporterAccount", fields: [reporterId], references: [id])
+  reporterId  String
+  post        Post         @relation(fields: [postId], references: [id])
+  postId      String
+  reason      ReportReason
+  description String?
+  createdAt   DateTime     @default(now())
+}
