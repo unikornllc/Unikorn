@@ -2,10 +2,42 @@ import prisma from "../db.js";
 
 export const getAllPosts = async (req, res) => {
 	try {
-		const posts = await prisma.post.findMany({});
-		res.status(200).json(posts);
+		const page = parseInt(req.query.page ?? "1", 10);
+		const limit = parseInt(req.query.limit ?? "20", 10);
+		if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+			return res.status(400).json({ message: "Invalid page or limit" });
+		}
+
+		const skip = (page - 1) * limit;
+
+		const [posts, total] = await Promise.all([
+			prisma.post.findMany({
+				skip,
+				take: limit,
+				orderBy: { createdAt: "desc" },
+				include: {
+					author: {
+						select: {
+							username: true,
+						},
+					},
+				},
+			}),
+			prisma.post.count(),
+		]);
+
+		res.status(200).json({
+			posts,
+			pagination: {
+				page,
+				limit,
+				total,
+				hasMore: skip + posts.length < total,
+			},
+		});
 	} catch (error) {
-		res.status(400).json({ message: error.message });
+		console.error("Error fetching posts:", error);
+		res.status(500).json({ message: error.message });
 	}
 };
 
