@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-	baseURL: "http://localhost:3003",
+	baseURL: "http://localhost:3001/api",
 	headers: {
 		"Content-Type": "application/json",
 	},
@@ -12,7 +12,7 @@ const POSTS_PER_PAGE = 20;
 
 export async function fetchPosts(page) {
 	try {
-		const response = await api.get("/allPosts", {
+		const response = await api.get("/getAllPosts", {
 			params: { page, limit: POSTS_PER_PAGE },
 		});
 		return response.data.posts;
@@ -54,6 +54,29 @@ export async function createRepost(postId) {
 		await api.post("/createRepost", { postId });
 	} catch (error) {
 		console.error("Error reposting:", error);
+		throw error;
+	}
+}
+
+export async function votePoll(pollId, optionId) {
+	try {
+		const response = await api.post("/voteOption", {
+			pollId,
+			optionId,
+		});
+		return response.data;
+	} catch (error) {
+		console.error("Error voting on poll:", error);
+		throw error;
+	}
+}
+
+export async function checkIfUserVoted(pollId) {
+	try {
+		const response = await api.get(`/checkUserVote/${pollId}`);
+		return response.data;
+	} catch (error) {
+		console.error("Error checking if user voted:", error);
 		throw error;
 	}
 }

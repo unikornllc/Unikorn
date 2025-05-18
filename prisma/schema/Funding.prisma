@@ -89,6 +89,8 @@ model FundingRound {
   financialId    String
   raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
   raisingFundsId String?
+
+  posts          Post[]
 }
 
 model Financial {

@@ -39,6 +39,9 @@ model Account {
   reposts     Repost[]
   pollsVoted  PollVote[]
   reportsMade Report[]   @relation("ReporterAccount")
+
+  @@index([id])
+  @@index([username])
 }
 
 model File {
