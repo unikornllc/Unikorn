@@ -192,6 +192,7 @@ import {
 } from "./controllers/file.js";
 
 import {
+	addComment,
 	checkUserVote,
 	createType1Post,
 	createType2Post,
@@ -200,6 +201,9 @@ import {
 	createType5Post,
 	createType6Post,
 	getAllPosts,
+	getComments,
+	likePost,
+	unlikePost,
 	votePoll,
 } from "./posts/postingController.js";
 
@@ -430,5 +434,9 @@ router.post("/createType6Post", createType6Post);
 router.get("/getAllPosts", getAllPosts);
 router.post("/voteOption", votePoll);
 router.get("/checkUserVote/:pollId", checkUserVote);
+router.get("/post/:postId/comments", getComments);
+router.post("/addComment", addComment);
+router.post("/likePost", likePost);
+router.post("/unlikePost", unlikePost);
 
 export default router;

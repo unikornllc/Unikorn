@@ -54,7 +54,6 @@ export default function PostCard({ post }) {
 		}
 	};
 
-	// Render the appropriate content based on post type
 	const renderPostContent = () => {
 		switch (post.type) {
 			case "LOOKING_FOR_FUNDING":

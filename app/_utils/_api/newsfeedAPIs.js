@@ -40,15 +40,6 @@ export async function unlikePost(postId) {
 	}
 }
 
-export async function addComment(postId, content) {
-	try {
-		await api.post("/addComment", { postId, content });
-	} catch (error) {
-		console.error("Error adding comment:", error);
-		throw error;
-	}
-}
-
 export async function createRepost(postId) {
 	try {
 		await api.post("/createRepost", { postId });

@@ -16,7 +16,11 @@ export const getAllPosts = async (req, res) => {
 				take: limit,
 				orderBy: { createdAt: "desc" },
 				include: {
-					author: true,
+					author: {
+						select: {
+							username: true,
+						},
+					},
 					media: true,
 					round: true,
 					event: true,
@@ -764,6 +768,58 @@ export const unlikePost = async (req, res) => {
 		res.status(200).json({ message: "Post unliked successfully" });
 	} catch (error) {
 		res.status(400).json({ message: error.message });
+	}
+};
+
+export const getComments = async (req, res) => {
+	try {
+		const { postId } = req.params;
+
+		const post = await prisma.post.findUnique({
+			where: { id: postId },
+			include: {
+				author: {
+					select: {
+						username: true,
+					},
+				},
+				media: true,
+				round: true,
+				event: true,
+				poll: {
+					include: {
+						options: true,
+						votes: true,
+					},
+				},
+				document: true,
+				likes: true,
+				comments: true,
+				reposts: true,
+				reports: true,
+			},
+		});
+
+		if (!post) {
+			return res.status(404).json({ message: "Post not found" });
+		}
+
+		const comments = await prisma.comment.findMany({
+			where: { postId: postId },
+			include: {
+				author: {
+					select: { username: true },
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
+
+		return res.status(200).json({ post, comments });
+	} catch (error) {
+		console.error("getPostWithComments error:", error);
+		return res.status(500).json({ message: "Internal server error" });
 	}
 };
 
