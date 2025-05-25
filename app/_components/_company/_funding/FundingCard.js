@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/app/_components/_ui/Card";
 import { Badge } from "@/app/_components/_ui/Badge";
 import { Button } from "@/app/_components/_ui/Button";
+import Link from "next/link";
 import {
 	Tabs,
 	TabsContent,
@@ -38,10 +39,10 @@ export function FundingCard({ fundraising, id, onMakeOffer, onViewDetails }) {
 					<div className="flex justify-between items-start mb-4">
 						<div>
 							<h3 className="text-xl font-bold mb-1">
-								{fundraising.company.name}
+								{fundraising.company?.name}
 							</h3>
 							<Badge variant="outline" className="mb-2">
-								{fundraising.company.industry}
+								{fundraising.company?.industry}
 							</Badge>
 						</div>
 						<Badge
@@ -65,7 +66,7 @@ export function FundingCard({ fundraising, id, onMakeOffer, onViewDetails }) {
 					</div>
 
 					<p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-						{fundraising.company.description}
+						{fundraising.company?.description}
 					</p>
 
 					<div>
@@ -115,25 +116,38 @@ export function FundingCard({ fundraising, id, onMakeOffer, onViewDetails }) {
 					</div>
 				</div>
 
-				<div className="px-6 pb-4">
-					<Button
-						variant="ghost"
-						className="w-full flex items-center justify-center border border-border"
-						onClick={() => setExpanded(!expanded)}
-					>
-						{expanded ? (
-							<>
-								<ChevronUp className="h-4 w-4 mr-2" />
-								Hide Details
-							</>
-						) : (
-							<>
-								<ChevronDown className="h-4 w-4 mr-2" />
-								View Details
-							</>
-						)}
-					</Button>
-				</div>
+				{onViewDetails ? (
+					<div className="px-6 pb-4">
+						<Button
+							variant="ghost"
+							className="w-full flex items-center justify-center border border-border"
+							onClick={() => setExpanded(!expanded)}
+						>
+							{expanded ? (
+								<>
+									<ChevronUp className="h-4 w-4 mr-2" />
+									Hide Details
+								</>
+							) : (
+								<>
+									<ChevronDown className="h-4 w-4 mr-2" />
+									View Details
+								</>
+							)}
+						</Button>
+					</div>
+				) : (
+					<div className="px-6 pb-4">
+						<Button
+							variant="ghost"
+							className="w-full flex items-center justify-center border border-border"
+						>
+							<Link href={"/companies/" + fundraising.id}>
+								View Funding Round
+							</Link>
+						</Button>
+					</div>
+				)}
 
 				{expanded && (
 					<motion.div

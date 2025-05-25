@@ -1,0 +1,154 @@
+enum PostType {
+  LOOKING_FOR_FUNDING  // Type 1
+  LOOKING_FOR_PARTNER  // Type 2
+  LOOKING_FOR_GUIDANCE // Type 3
+  EVENT                // Type 4
+  POLL                 // Type 5
+  DOCUMENT             // Type 6
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  OTHER
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  author      Account   @relation("AccountPosts", fields: [authorId], references: [id])
+  authorId    String
+  type        PostType
+  content     String?   @db.VarChar(3000) // Text field for (LOOKING_FOR_FUNDING, LOOKING_FOR_PARTNER, LOOKING_FOR_GUIDANCE) post types
+  media       Media[]   // Stores media (image, video) for LOOKING_FOR_FUNDING post type
+  
+  // LOOKING_FOR_FUNDING post type specific relation
+  round       RaisingFunds?    @relation(fields: [roundId], references: [id])
+  roundId     String?
+  
+  // Event post type specific relation
+  event       Event?    @relation()
+  
+  // Poll post type specific relation
+  poll        Poll?     @relation()
+  
+  // Document post type specific relation
+  document    Document? @relation()
+  
+  createdAt   DateTime  @default(now())
+  likes       Like[]
+  comments    Comment[]
+  reposts     Repost[]
+  reports     Report[]
+
+  @@index([createdAt])
+  @@index([id])
+  @@index([type, createdAt])
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.VarChar(3000)
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?   // location for in-person events
+  virtualLink String?   // Link for virtual events
+  isVirtual   Boolean   @default(false)
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String    @unique
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  title       String
+  fileUrl     String
+  fileType    String    // "pdf", "ppt", "pptx" only
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String    @unique
+}
+
+model Media {
+  id       String @id @default(uuid())
+  post     Post   @relation(fields: [postId], references: [id])
+  postId   String
+  url      String
+  mimeType String
+}
+
+model Poll {
+  id       String       @id @default(uuid())
+  question String
+  options  PollOption[]
+  votes    PollVote[]
+  post     Post         @relation(fields: [postId], references: [id])
+  postId   String       @unique
+
+  @@index([id])
+}
+
+model PollOption {
+  id     String     @id @default(uuid())
+  poll   Poll       @relation(fields: [pollId], references: [id])
+  pollId String
+  text   String
+  votes  PollVote[]
+
+  @@index([id])
+}
+
+model PollVote {
+  id        String     @id @default(uuid())
+  account   Account    @relation(fields: [accountId], references: [id])
+  accountId String
+  option    PollOption @relation(fields: [optionId], references: [id])
+  optionId  String
+  poll      Poll       @relation(fields: [pollId], references: [id])
+  pollId    String
+  votedAt   DateTime   @default(now())
+
+  @@unique([accountId, optionId])
+  @@index([accountId, pollId])
+}
+
+model Like {
+  id          String    @id @default(uuid())
+  account     Account   @relation(fields: [accountId], references: [id])
+  accountId   String
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String
+  createdAt   DateTime  @default(now())
+
+  @@unique([accountId, postId])
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  author      Account   @relation("AccountComments", fields: [authorId], references: [id])
+  authorId    String
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String
+  content     String
+  createdAt   DateTime  @default(now())
+}
+
+model Repost {
+  id          String    @id @default(uuid())
+  account     Account   @relation(fields: [accountId], references: [id])
+  accountId   String
+  post        Post      @relation(fields: [postId], references: [id])
+  postId      String
+  createdAt   DateTime  @default(now())
+
+  @@unique([accountId, postId])
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reporter    Account      @relation("ReporterAccount", fields: [reporterId], references: [id])
+  reporterId  String
+  post        Post         @relation(fields: [postId], references: [id])
+  postId      String
+  reason      ReportReason
+  description String?
+  createdAt   DateTime     @default(now())
+}

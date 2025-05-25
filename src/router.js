@@ -191,6 +191,22 @@ import {
 	uploadProfilePicture,
 } from "./controllers/file.js";
 
+import {
+	addComment,
+	checkUserVote,
+	createType1Post,
+	createType2Post,
+	createType3Post,
+	createType4Post,
+	createType5Post,
+	createType6Post,
+	getAllPosts,
+	getComments,
+	likePost,
+	unlikePost,
+	votePoll,
+} from "./posts/postingController.js";
+
 const router = Router();
 
 router.post("/createInterest", createInterest);
@@ -407,5 +423,20 @@ router.get("/getCompanyPersonnel", getCompanyPersonnel);
 // router.delete("/deleteProfilePicture", deleteFile);
 
 router.get("/getUserInvestments", getUserInvestments);
+
+// posting api
+router.post("/createType1Post", createType1Post);
+router.post("/createType2Post", createType2Post);
+router.post("/createType3Post", createType3Post);
+router.post("/createType4Post", createType4Post);
+router.post("/createType5Post", createType5Post);
+router.post("/createType6Post", createType6Post);
+router.get("/getAllPosts", getAllPosts);
+router.post("/voteOption", votePoll);
+router.get("/checkUserVote/:pollId", checkUserVote);
+router.get("/post/:postId/comments", getComments);
+router.post("/addComment", addComment);
+router.post("/likePost", likePost);
+router.post("/unlikePost", unlikePost);
 
 export default router;
