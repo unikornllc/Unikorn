@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,11 +31,12 @@ import axios from "axios";
 
 const formSchema = z.object({
 	content: z.string().min(10, "Description must be at least 10 characters"),
-	roundId: z.string().optional(),
+	roundId: z.string().min(1, "Funding round is required"),
 });
 
 export default function FundingPostForm() {
 	const router = useRouter();
+	const [fundingRounds, setRaisingFund] = useState(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [mediaFiles, setMediaFiles] = useState([]);
 	const [mediaPreviewUrls, setMediaPreviewUrls] = useState([]);
@@ -48,11 +49,22 @@ export default function FundingPostForm() {
 		},
 	});
 
-	const fundingRounds = [
-		{ id: "round1", name: "Seed Round" },
-		{ id: "round2", name: "Series A" },
-		{ id: "round3", name: "Series B" },
-	];
+	useEffect(() => {
+		const fetchRaisingFundData = async () => {
+			try {
+				const response = await axios.get(
+					`${process.env.NEXT_PUBLIC_SERVER}/api/raisingFunds/company/active`,
+					{ withCredentials: true },
+				);
+				const round = response.data.activeFundraising;
+				setRaisingFund(round);
+				form.setValue("roundId", round.id);
+			} catch (error) {
+				console.error("Error fetching raising fund data:", error);
+			}
+		};
+		fetchRaisingFundData();
+	}, [form]);
 
 	const handleMediaChange = (e) => {
 		if (e.target.files && e.target.files.length > 0) {
@@ -80,11 +92,9 @@ export default function FundingPostForm() {
 			const postData = {
 				type: "LOOKING_FOR_FUNDING",
 				content: values.content,
-				roundId: values.roundId || undefined,
+				roundId: fundingRounds.id,
 				media: mediaUrls,
 			};
-
-			console.log("Submitting post data:", postData);
 
 			const res = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createType1Post`,
@@ -134,24 +144,31 @@ export default function FundingPostForm() {
 					name="roundId"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Funding Round (Optional)</FormLabel>
-							<Select onValueChange={field.onChange} value={field.value}>
+							<FormLabel>Funding Round</FormLabel>
+							<Select disabled value={fundingRounds?.id}>
 								<FormControl>
 									<SelectTrigger>
 										<SelectValue placeholder="Select a funding round" />
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
-									{fundingRounds.map((round) => (
-										<SelectItem key={round.id} value={round.id}>
-											{round.name}
+									{fundingRounds && (
+										<SelectItem key={fundingRounds.id} value={fundingRounds.id}>
+											<div className="text-left">
+												<div className="font-semibold">
+													{fundingRounds.companyName}
+												</div>
+												<div className="text-sm ">
+													{`Looking to raise $${fundingRounds.fundingAmount} – $${fundingRounds.pricePerPortion} per portion, ${fundingRounds.remainingPortions} remaining`}
+												</div>
+												<div className="text-xs text-gray-500 italic">
+													Status: {fundingRounds.status}
+												</div>
+											</div>
 										</SelectItem>
-									))}
+									)}
 								</SelectContent>
 							</Select>
-							<FormDescription>
-								Select the funding round you're currently raising.
-							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}

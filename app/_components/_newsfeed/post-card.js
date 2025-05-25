@@ -7,12 +7,12 @@ import { Card, CardContent, CardFooter, CardHeader } from "../_ui/Card.js";
 import { Avatar, AvatarFallback, AvatarImage } from "../_ui/Avatar.js";
 import { Button } from "../_ui/Button.js";
 import Link from "next/link";
-import FundingPostContent from "./post-types/funding-post";
-import PartnerPostContent from "./post-types/partner-post";
-import GuidancePostContent from "./post-types/guidance-post";
-import EventPostContent from "./post-types/event-post";
-import PollPostContent from "./post-types/poll-post";
-import DocumentPostContent from "./post-types/document-post";
+import FundingPostContent from "./post-types/funding-post.js";
+import PartnerPostContent from "./post-types/partner-post.js";
+import GuidancePostContent from "./post-types/guidance-post.js";
+import EventPostContent from "./post-types/event-post.js";
+import PollPostContent from "./post-types/poll-post.js";
+import DocumentPostContent from "./post-types/document-post.js";
 import { likePost, unlikePost } from "@/app/_utils/_api/newsfeedAPIs.js";
 import { toast } from "sonner";
 
@@ -20,6 +20,15 @@ export default function PostCard({ post }) {
 	const [isLiked, setIsLiked] = useState(post.isLiked || false);
 	const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
 	const [isLiking, setIsLiking] = useState(false);
+
+	const getProfileUrl = (author) => {
+		if (!author) return "#";
+
+		const profileType = author.role === "Company" ? "company" : "user";
+		return `/${profileType}/profile/${author.username}`;
+	};
+
+	const profileUrl = getProfileUrl(post.author);
 
 	const formattedDate = formatDistanceToNow(new Date(post.createdAt), {
 		addSuffix: true,
@@ -79,7 +88,7 @@ export default function PostCard({ post }) {
 		<Card className="overflow-hidden">
 			<CardHeader className="pb-3">
 				<div className="flex items-center space-x-3">
-					<Link href={`/profile/${authorId}`}>
+					<Link href={profileUrl}>
 						<Avatar>
 							{post.author?.profilePicture ? (
 								<AvatarImage
@@ -92,10 +101,7 @@ export default function PostCard({ post }) {
 						</Avatar>
 					</Link>
 					<div>
-						<Link
-							href={`/profile/${authorId}`}
-							className="font-medium hover:underline"
-						>
+						<Link href={profileUrl} className="font-medium hover:underline">
 							{authorName}
 						</Link>
 						<p className="text-xs text-gray-500">{formattedDate}</p>

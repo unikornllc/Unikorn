@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
-import EditIcon from "@/app/_icons/EditIcon.jsx";
-import SaveIcon from "@/app/_icons/SaveIcon.jsx";
+import EditIcon from "@/app/_icons/EditIcon";
+import SaveIcon from "@/app/_icons/SaveIcon";
 
 const BoardMembers = ({ members, onUpdate }) => {
 	// Local state to handle board members within the component

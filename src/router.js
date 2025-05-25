@@ -425,11 +425,11 @@ router.get("/getCompanyPersonnel", getCompanyPersonnel);
 router.get("/getUserInvestments", getUserInvestments);
 
 // posting api
+router.post("/createType1Post", createType1Post);
 router.post("/createType2Post", createType2Post);
 router.post("/createType3Post", createType3Post);
 router.post("/createType4Post", createType4Post);
 router.post("/createType5Post", createType5Post);
-router.post("/createType1Post", createType1Post);
 router.post("/createType6Post", createType6Post);
 router.get("/getAllPosts", getAllPosts);
 router.post("/voteOption", votePoll);

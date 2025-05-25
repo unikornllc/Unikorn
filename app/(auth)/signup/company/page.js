@@ -31,7 +31,10 @@ import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import dynamic from "next/dynamic";
-const PhoneInput = dynamic(() => import("react-phone-input-2").then((mod) => mod.default), { ssr: false });
+const PhoneInput = dynamic(
+	() => import("react-phone-input-2").then((mod) => mod.default),
+	{ ssr: false },
+);
 import { Controller } from "react-hook-form";
 import "react-phone-input-2/lib/style.css";
 
@@ -163,12 +166,13 @@ export default function CompanySignUp() {
 			// 	? (dataToSend.hunter = "true")
 			// 	: (dataToSend.hunter = "false");
 			formData.tier = formData.hunter ? "Hunter" : "Holder";
+			formData.industry = [formData.industry];
 			formData.hunter = undefined;
 			formData.hunter = undefined;
 
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData,role: "Company" },
+				{ formData, role: "Company" },
 				{
 					withCredentials: true,
 				},
@@ -316,7 +320,8 @@ export default function CompanySignUp() {
 													border: "1px solid #93c5fd",
 													paddingLeft: "60px",
 													outline: "none",
-													transition: "border 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+													transition:
+														"border 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
 												}}
 												containerStyle={{
 													width: "100%",
@@ -339,7 +344,9 @@ export default function CompanySignUp() {
 										)}
 									/>
 									{errors.mobileNumber && (
-										<span className="text-red-500 text-sm">{errors.mobileNumber.message}</span>
+										<span className="text-red-500 text-sm">
+											{errors.mobileNumber.message}
+										</span>
 									)}
 								</div>
 								<div className="grid grid-cols-2 gap-4">

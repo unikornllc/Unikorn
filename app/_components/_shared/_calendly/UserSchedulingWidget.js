@@ -1,5 +1,3 @@
-// components/Calendly/UserSchedulingWidget.jsx
-
 import React, { useEffect, useState } from "react";
 import CalendlyWidget from "./CalendlyWidget";
 import axios from "axios";

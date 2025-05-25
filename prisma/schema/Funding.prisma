@@ -32,6 +32,7 @@ model RaisingFunds {
   investmentOffers  InvestmentOffer[]
   journal           Journal?
   FundingRound      FundingRound[]
+  posts          Post[]
 }
 
 model Fundraiser {
@@ -90,7 +91,6 @@ model FundingRound {
   raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
   raisingFundsId String?
 
-  posts          Post[]
 }
 
 model Financial {

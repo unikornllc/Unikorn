@@ -1,4 +1,4 @@
-import Newsfeed from "@/app/_components/_newsfeed/news-feed.jsx";
+import Newsfeed from "@/app/_components/_newsfeed/news-feed";
 
 export default function Home() {
 	return (

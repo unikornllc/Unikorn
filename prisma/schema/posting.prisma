@@ -22,7 +22,7 @@ model Post {
   media       Media[]   // Stores media (image, video) for LOOKING_FOR_FUNDING post type
   
   // LOOKING_FOR_FUNDING post type specific relation
-  round       FundingRound?    @relation(fields: [roundId], references: [id])
+  round       RaisingFunds?    @relation(fields: [roundId], references: [id])
   roundId     String?
   
   // Event post type specific relation

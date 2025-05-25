@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
-import EditIcon from "@/app/_icons/EditIcon.jsx";
-import SaveIcon from "@/app/_icons/SaveIcon.jsx";
+import EditIcon from "@/app/_icons/EditIcon";
+import SaveIcon from "@/app/_icons/SaveIcon";
 import ExternalLink from "../../ExternalLink";
 
 const FounderInfo = ({ founders = [], onUpdate }) => {

@@ -9,6 +9,7 @@ export const getAllPosts = async (req, res) => {
 		}
 
 		const skip = (page - 1) * limit;
+		const currentUserId = req.account?.id;
 
 		const [posts, total] = await Promise.all([
 			prisma.post.findMany({
@@ -19,6 +20,7 @@ export const getAllPosts = async (req, res) => {
 					author: {
 						select: {
 							username: true,
+							role: true,
 						},
 					},
 					media: true,
@@ -40,8 +42,15 @@ export const getAllPosts = async (req, res) => {
 			prisma.post.count(),
 		]);
 
+		const postsWithLikeStatus = posts.map((post) => ({
+			...post,
+			isLiked: currentUserId
+				? post.likes.some((like) => like.accountId === currentUserId)
+				: false,
+		}));
+
 		res.status(200).json({
-			posts,
+			posts: postsWithLikeStatus,
 			pagination: {
 				page,
 				limit,
@@ -75,12 +84,13 @@ export const createType1Post = async (req, res) => {
 		}
 
 		if (roundId) {
-			const round = await prisma.fundingRound.findUnique({
+			const round = await prisma.raisingFunds.findUnique({
 				where: { id: roundId },
 			});
+			console.log(round);
 
 			if (!round) {
-				return res.status(404).json({ message: "Referenced round not found" });
+				return res.status(400).json({ message: "Referenced round not found" });
 			}
 		}
 
@@ -91,11 +101,9 @@ export const createType1Post = async (req, res) => {
 				author: {
 					connect: { id: authorId },
 				},
-				round: roundId
-					? {
-							connect: { id: roundId },
-						}
-					: undefined,
+				round: {
+					connect: { id: roundId },
+				},
 				media: {
 					create:
 						media?.map((item) => ({
@@ -761,8 +769,10 @@ export const unlikePost = async (req, res) => {
 	try {
 		await prisma.like.delete({
 			where: {
-				accountId: req.account.id,
-				postId: req.params.postId,
+				accountId_postId: {
+					accountId: req.account.id,
+					postId: req.body.postId,
+				},
 			},
 		});
 		res.status(200).json({ message: "Post unliked successfully" });
