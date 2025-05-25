@@ -12,7 +12,7 @@
 		"lint": "next lint"
 	},
 	"author": "",
-	"license": "ISC",
+	"license": "Unikorn Proprietary License",
 	"description": "",
 	"dependencies": {
 		"@cypress-design/react-statusicon": "^1.0.2",

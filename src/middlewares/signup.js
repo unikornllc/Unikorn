@@ -35,7 +35,7 @@ export const checkEmail = async (req, res, next) => {
 		if (accountEmail == null) {
 			next();
 		} else {
-			res.status(400).json(req.body.formData);
+			res.status(400).json({ message: "Email is already registered" });
 		}
 	} catch (e) {
 		console.error(e);

@@ -485,18 +485,6 @@ export default function CompanySignUp() {
 									</span>
 								</div>
 							</div>
-							<div className="flex justify-center">
-								<div className="flex justify-center gap-4 mt-2">
-									<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
-										<FaFacebook className="text-blue-600 h-6 w-6" />
-									</button>
-									<a href={`${process.env.NEXT_PUBLIC_SERVER}/auth/google`}>
-										<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
-											<FcGoogle className="text-red-500 h-6 w-6" />
-										</button>
-									</a>
-								</div>
-							</div>
 						</CardContent>
 						<CardFooter className="flex justify-center">
 							<div className="text-sm text-indigo-700">

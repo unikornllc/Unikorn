@@ -75,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
 	session({
-		secret: "keyboard cat",
+		secret: "keyboard cat",  //Alert: Why a randomID is not used here ?
 		resave: false,
 		saveUninitialized: false,
 	}),
