@@ -5,6 +5,7 @@ enum AccountType {
 
 model Account {
   id            String         @id @unique @default(uuid())
+  googleId      String?        @unique
   username      String         @unique
   email         String         @unique
   password      String

@@ -63,6 +63,9 @@ model Education {
   id          String @id @default(uuid())
   degree      Degree @default(NONE)
   institution String
+  startDate   DateTime?
+  endDate     DateTime? 
+  fieldofStudy String?
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 }
@@ -89,6 +92,8 @@ model StartupExperience {
   id          String @id @default(uuid())
   startupName String
   role        String
+  startDate   DateTime?
+  endDate     DateTime?
   description String @db.VarChar(500)
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String

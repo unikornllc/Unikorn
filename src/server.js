@@ -75,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
 	session({
-		secret: "keyboard cat",  //Alert: Why a randomID is not used here ?
+		secret: "keyboard cat", //Alert: Why a randomID is not used here ?
 		resave: false,
 		saveUninitialized: false,
 	}),
@@ -112,24 +112,20 @@ app.get(
 	passport.authenticate("google", {
 		failureRedirect: `${process.env.FRONTEND}/`,
 	}),
+	(req, res, next) => {
+		req.account = req.user;
+		next();
+	},
+	verifyRefreshToken,
+	handleNewDevice,
+	generateRefreshTokenIfNeeded,
+	verifyAccessToken,
+	generateAccessTokenIfNeeded,
 	(req, res) => {
-		const account = req.user;
-
-		// Create a JWT token
-		const token = createJWT({
-			id: account.id,
-			role: "User",
-		});
-
-		res.cookie("token", token, {
-			httpOnly: false,
-			secure: false,
-			sameSite: "Lax",
-			maxAge: 24 * 60 * 60 * 1000,
-		});
-		res.redirect(`${process.env.FRONTEND}/userHome`);
+		res.redirect(`${process.env.FRONTEND}/user/home`);
 	},
 );
+
 app.get("/auth/logout", function (req, res, next) {
 	req.logout(function (err) {
 		if (err) {
