@@ -13,6 +13,8 @@ export const createStartupExperience = async (req, res) => {
 				role: req.body.role,
 				description: req.body.description,
 				user: { connect: { id: req.account.id } },
+				startDate: req.body.startDate + "T00:00:00.000Z",
+				endDate: req.body.endDate + "T00:00:00.000Z",
 			},
 		});
 		res.status(200).json({

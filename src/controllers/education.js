@@ -28,12 +28,16 @@ export const createEducation = async (req, res) => {
 				user: {
 					connect: { id: user.id },
 				},
+				startDate: req.body.startDate,
+				endDate: req.body.endDate,
+				fieldofStudy: req.body.fieldofStudy,
 			},
 		});
 		res.status(200).json({
 			education: (({ userId, ...safe }) => safe)(education),
 		});
 	} catch (e) {
+		console.error(e);
 		res.status(400).json({ message: "Error creating education" });
 	}
 };

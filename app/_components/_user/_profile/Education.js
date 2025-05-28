@@ -14,17 +14,7 @@ const Education = ({ username, educationList, editable }) => {
 	const [itemToDelete, setItemToDelete] = useState(null);
 	const [loading, setLoading] = useState(false);
 
-	const degrees = [
-		"NONE",
-		"High School Diploma",
-		"Associate Degree",
-		"Bachelor's Degree",
-		"Master's Degree",
-		"Doctoral Degree",
-		"Professional Degree",
-		"Certificate",
-		"Other",
-	];
+	const degrees = ["NONE", "BA", "BSc", "MA", "MSc", "MBA", "PhD"];
 
 	const fieldsOfStudy = [
 		"NONE",
