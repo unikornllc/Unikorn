@@ -10,7 +10,6 @@ import {
 	Briefcase,
 	GraduationCap,
 	Award,
-	Users,
 	Building,
 	TrendingUp,
 } from "lucide-react";
@@ -23,8 +22,41 @@ const HomeSection = ({ user, investments = [], editable }) => {
 
 	const latestEducation = user.education?.[0] || null;
 
-	const latestExperience =
-		user.corporateExperience?.[0] || user.startupExperience?.[0] || null;
+	// Get the latest experience from both corporate and startup experiences
+	const getLatestExperiences = () => {
+		const corporateExps = user.corporateExperience || [];
+		const startupExps = user.startupExperience || [];
+
+		// Sort corporate experiences by date (most recent first)
+		const sortedCorporateExps = [...corporateExps].sort((a, b) => {
+			const dateA = new Date(a.endDate || a.startDate);
+			const dateB = new Date(b.endDate || b.startDate);
+			return dateB - dateA;
+		});
+
+		// Sort startup experiences by date (most recent first)
+		const sortedStartupExps = [...startupExps].sort((a, b) => {
+			const dateA = new Date(a.endDate || a.startDate);
+			const dateB = new Date(b.endDate || b.startDate);
+			return dateB - dateA;
+		});
+
+		// Get the most recent from each type (if available)
+		const latestCorporate =
+			sortedCorporateExps.length > 0
+				? { ...sortedCorporateExps[0], type: "corporate" }
+				: null;
+
+		const latestStartup =
+			sortedStartupExps.length > 0
+				? { ...sortedStartupExps[0], type: "startup" }
+				: null;
+
+		// Return array with the latest from each type (filtering out nulls)
+		return [latestCorporate, latestStartup].filter((exp) => exp !== null);
+	};
+
+	const latestExperiences = getLatestExperiences();
 
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -60,24 +92,50 @@ const HomeSection = ({ user, investments = [], editable }) => {
 							</div>
 						</div>
 
-						{latestExperience && (
+						{latestExperiences && latestExperiences.length > 0 && (
 							<div className="flex items-start gap-3">
 								<Briefcase className="h-5 w-5 text-blue-500 mt-1" />
-								<div>
-									<h3 className="font-medium">Latest Experience</h3>
-									<p className="text-gray-700">
-										{latestExperience.jobTitle || latestExperience.role} at{" "}
-										<span className="font-medium">
-											{latestExperience.companyName ||
-												latestExperience.startupName}
-										</span>
-									</p>
-									<p className="text-gray-500 text-sm">
-										{new Date(latestExperience.startDate).getFullYear()} -{" "}
-										{latestExperience.endDate
-											? new Date(latestExperience.endDate).getFullYear()
-											: "Present"}
-									</p>
+								<div className="w-full">
+									<h3 className="font-medium">Latest Experiences</h3>
+									<div className="space-y-3 mt-2">
+										{latestExperiences.map((experience, index) => (
+											<div key={index} className="p-3 bg-gray-50 rounded-lg">
+												<div className="flex items-center gap-2 mb-1">
+													<p className="text-gray-700 font-medium">
+														{experience.jobTitle || experience.role} at{" "}
+														<span className="font-semibold">
+															{experience.companyName || experience.startupName}
+														</span>
+													</p>
+													<Badge
+														variant={
+															experience.type === "corporate"
+																? "default"
+																: "secondary"
+														}
+														className="text-xs"
+													>
+														{experience.type === "corporate"
+															? "Corporate"
+															: "Startup"}
+													</Badge>
+												</div>
+												<p className="text-gray-500 text-sm">
+													{new Date(experience.startDate).getFullYear()} -{" "}
+													{experience.endDate
+														? new Date(experience.endDate).getFullYear()
+														: "Present"}
+												</p>
+												{(experience.responsibilities ||
+													experience.description) && (
+													<p className="text-gray-600 text-sm mt-1 line-clamp-2">
+														{experience.responsibilities ||
+															experience.description}
+													</p>
+												)}
+											</div>
+										))}
+									</div>
 								</div>
 							</div>
 						)}

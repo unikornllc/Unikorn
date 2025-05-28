@@ -33,9 +33,6 @@ const validateData = (modelType, data) => {
 			if (!data.startDate) {
 				errors.push("Start date is required");
 			}
-			if (!data.responsibilities?.trim()) {
-				errors.push("Responsibilities are required");
-			}
 			break;
 
 		case "startupExperience":
