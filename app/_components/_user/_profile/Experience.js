@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/solid";
+"use client";
+
+import { useState } from "react";
+import { PlusIcon, PencilIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
 import { Switch } from "@/app/_components/_ui/Switch";
@@ -32,6 +34,8 @@ const Experience = ({
 	const [newStartupExp, setNewStartupExp] = useState({
 		startupName: "",
 		role: "",
+		startDate: "",
+		endDate: "",
 		description: "",
 	});
 	const [editingCorporateId, setEditingCorporateId] = useState(null);
@@ -45,6 +49,8 @@ const Experience = ({
 		// for startup
 		startupName: "",
 		role: "",
+		startupStartDate: "",
+		startupEndDate: "",
 		description: "",
 	});
 
@@ -52,6 +58,10 @@ const Experience = ({
 
 	const [isCurrentlyWorking, setIsCurrentlyWorking] = useState(false);
 	const [isEditCurrentlyWorking, setIsEditCurrentlyWorking] = useState(false);
+	const [isCurrentlyWorkingStartup, setIsCurrentlyWorkingStartup] =
+		useState(false);
+	const [isEditCurrentlyWorkingStartup, setIsEditCurrentlyWorkingStartup] =
+		useState(false);
 
 	const [loading, setLoading] = useState(false);
 
@@ -160,6 +170,8 @@ const Experience = ({
 			setNewStartupExp({
 				startupName: "",
 				role: "",
+				startDate: "",
+				endDate: "",
 				description: "",
 			});
 			setAddingStartupExp(false);
@@ -193,19 +205,16 @@ const Experience = ({
 	const updateStartupExperience = async (experienceId) => {
 		try {
 			setLoading(true);
-			// const response = await axios.put(
-			// 	`${process.env.NEXT_PUBLIC_SERVER}/api/updateStartupExperience`,
-			// 	{
-			// 		username,
-			// 		...editData,
-			// 		id: experienceId,
-			// 	},
-			// 	{ withCredentials: true }
-			// );
+			const experienceData = {
+				...editData,
+				startDate: editData.startupStartDate,
+				endDate: isEditCurrentlyWorkingStartup ? null : editData.startupEndDate,
+				id: experienceId,
+			};
 			const updatedItem = await updateItem(
 				"startupExperience",
 				experienceId,
-				editData,
+				experienceData,
 			);
 			setStartupExperiences((prevExps) =>
 				prevExps.map((exp) => (exp.id === experienceId ? updatedItem : exp)),
@@ -213,6 +222,7 @@ const Experience = ({
 
 			setEditingStartupId(null);
 			setEditData({});
+			setIsEditCurrentlyWorkingStartup(false);
 		} catch (error) {
 			console.error("Error updating startup experience:", error);
 		} finally {
@@ -238,8 +248,13 @@ const Experience = ({
 			setEditData({
 				startupName: exp.startupName || "",
 				role: exp.role || "",
+				startupStartDate: exp.startDate || "",
+				startupEndDate: exp.endDate || "",
 				description: exp.description || "",
 			});
+			if (!exp.endDate) {
+				setIsEditCurrentlyWorkingStartup(true);
+			}
 		}
 	};
 	const handleCancelEdit = (type) => {
@@ -258,8 +273,11 @@ const Experience = ({
 			setEditData({
 				startupName: "",
 				role: "",
+				startupStartDate: "",
+				startupEndDate: "",
 				description: "",
 			});
+			setIsEditCurrentlyWorkingStartup(false);
 		}
 	};
 
@@ -425,7 +443,7 @@ const Experience = ({
 									})
 								}
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
-								placeholder="Responsibilities"
+								placeholder="Responsibilities (Optional)"
 								rows={4}
 							></textarea>
 							<div className="flex">
@@ -526,7 +544,7 @@ const Experience = ({
 											</div>
 										</div>
 										<textarea
-											value={editData.responsibilities}
+											value={editData.responsibilities || ""}
 											onChange={(e) =>
 												setEditData({
 													...editData,
@@ -534,6 +552,7 @@ const Experience = ({
 												})
 											}
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
+											placeholder="Responsibilities (Optional)"
 											rows={4}
 										/>
 										<div className="flex justify-between items-center">
@@ -620,6 +639,52 @@ const Experience = ({
 								className="border border-gray-300 p-2 rounded-md w-full mb-2"
 								placeholder="Startup Name"
 							/>
+							<div className="flex flex-col space-y-2 mb-2">
+								<div className="flex items-center space-x-2">
+									<Switch
+										checked={isCurrentlyWorkingStartup}
+										onCheckedChange={(checked) => {
+											setIsCurrentlyWorkingStartup(checked);
+											if (checked) {
+												setNewStartupExp({
+													...newStartupExp,
+													endDate: "",
+												});
+											}
+										}}
+									/>
+									<label className="text-sm text-gray-600">
+										I am currently working here
+									</label>
+								</div>
+								<div className="flex space-x-2">
+									<input
+										type="date"
+										value={formatDateForInput(newStartupExp.startDate)}
+										onChange={(e) =>
+											setNewStartupExp({
+												...newStartupExp,
+												startDate: e.target.value,
+											})
+										}
+										className="border border-gray-300 p-2 rounded-md w-1/2"
+										placeholder="Start Date"
+									/>
+									<input
+										type="date"
+										value={formatDateForInput(newStartupExp.endDate)}
+										onChange={(e) =>
+											setNewStartupExp({
+												...newStartupExp,
+												endDate: e.target.value,
+											})
+										}
+										className="border border-gray-300 p-2 rounded-md w-1/2"
+										placeholder="End Date"
+										disabled={isCurrentlyWorkingStartup}
+									/>
+								</div>
+							</div>
 							<textarea
 								value={newStartupExp.description}
 								onChange={(e) =>
@@ -647,8 +712,11 @@ const Experience = ({
 										setNewStartupExp({
 											startupName: "",
 											role: "",
+											startDate: "",
+											endDate: "",
 											description: "",
 										});
+										setIsCurrentlyWorkingStartup(false);
 									}}
 									disabled={loading}
 								>
@@ -683,6 +751,54 @@ const Experience = ({
 											className="border border-gray-300 p-2 rounded-md w-full mb-2"
 											placeholder="Startup Name"
 										/>
+										<div className="flex flex-col space-y-2 mb-2">
+											<div className="flex items-center space-x-2">
+												<Switch
+													checked={isEditCurrentlyWorkingStartup}
+													onCheckedChange={(checked) => {
+														setIsEditCurrentlyWorkingStartup(checked);
+														if (checked) {
+															setEditData({
+																...editData,
+																startupEndDate: "",
+															});
+														}
+													}}
+												/>
+												<label className="text-sm text-gray-600">
+													I am currently working here
+												</label>
+											</div>
+											<div className="flex space-x-2">
+												<input
+													type="date"
+													value={
+														formatDateForInput(editData.startupStartDate) || ""
+													}
+													onChange={(e) =>
+														setEditData({
+															...editData,
+															startupStartDate: e.target.value,
+														})
+													}
+													className="border border-gray-300 p-2 rounded-md w-1/2"
+												/>
+												<input
+													type="date"
+													value={
+														formatDateForInput(editData.startupEndDate) || ""
+													}
+													onChange={(e) =>
+														setEditData({
+															...editData,
+															startupEndDate: e.target.value,
+														})
+													}
+													className="border border-gray-300 p-2 rounded-md w-1/2"
+													disabled={isEditCurrentlyWorkingStartup}
+												/>
+											</div>
+										</div>
 										<textarea
 											value={editData.description}
 											onChange={(e) =>
@@ -727,6 +843,14 @@ const Experience = ({
 												{exp.role}
 											</h4>
 											<p className="text-textSecondary">{exp.startupName}</p>
+											{exp.startDate && (
+												<p className="text-sm text-gray-500">
+													{new Date(exp.startDate).toLocaleDateString()} -{" "}
+													{exp.endDate
+														? new Date(exp.endDate).toLocaleDateString()
+														: "Present"}
+												</p>
+											)}
 											<p className="text-textSecondary mt-2">
 												{exp.description}
 											</p>
