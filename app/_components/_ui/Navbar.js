@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./Button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, Building2, ArrowRight } from "lucide-react";
 
 const navItems = [
 	{ name: "Features", href: "#features" },
@@ -15,6 +15,7 @@ const navItems = [
 export default function Navbar() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isScrolled, setIsScrolled] = useState(false);
+	const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -23,6 +24,30 @@ export default function Navbar() {
 		window.addEventListener("scroll", handleScroll);
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
+	useEffect(() => {
+		const handleEscape = (e) => {
+			if (e.key === "Escape") {
+				setIsSignUpModalOpen(false);
+			}
+		};
+
+		if (isSignUpModalOpen) {
+			document.addEventListener("keydown", handleEscape);
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "unset";
+		}
+
+		return () => {
+			document.removeEventListener("keydown", handleEscape);
+			document.body.style.overflow = "unset";
+		};
+	}, [isSignUpModalOpen]);
+
+	const handleSignUpClick = () => {
+		setIsSignUpModalOpen(true);
+		setIsMenuOpen(false);
+	};
 
 	return (
 		<header
@@ -54,11 +79,12 @@ export default function Navbar() {
 							Log In
 						</Button>
 					</Link>
-					<Link href="/signup/user">
-						<Button className="bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
-							Sign Up
-						</Button>
-					</Link>
+					<Button
+						onClick={handleSignUpClick}
+						className="bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+					>
+						Sign Up
+					</Button>
 				</div>
 
 				{/* Mobile Menu Button */}
@@ -96,11 +122,104 @@ export default function Navbar() {
 								Log In
 							</Button>
 						</Link>
-						<Link href="/signup/user" className="block">
-							<Button className="w-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
-								Sign Up
-							</Button>
-						</Link>
+						<Button
+							onClick={handleSignUpClick}
+							className="w-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+						>
+							Sign Up
+						</Button>
+					</div>
+				</div>
+			)}
+			{isSignUpModalOpen && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center">
+					{/* Backdrop */}
+					<div
+						className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+						onClick={() => setIsSignUpModalOpen(false)}
+					/>
+
+					{/* Modal Content */}
+					<div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transform transition-all">
+						{/* Close Button */}
+						<button
+							onClick={() => setIsSignUpModalOpen(false)}
+							className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+							aria-label="Close modal"
+						>
+							<X size={24} />
+						</button>
+
+						{/* Modal Header */}
+						<div className="text-center mb-8">
+							<h2 className="text-2xl font-bold text-gray-900 mb-2">
+								Choose Your Account Type
+							</h2>
+							<p className="text-gray-600">
+								Select the option that best describes you
+							</p>
+						</div>
+
+						{/* Account Type Options */}
+						<div className="space-y-4">
+							{/* Individual Account */}
+							<Link href="/signup/user" className="flex-1">
+								<button
+									onClick={() => setIsSignUpModalOpen(false)}
+									className="w-full p-6 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all group text-left"
+								>
+									<div className="flex items-start space-x-4">
+										<div className="flex-shrink-0">
+											<div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+												<User className="w-6 h-6 text-indigo-600" />
+											</div>
+										</div>
+										<div className="flex-1">
+											<h3 className="font-semibold text-gray-900 mb-1">
+												Individual Account
+											</h3>
+											<p className="text-sm text-gray-600 mb-3">
+												Perfect for personal use, freelancers, and individual
+												investors looking to explore opportunities.
+											</p>
+											<div className="flex items-center text-indigo-600 text-sm font-medium">
+												Sign up as Individual
+												<ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+											</div>
+										</div>
+									</div>
+								</button>
+							</Link>
+
+							{/* Company Account */}
+							<Link href="/signup/company" className="flex-1">
+								<button
+									onClick={() => setIsSignUpModalOpen(false)}
+									className="w-full p-6 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all group text-left"
+								>
+									<div className="flex items-start space-x-4">
+										<div className="flex-shrink-0">
+											<div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+												<Building2 className="w-6 h-6 text-indigo-600" />
+											</div>
+										</div>
+										<div className="flex-1">
+											<h3 className="font-semibold text-gray-900 mb-1">
+												Company Account
+											</h3>
+											<p className="text-sm text-gray-600 mb-3">
+												Ideal for businesses, startups, and organizations
+												seeking funding or looking to invest.
+											</p>
+											<div className="flex items-center text-indigo-600 text-sm font-medium">
+												Sign up as Company
+												<ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+											</div>
+										</div>
+									</div>
+								</button>
+							</Link>
+						</div>
 					</div>
 				</div>
 			)}

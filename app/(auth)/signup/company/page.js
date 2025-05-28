@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -37,6 +37,7 @@ const PhoneInput = dynamic(
 );
 import { Controller } from "react-hook-form";
 import "react-phone-input-2/lib/style.css";
+import { set } from "date-fns";
 
 export default function CompanySignUp() {
 	const router = useRouter();
@@ -59,6 +60,31 @@ export default function CompanySignUp() {
 
 	const MIN_USERNAME_LENGTH = 5;
 	const MAX_USERNAME_LENGTH = 16;
+
+	const formatUrl = (url) => {
+		if (!url) return "";
+
+		if (!/^https?:\/\//i.test(url)) {
+			url = `https://${url}`;
+		}
+
+		try {
+			const parsed = new URL(url);
+			let hostname = parsed.hostname;
+			if (!hostname.endsWith(".") && !hostname.endsWith(".com")) {
+				hostname += ".com";
+			}
+			const parts = hostname.split(".");
+			if (parts.length === 2 && !hostname.startsWith("www.")) {
+				hostname = `www.${hostname}`;
+			}
+
+			parsed.hostname = hostname;
+			return parsed.toString();
+		} catch {
+			return url;
+		}
+	};
 
 	const checkUsername = useCallback(async (username) => {
 		try {
@@ -149,6 +175,8 @@ export default function CompanySignUp() {
 		},
 		[checkUsername, setError, clearErrors, watch],
 	);
+	const websiteRaw = watch("website");
+	const formattedWebsite = formatUrl(websiteRaw);
 
 	const onSubmit = async (formData) => {
 		setLoading(true);
@@ -165,9 +193,9 @@ export default function CompanySignUp() {
 			// dataToSend.hunter == "on"
 			// 	? (dataToSend.hunter = "true")
 			// 	: (dataToSend.hunter = "false");
+			formData.website = formatUrl(formData.website);
 			formData.tier = formData.hunter ? "Hunter" : "Holder";
 			formData.industry = [formData.industry];
-			formData.hunter = undefined;
 			formData.hunter = undefined;
 
 			const response = await axios.post(
@@ -298,7 +326,7 @@ export default function CompanySignUp() {
 										</ul>
 									)}
 								</div>
-								<div className="space-y-2">
+								{/* <div className="space-y-2">
 									<Label htmlFor="mobileNumber" className="text-indigo-900">
 										Mobile Number
 									</Label>
@@ -348,7 +376,7 @@ export default function CompanySignUp() {
 											{errors.mobileNumber.message}
 										</span>
 									)}
-								</div>
+								</div> */}
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
 										<Label htmlFor="password" className="text-indigo-900">
@@ -419,9 +447,20 @@ export default function CompanySignUp() {
 									<Input
 										id="website"
 										type="url"
+										placeholder="https://example.com"
 										{...register("website")}
+										onBlur={(e) => {
+											const fixed = formatUrl(e.target.value);
+											setValue("website", fixed, { shouldValidate: true });
+										}}
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
+									{websiteRaw && (
+										<p className="text-sm text-gray-500">
+											Formatted:{" "}
+											<span className="font-mono">{formattedWebsite}</span>
+										</p>
+									)}
 								</div>
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
@@ -456,7 +495,7 @@ export default function CompanySignUp() {
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
 								</div>
-								<div className="space-y-2">
+								{/* <div className="space-y-2">
 									<Label htmlFor="files" className="text-indigo-900">
 										Upload Files
 									</Label>
@@ -467,13 +506,13 @@ export default function CompanySignUp() {
 										{...register("files")}
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
-								</div>
-								<div className="flex items-center space-x-2">
+								</div> */}
+								{/* <div className="flex items-center space-x-2">
 									<Switch id="hunter" {...register("hunter")} />
 									<Label htmlFor="hunter" className="text-indigo-900">
 										Are you a hunter?
 									</Label>
-								</div>
+								</div> */}
 								<Button
 									type="submit"
 									className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"

@@ -122,7 +122,11 @@ app.get(
 	verifyAccessToken,
 	generateAccessTokenIfNeeded,
 	(req, res) => {
-		res.redirect(`${process.env.FRONTEND}/user/home`);
+		if (req.user.role === "User") {
+			res.redirect(`${process.env.FRONTEND}/user/home`);
+		} else if (req.user.role === "Company") {
+			res.redirect(`${process.env.FRONTEND}/company/home`);
+		}
 	},
 );
 

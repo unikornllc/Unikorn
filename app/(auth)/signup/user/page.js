@@ -30,7 +30,10 @@ import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import dynamic from "next/dynamic";
-const PhoneInput = dynamic(() => import("react-phone-input-2").then((mod) => mod.default), { ssr: false });
+const PhoneInput = dynamic(
+	() => import("react-phone-input-2").then((mod) => mod.default),
+	{ ssr: false },
+);
 import "react-phone-input-2/lib/style.css";
 import { Controller } from "react-hook-form";
 
@@ -289,7 +292,7 @@ export default function UserSignUp() {
 										</ul>
 									)}
 								</div>
-								<div className="space-y-2">
+								{/* <div className="space-y-2">
 									<Label htmlFor="mobileNumber" className="text-indigo-900">
 										Mobile Number
 									</Label>
@@ -336,7 +339,7 @@ export default function UserSignUp() {
 									{errors.mobileNumber && (
 										<span className="text-red-500 text-sm">{errors.mobileNumber.message}</span>
 									)}
-								</div>
+								</div> */}
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
 										<Label htmlFor="password" className="text-indigo-900">
@@ -403,7 +406,7 @@ export default function UserSignUp() {
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
 								</div>
-								<div className="space-y-2">
+								{/* <div className="space-y-2">
 									<Label htmlFor="title" className="text-indigo-900">
 										Title
 									</Label>
@@ -417,12 +420,8 @@ export default function UserSignUp() {
 										<option value="Ms">Ms</option>
 										<option value="Mrs">Mrs</option>
 									</select>
-									{/* <Input
-										id="title"
-										{...register("title")}
-										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
-									/> */}
-								</div>
+									
+								</div> */}
 								<Button
 									type="submit"
 									className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
