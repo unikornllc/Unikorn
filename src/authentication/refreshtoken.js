@@ -94,7 +94,7 @@ export const generateRefreshToken = async (req, res, next) => {
 				ip,
 				browser: browser.name,
 				os: os.name,
-				role: (String)(account.role),
+				role: String(account.role),
 			},
 		});
 		res.sidVerified = true;
@@ -130,7 +130,7 @@ export const generateRefreshTokenIfNeeded = async (req, res, next) => {
 
 		const loginDevices = await prisma.loginDevices.findMany({
 			where: {
-				accountId: account.id
+				accountId: account.id,
 			},
 		});
 
