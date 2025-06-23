@@ -27,7 +27,6 @@ const ModernHeader = ({ user, editable }) => {
 				<div className="flex flex-col md:flex-row items-end gap-6 pt-6 mb-4">
 					<div className="w-full md:w-auto md:ml-44 flex flex-col md:flex-row items-center md:items-start gap-2 flex-wrap mt-24 md:mt-0">
 						<div className="flex items-center gap-2">
-							<span className="text-gray-600 font-medium">{title}</span>
 							<h1 className="text-3xl font-bold text-center md:text-left">
 								{name}
 							</h1>
