@@ -120,7 +120,11 @@ export const verifyCredentialsIfNoRefreshToken = async (req, res, next) => {
 		}
 
 		if (!account.emailVerified) {
-			return res.status(403).json({ message: "Verify your email first." });
+			// return res.status(403).json({ message: "Verify your email first." });
+			return res.status(200).json({ 
+				message: "Account created successfully. Please check your email for verification.",
+				redirectTo: "/stayTuned"
+			});
 		}
 
 		req.account = account;

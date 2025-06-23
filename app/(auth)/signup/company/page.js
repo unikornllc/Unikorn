@@ -30,6 +30,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { Building2, TrendingUp } from "lucide-react";
 import dynamic from "next/dynamic";
 const PhoneInput = dynamic(
 	() => import("react-phone-input-2").then((mod) => mod.default),
@@ -56,6 +57,7 @@ export default function CompanySignUp() {
 	const [signUpError, setSignUpError] = useState(null);
 	const [signUpSuccess, setSignUpSuccess] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [companyType, setCompanyType] = useState("Startup");
 	const debounceTimer = useRef(null);
 
 	const MIN_USERNAME_LENGTH = 5;
@@ -200,14 +202,15 @@ export default function CompanySignUp() {
 
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData, role: "Company" },
+				{ formData, role: "Company", companyType },
 				{
 					withCredentials: true,
 				},
 			);
 			if (response.status === 200) {
 				setSignUpSuccess(true);
-				router.push("/checkEmail");
+				// router.push("/checkEmail");
+				router.push("/stayTuned");
 			} else {
 				setSignUpError("Signup failed. Please try again.");
 			}
@@ -232,10 +235,10 @@ export default function CompanySignUp() {
 					<Card className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl">
 						<CardHeader>
 							<CardTitle className="text-3xl font-bold text-center text-indigo-900">
-								Sign Up as Company
+								Sign Up as {companyType}
 							</CardTitle>
 							<CardDescription className="text-center text-indigo-700">
-								Create your company account to start fundraising
+								Create your company account to start your journey
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
@@ -255,6 +258,35 @@ export default function CompanySignUp() {
 									<AlertDescription>{signUpError}</AlertDescription>
 								</Alert>
 							)}
+							<div className="space-y-3">
+								<Label className="text-indigo-900 font-medium">What describes you best?</Label>
+								<div className="flex gap-3">
+									<button
+										type="button"
+										onClick={() => setCompanyType("Startup")}
+										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
+											companyType === "Startup"
+												? "border-indigo-500 bg-indigo-50 text-indigo-700"
+												: "border-gray-300 bg-white text-gray-600 hover:border-indigo-300"
+										}`}
+									>
+										<Building2 className="w-5 h-5" />
+										<span className="font-medium">Startup</span>
+									</button>
+									<button
+										type="button"
+										onClick={() => setCompanyType("VC")}
+										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
+											companyType === "VC"
+												? "border-purple-500 bg-purple-50 text-purple-700"
+												: "border-gray-300 bg-white text-gray-600 hover:border-purple-300"
+										}`}
+									>
+										<TrendingUp className="w-5 h-5" />
+										<span className="font-medium">Venture Capital</span>
+									</button>
+								</div>
+							</div>
 							<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">

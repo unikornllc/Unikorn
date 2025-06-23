@@ -8,6 +8,8 @@ export const createAccount = async (req, res) => {
 	try {
 		const data = req.body.formData;
 		const role = req.body.role;
+		const userType = req.body.userType;
+		const companyType = req.body.companyType;
 		const hashedPassword = await hashPassword(data.password);
 
 		const account = await prisma.account.create({
@@ -30,6 +32,7 @@ export const createAccount = async (req, res) => {
 						name: data.name,
 						description: data.description || "",
 						title: data.title,
+						type: userType,
 					},
 				} : undefined,
 				company: role === "Company" ? {
@@ -38,14 +41,14 @@ export const createAccount = async (req, res) => {
 						description: data.description,
 						website: data.website,
 						founded: new Date(data.founded),
-						type: data.type || "Public",
+						type: companyType,
 						hqLocation: data.hqLocation,
 						industry: data.industry,
 					},
 				} : undefined,
 			},
 		});
-		await sendVerifyEmail(data.email, account.id);
+		// await sendVerifyEmail(data.email, account.id);
 
 		res.status(200).json({ message: "created successfully" });
 	} catch (error) {

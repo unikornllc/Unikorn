@@ -11,6 +11,7 @@ const routeRules = {
 		"/signup/user",
 		"/verifyAccount",
 		"/checkEmail",
+		"/stayTuned",
 	],
 	protectedUserRoutes: ["/user/home", "/user/profile", "/myInvestments"],
 	protectedCompanyRoutes: [

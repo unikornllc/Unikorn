@@ -31,6 +31,11 @@ enum Tier {
   Standard
 }
 
+enum UserType {
+  Investor
+  Founder
+}
+
 model User {
   id                    String                  @id @unique @default(uuid())
   account               Account                 @relation(fields: [id], references: [id], onDelete: Cascade)
@@ -38,6 +43,7 @@ model User {
   description           String                  @db.VarChar(601)
   title                 Title                   @default(Mr)
   tier                  Tier                    @default(Standard)
+  type                  UserType                @default(Founder)
   expertise             Expertise[]
   education             Education[]
   interest              Interest[]
