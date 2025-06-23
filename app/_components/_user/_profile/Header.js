@@ -208,7 +208,6 @@ const Header = ({ user, editable }) => {
 				</p>
 			)}
 			<div className="pt-24 pb-6 text-center">
-				<h2 className="text-xl text-gray-600">{title}</h2>
 				<h1 className="text-3xl font-bold">
 					{name}{" "}
 					{unikornVerified && (

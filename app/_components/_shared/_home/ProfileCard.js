@@ -60,23 +60,25 @@ export default function ProfileCard({ profile, isCompany }) {
 						{profile.name}
 					</h2>
 					<p className="text-sm text-indigo-600">@{profile.account.username}</p>
-					<p className="mt-2 text-center text-gray-600">
-						{profile.description && profile.description.length > 150
-							? `${profile.description.substring(0, 150)}...`
-							: profile.description}
-						{profile.description && profile.description.length > 150 && (
-							<button
-								onClick={() => {
-									window.location.href = isCompany
-										? "/company/profile?tab=about"
-										: "/user/profile?tab=about";
-								}}
-								className="ml-1 text-indigo-600 hover:text-indigo-800 underline text-sm font-medium"
-							>
-								Show more
-							</button>
-						)}
-					</p>
+					<div className="mt-2 w-full px-2">
+						<p className="text-center text-gray-600 text-sm leading-relaxed break-words hyphens-auto">
+							{profile.description && profile.description.length > 150
+								? `${profile.description.substring(0, 150)}...`
+								: profile.description}
+							{profile.description && profile.description.length > 150 && (
+								<button
+									onClick={() => {
+										window.location.href = isCompany
+											? "/company/profile?tab=about"
+											: "/user/profile?tab=about";
+									}}
+									className="ml-1 text-indigo-600 hover:text-indigo-800 underline text-sm font-medium inline-block"
+								>
+									Show more
+								</button>
+							)}
+						</p>
+					</div>
 					<div className="mt-4 flex justify-center space-x-2">
 						<Button
 							variant="outline"
