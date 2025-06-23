@@ -3,6 +3,8 @@ enum CompanyType {
   NonProfit
   Private
   Public
+  Startup
+  VC
 }
 
 enum CompanyTier {

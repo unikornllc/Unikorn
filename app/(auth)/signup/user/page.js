@@ -29,6 +29,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { Users, Building2 } from "lucide-react";
 import dynamic from "next/dynamic";
 const PhoneInput = dynamic(
 	() => import("react-phone-input-2").then((mod) => mod.default),
@@ -54,6 +55,7 @@ export default function UserSignUp() {
 	const [signUpError, setSignUpError] = useState(null);
 	const [signUpSuccess, setSignUpSuccess] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [userType, setUserType] = useState("Investor"); // Default to Investor
 	const debounceTimer = useRef(null);
 
 	const MIN_USERNAME_LENGTH = 5;
@@ -163,14 +165,15 @@ export default function UserSignUp() {
 			console.log("formData:", formData);
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData, role: "User" },
+				{ formData, role: "User", userType }, // Include userType in the request
 				{
 					withCredentials: true,
 				},
 			);
 			if (response.status === 200) {
 				setSignUpSuccess(true);
-				router.push("/checkEmail");
+				// router.push("/checkEmail");
+				router.push("/stayTuned");
 			} else {
 				setSignUpError("Signup failed. Please try again.");
 				setLoading(false);
@@ -195,10 +198,10 @@ export default function UserSignUp() {
 					<Card className="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm shadow-xl">
 						<CardHeader>
 							<CardTitle className="text-3xl font-bold text-center text-indigo-900">
-								Sign Up as Investor
+								Sign Up as {userType}
 							</CardTitle>
 							<CardDescription className="text-center text-indigo-700">
-								Create your account to start investing
+								Create your account to start your journey
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
@@ -218,6 +221,36 @@ export default function UserSignUp() {
 									<AlertDescription>{signUpError}</AlertDescription>
 								</Alert>
 							)}
+							{/* User Type Toggle */}
+							<div className="space-y-3">
+								<Label className="text-indigo-900 font-medium">What describes you best?</Label>
+								<div className="flex gap-3">
+									<button
+										type="button"
+										onClick={() => setUserType("Investor")}
+										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
+											userType === "Investor"
+												? "border-indigo-500 bg-indigo-50 text-indigo-700"
+												: "border-gray-300 bg-white text-gray-600 hover:border-indigo-300"
+										}`}
+									>
+										<Users className="w-5 h-5" />
+										<span className="font-medium">Investor</span>
+									</button>
+									<button
+										type="button"
+										onClick={() => setUserType("Founder")}
+										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
+											userType === "Founder"
+												? "border-purple-500 bg-purple-50 text-purple-700"
+												: "border-gray-300 bg-white text-gray-600 hover:border-purple-300"
+										}`}
+									>
+										<Building2 className="w-5 h-5" />
+										<span className="font-medium">Founder</span>
+									</button>
+								</div>
+							</div>
 							<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">

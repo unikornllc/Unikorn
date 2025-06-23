@@ -51,8 +51,14 @@ export default function SignIn() {
 				{ withCredentials: true },
 			);
 			if (response.status === 200) {
-				setSignUpSuccess(true);
-				router.push("/home");
+				// setSignUpSuccess(true);
+				// router.push("/home");
+				if (response.data.redirectTo) {
+					router.push(response.data.redirectTo);
+				} else {
+					setSignUpSuccess(true);
+					router.push("/home");
+				}
 			} else {
 				setSignInError("Invalid email or password");
 				setLoading(false);
