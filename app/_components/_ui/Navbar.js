@@ -179,8 +179,8 @@ export default function Navbar() {
 												Individual Account
 											</h3>
 											<p className="text-sm text-gray-600 mb-3">
-												Perfect for personal use, freelancers, and individual
-												investors looking to explore opportunities.
+												Perfect for personal use, founders, and angel
+												investors.
 											</p>
 											<div className="flex items-center text-indigo-600 text-sm font-medium">
 												Sign up as Individual
@@ -212,7 +212,7 @@ export default function Navbar() {
 												seeking funding or looking to invest.
 											</p>
 											<div className="flex items-center text-indigo-600 text-sm font-medium">
-												Sign up as Company
+												Sign up as Business
 												<ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
 											</div>
 										</div>
