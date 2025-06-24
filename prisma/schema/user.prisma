@@ -31,10 +31,6 @@ enum Tier {
   Standard
 }
 
-enum UserType {
-  Investor
-  Founder
-}
 
 model User {
   id                    String                  @id @unique @default(uuid())
@@ -43,7 +39,7 @@ model User {
   description           String                  @db.VarChar(601)
   title                 Title                   @default(Mr)
   tier                  Tier                    @default(Standard)
-  type                  UserType                @default(Founder)
+  isInvestor            Boolean                 @default(false)
   expertise             Expertise[]
   education             Education[]
   interest              Interest[]

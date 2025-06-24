@@ -8,7 +8,7 @@ export const createAccount = async (req, res) => {
 	try {
 		const data = req.body.formData;
 		const role = req.body.role;
-		const userType = req.body.userType;
+		const isInvestor = req.body.isInvestor;
 		const companyType = req.body.companyType;
 		const hashedPassword = await hashPassword(data.password);
 
@@ -32,7 +32,7 @@ export const createAccount = async (req, res) => {
 						name: data.name,
 						description: data.description || "",
 						title: data.title,
-						type: userType,
+						isInvestor: isInvestor,
 					},
 				} : undefined,
 				company: role === "Company" ? {
@@ -44,6 +44,7 @@ export const createAccount = async (req, res) => {
 						type: companyType,
 						hqLocation: data.hqLocation,
 						industry: data.industry,
+						isInvestor: isInvestor,
 					},
 				} : undefined,
 			},

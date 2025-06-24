@@ -57,7 +57,8 @@ export default function CompanySignUp() {
 	const [signUpError, setSignUpError] = useState(null);
 	const [signUpSuccess, setSignUpSuccess] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const [companyType, setCompanyType] = useState("Startup");
+	const [companyType, setCompanyType] = useState("Profit");
+	const [startupOrVC, setStartupOrVC] = useState("Startup");
 	const debounceTimer = useRef(null);
 
 	const MIN_USERNAME_LENGTH = 5;
@@ -192,24 +193,21 @@ export default function CompanySignUp() {
 
 		try {
 			console.log(formData);
-			// dataToSend.hunter == "on"
-			// 	? (dataToSend.hunter = "true")
-			// 	: (dataToSend.hunter = "false");
 			formData.website = formatUrl(formData.website);
 			formData.tier = formData.hunter ? "Hunter" : "Holder";
 			formData.industry = [formData.industry];
 			formData.hunter = undefined;
 
+			const isInvestor = startupOrVC === "VC";
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData, role: "Company", companyType },
+				{ formData, role: "Company", companyType, isInvestor },
 				{
 					withCredentials: true,
 				},
 			);
 			if (response.status === 200) {
 				setSignUpSuccess(true);
-				// router.push("/checkEmail");
 				router.push("/stayTuned");
 			} else {
 				setSignUpError("Signup failed. Please try again.");
@@ -263,9 +261,9 @@ export default function CompanySignUp() {
 								<div className="flex gap-3">
 									<button
 										type="button"
-										onClick={() => setCompanyType("Startup")}
+										onClick={() => setStartupOrVC("Startup")}
 										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
-											companyType === "Startup"
+											startupOrVC === "Startup"
 												? "border-indigo-500 bg-indigo-50 text-indigo-700"
 												: "border-gray-300 bg-white text-gray-600 hover:border-indigo-300"
 										}`}
@@ -275,9 +273,9 @@ export default function CompanySignUp() {
 									</button>
 									<button
 										type="button"
-										onClick={() => setCompanyType("VC")}
+										onClick={() => setStartupOrVC("VC")}
 										className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200 ${
-											companyType === "VC"
+											startupOrVC === "VC"
 												? "border-purple-500 bg-purple-50 text-purple-700"
 												: "border-gray-300 bg-white text-gray-600 hover:border-purple-300"
 										}`}
@@ -286,6 +284,19 @@ export default function CompanySignUp() {
 										<span className="font-medium">Venture Capital</span>
 									</button>
 								</div>
+							</div>
+							<div className="space-y-3">
+								<Label className="text-indigo-900 font-medium">Company Type</Label>
+								<select
+									value={companyType}
+									onChange={e => setCompanyType(e.target.value)}
+									className="w-full p-3 border-2 rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+								>
+									<option value="Profit">Profit</option>
+									<option value="NonProfit">NonProfit</option>
+									<option value="Private">Private</option>
+									<option value="Public">Public</option>
+								</select>
 							</div>
 							<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 								<div className="grid grid-cols-2 gap-4">
