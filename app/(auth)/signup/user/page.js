@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Button } from "../../../_components/_ui/Button";
 import { Input } from "../../../_components/_ui/Input";
@@ -40,6 +40,8 @@ import { Controller } from "react-hook-form";
 
 export default function UserSignUp() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const initialType = searchParams.get("type") || "Investor";
 	const {
 		control,
 		register,
@@ -55,7 +57,7 @@ export default function UserSignUp() {
 	const [signUpError, setSignUpError] = useState(null);
 	const [signUpSuccess, setSignUpSuccess] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const [userType, setUserType] = useState("Investor"); // Default to Investor
+	const [userType, setUserType] = useState(initialType);
 	const debounceTimer = useRef(null);
 
 	const MIN_USERNAME_LENGTH = 5;
