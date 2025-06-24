@@ -47,7 +47,7 @@ export default function StayTuned() {
 									<h3 className="text-lg font-semibold text-indigo-900">Coming Soon</h3>
 								</div>
 								<p className="text-indigo-700">
-									We're in the final stages of development. Get ready to revolutionize your investment journey with our secure and intuitive platform.
+									We're in the final stages of development. Get ready to revolutionize your investment journey with our platform.
 								</p>
 							</motion.div>
 
@@ -60,40 +60,19 @@ export default function StayTuned() {
 								<div className="flex items-center space-x-3 p-4 bg-indigo-50 rounded-lg">
 									<Users className="w-6 h-6 text-indigo-600" />
 									<div>
-										<h4 className="font-semibold text-indigo-900">For Investors</h4>
+										<h4 className="font-semibold text-indigo-900">Angel Investors/VCs</h4>
 										<p className="text-sm text-indigo-700">Discover and invest in promising companies</p>
 									</div>
 								</div>
 								<div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg">
 									<Building2 className="w-6 h-6 text-purple-600" />
 									<div>
-										<h4 className="font-semibold text-purple-900">For Founders</h4>
+										<h4 className="font-semibold text-purple-900">Founders/Startups</h4>
 										<p className="text-sm text-purple-700">Connect with potential investors worldwide</p>
 									</div>
 								</div>
 							</motion.div>
 
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								animate={{ opacity: 1, y: 0 }}
-								transition={{ delay: 0.8 }}
-								className="grid grid-cols-1 md:grid-cols-2 gap-4"
-							>
-								<div className="flex items-center space-x-3 p-4 bg-indigo-50 rounded-lg">
-									<Building2 className="w-6 h-6 text-indigo-600" />
-									<div>
-										<h4 className="font-semibold text-indigo-900">For Startups</h4>
-										<p className="text-sm text-indigo-700">Launch fundraising campaigns and connect with investors</p>
-									</div>
-								</div>
-								<div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg">
-									<TrendingUp className="w-6 h-6 text-purple-600" />
-									<div>
-										<h4 className="font-semibold text-purple-900">For VCs</h4>
-										<p className="text-sm text-purple-700">Discover and invest in promising companies</p>
-									</div>
-								</div>
-							</motion.div>
 
 							<motion.div
 								initial={{ opacity: 0, y: 20 }}
