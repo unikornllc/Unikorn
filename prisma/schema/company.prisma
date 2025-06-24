@@ -3,8 +3,6 @@ enum CompanyType {
   NonProfit
   Private
   Public
-  Startup
-  VC
 }
 
 enum CompanyTier {
@@ -30,6 +28,7 @@ model Company {
   website            String
   founded            DateTime
   type               CompanyType          @default(Public)
+  isInvestor         Boolean              @default(false)
   companySize        String               @default("1-50")
   hqLocation         String
   socialMedia        Json?

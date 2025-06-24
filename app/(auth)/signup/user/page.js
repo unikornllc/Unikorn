@@ -163,9 +163,10 @@ export default function UserSignUp() {
 
 		try {
 			console.log("formData:", formData);
+			const isInvestor = userType === "Investor";
 			const response = await axios.post(
 				`${process.env.NEXT_PUBLIC_SERVER}/api/createAccount`,
-				{ formData, role: "User", userType }, // Include userType in the request
+				{ formData, role: "User", isInvestor }, // Use isInvestor instead of userType
 				{
 					withCredentials: true,
 				},
