@@ -13,9 +13,12 @@ import {
 export function Toaster() {
 	const { toasts, dismiss } = useToast();
 
+	// Ensure toasts is an array
+	const safeToasts = Array.isArray(toasts) ? toasts : [];
+
 	return (
 		<ToastProvider>
-			{toasts.map(({ id, title, description, action, ...props }) => (
+			{safeToasts.map(({ id, title, description, action, ...props }) => (
 				<Toast key={id} {...props}>
 					<div className="grid gap-1">
 						{title && <ToastTitle>{title}</ToastTitle>}

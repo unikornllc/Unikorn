@@ -7,7 +7,7 @@ import { sendNewLoginNotification } from "./loginDevice.js";
 
 const refreshCookieOptions = {
 	httpOnly: true, // TODO: Change to true
-	secure: true, // TODO: Change to true
+	secure: false, // TODO: Change to true
 	maxAge: 7 * 24 * 60 * 60 * 1000,
 	sameSite: "Lax",
 };

@@ -2,9 +2,9 @@
 "use client"; // Indicates this is a Client Component
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-const ExternalRedirect = () => {
+const ExternalRedirectContent = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const url = searchParams.get("url");
@@ -61,6 +61,14 @@ const ExternalRedirect = () => {
 				</button>
 			</div>
 		</div>
+	);
+};
+
+const ExternalRedirect = () => {
+	return (
+		<Suspense fallback={<div className="container mx-auto p-4">Loading...</div>}>
+			<ExternalRedirectContent />
+		</Suspense>
 	);
 };
 
