@@ -61,8 +61,8 @@ export default function CompanySignUp() {
 	const [startupOrVC, setStartupOrVC] = useState("Startup");
 	const debounceTimer = useRef(null);
 
-	const MIN_USERNAME_LENGTH = 5;
-	const MAX_USERNAME_LENGTH = 16;
+	const MIN_USERNAME_LENGTH = 4;
+	const MAX_USERNAME_LENGTH = 20;
 
 	const formatUrl = (url) => {
 		if (!url) return "";
@@ -101,50 +101,86 @@ export default function CompanySignUp() {
 			return { valid: false, message: "Error checking username" };
 		}
 	}, []);
+	const checkForUsernameSuggestions = useCallback(async () => {
+		const name = watch("name") || "";
+		const email = watch("email") || "";
+		const username = watch("username") || "";
+
+		if (
+			name.length >= MIN_USERNAME_LENGTH &&
+			email.length >= MIN_USERNAME_LENGTH
+		) {
+			if (!username || username.length === 0 || errors.username) {
+				try {
+					const response = await axios.get(
+						`${process.env.NEXT_PUBLIC_SERVER}/api/suggestUsername`,
+						{ params: { email, name } },
+					);
+					setUsernameSuggestions(response.data.usernameSuggestions || []);
+				} catch (error) {
+					console.error("Error fetching username suggestions:", error);
+				}
+			}
+		} else {
+			setUsernameSuggestions([]);
+		}
+	}, [watch, errors.username, MIN_USERNAME_LENGTH]);
 
 	const handleInputChange = useCallback(
 		(field) => async (e) => {
 			const value = e.target.value;
-			if (value.length > 4 && (field === "email" || field === "name")) {
+			if (field === "email" || field === "name") {
 				clearTimeout(debounceTimer.current);
-				debounceTimer.current = setTimeout(async () => {
-					const username = watch("username");
-					let needSuggestions = false;
-					if (!username) {
-						needSuggestions = true;
-					} else {
-						// Check if the current username is valid
-						const { valid, message } = await checkUsername(username);
-						if (!valid) {
-							needSuggestions = true;
-						}
-					}
-
-					if (needSuggestions) {
-						try {
-							const name = watch("name");
-							const email = watch("email");
-							if (
-								name.length >= MIN_USERNAME_LENGTH &&
-								email.length >= MIN_USERNAME_LENGTH
-							) {
-								const response = await axios.get(
-									`${process.env.NEXT_PUBLIC_SERVER}/api/suggestUsername`,
-									{ params: { email, name } },
-								);
-								setUsernameSuggestions(response.data.usernameSuggestions || []);
-							}
-						} catch (error) {
-							console.error("Error fetching username suggestions:", error);
-						}
-					} else {
-						setUsernameSuggestions([]);
-					}
+				debounceTimer.current = setTimeout(() => {
+					checkForUsernameSuggestions();
 				}, 300);
 			}
 		},
-		[watch, checkUsername],
+		[checkForUsernameSuggestions],
 	);
+	// const handleInputChange = useCallback(
+	// 	(field) => async (e) => {
+	// 		const value = e.target.value;
+	// 		if (value.length > 4 && (field === "email" || field === "name")) {
+	// 			clearTimeout(debounceTimer.current);
+	// 			debounceTimer.current = setTimeout(async () => {
+	// 				const username = watch("username");
+	// 				let needSuggestions = false;
+	// 				if (!username) {
+	// 					needSuggestions = true;
+	// 				} else {
+	// 					// Check if the current username is valid
+	// 					const { valid, message } = await checkUsername(username);
+	// 					if (!valid) {
+	// 						needSuggestions = true;
+	// 					}
+	// 				}
+
+	// 				if (needSuggestions) {
+	// 					try {
+	// 						const name = watch("name");
+	// 						const email = watch("email");
+	// 						if (
+	// 							name.length >= MIN_USERNAME_LENGTH &&
+	// 							email.length >= MIN_USERNAME_LENGTH
+	// 						) {
+	// 							const response = await axios.get(
+	// 								`${process.env.NEXT_PUBLIC_SERVER}/api/suggestUsername`,
+	// 								{ params: { email, name } },
+	// 							);
+	// 							setUsernameSuggestions(response.data.usernameSuggestions || []);
+	// 						}
+	// 					} catch (error) {
+	// 						console.error("Error fetching username suggestions:", error);
+	// 					}
+	// 				} else {
+	// 					setUsernameSuggestions([]);
+	// 				}
+	// 			}, 300);
+	// 		}
+	// 	},
+	// 	[watch, checkUsername],
+	// );
 
 	const handleUsernameBlur = useCallback(
 		async (e) => {
@@ -180,6 +216,22 @@ export default function CompanySignUp() {
 	);
 	const websiteRaw = watch("website");
 	const formattedWebsite = formatUrl(websiteRaw);
+
+	useEffect(() => {
+		const checkAutofill = setTimeout(() => {
+			const name = watch("name");
+			const email = watch("email");
+			if (name || email) {
+				checkForUsernameSuggestions();
+			}
+		}, 500);
+
+		return () => clearTimeout(checkAutofill);
+	}, [watch, checkForUsernameSuggestions]);
+
+	const handleInputFocus = useCallback(() => {
+		checkForUsernameSuggestions();
+	}, [checkForUsernameSuggestions]);
 
 	const onSubmit = async (formData) => {
 		setLoading(true);
@@ -257,7 +309,9 @@ export default function CompanySignUp() {
 								</Alert>
 							)}
 							<div className="space-y-3">
-								<Label className="text-indigo-900 font-medium">What describes you best?</Label>
+								<Label className="text-indigo-900 font-medium">
+									What describes you best?
+								</Label>
 								<div className="flex gap-3">
 									<button
 										type="button"
@@ -286,10 +340,12 @@ export default function CompanySignUp() {
 								</div>
 							</div>
 							<div className="space-y-3">
-								<Label className="text-indigo-900 font-medium">Company Type</Label>
+								<Label className="text-indigo-900 font-medium">
+									Company Type
+								</Label>
 								<select
 									value={companyType}
-									onChange={e => setCompanyType(e.target.value)}
+									onChange={(e) => setCompanyType(e.target.value)}
 									className="w-full p-3 border-2 rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
 								>
 									<option value="Profit">Profit</option>
@@ -310,6 +366,7 @@ export default function CompanySignUp() {
 												required: "Company name is required",
 											})}
 											onChange={handleInputChange("name")}
+											onFocus={handleInputFocus}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 										{errors.name && (
@@ -327,6 +384,7 @@ export default function CompanySignUp() {
 											type="email"
 											{...register("email", { required: "Email is required" })}
 											onChange={handleInputChange("email")}
+											onFocus={handleInputFocus}
 											className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 										/>
 										{errors.email && (
@@ -344,7 +402,17 @@ export default function CompanySignUp() {
 										id="username"
 										{...register("username", {
 											required: "Username is required",
+											minLength: {
+												value: 4,
+												message: "Username must be at least 4 characters",
+											},
+											maxLength: {
+												value: 20,
+												message: "Username must be at most 20 characters",
+											},
 										})}
+										onBlur={handleUsernameBlur}
+										onFocus={handleInputFocus}
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
 									{errors.username && (
@@ -360,6 +428,7 @@ export default function CompanySignUp() {
 													className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-indigo-700"
 													onClick={() => {
 														setValue("username", suggestion);
+														clearErrors("username");
 														setUsernameSuggestions([]);
 													}}
 												>

@@ -9,7 +9,26 @@ import {
 	CardHeader,
 	CardTitle,
 } from "../_components/_ui/Card";
-import { ChevronRight, LineChart, ShieldCheck, Users, Search, MessageCircle, TrendingUp, Eye, Handshake, BarChart3, UserCheck, Rocket, Star, Sparkles, FileText, UserPlus, StickyNote, AlertCircle } from "lucide-react";
+import {
+	ChevronRight,
+	LineChart,
+	ShieldCheck,
+	Users,
+	Search,
+	MessageCircle,
+	TrendingUp,
+	Eye,
+	Handshake,
+	BarChart3,
+	UserCheck,
+	Rocket,
+	Star,
+	Sparkles,
+	FileText,
+	UserPlus,
+	StickyNote,
+	AlertCircle,
+} from "lucide-react";
 
 export default function Home() {
 	return (
@@ -18,10 +37,16 @@ export default function Home() {
 				{/* Hero Section */}
 				<section className="max-w-7xl mx-auto px-6 py-20 text-center">
 					<h1 className="text-5xl font-bold text-indigo-900 mb-6">
-						Empowering Investors & Founders to <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Connect, Invest, and Grow</span>
+						Empowering Investors & Founders to{" "}
+						<span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+							Connect, Invest, and Grow
+						</span>
 					</h1>
 					<p className="text-xl text-indigo-700 mb-10 max-w-4xl mx-auto">
-						Unikorn is the social platform where innovative startups meet forward-thinking investors. Whether you're looking to invest in the next big thing or raise capital for your company, Unikorn is your gateway to opportunity.
+						Unikorn is the social platform where innovative startups meet
+						forward-thinking investors. Whether you're looking to invest in the
+						next big thing or raise capital for your company, Unikorn is your
+						gateway to opportunity.
 					</p>
 					<div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
 						<Link href="/signup/user">
@@ -51,7 +76,10 @@ export default function Home() {
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Search className="text-blue-600 w-5 h-5" />Discover Opportunities</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Search className="text-blue-600 w-5 h-5" />
+										Discover Opportunities
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
@@ -61,17 +89,24 @@ export default function Home() {
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Rocket className="text-purple-600 w-5 h-5" />Invest Early</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Rocket className="text-purple-600 w-5 h-5" />
+										Invest Early
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Connect directly with entrepreneurs, with no boundaries and full transparency.
+										Connect directly with entrepreneurs, with no boundaries and
+										full transparency.
 									</CardDescription>
 								</CardContent>
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><MessageCircle className="text-indigo-600 w-5 h-5" />Secure Chatting</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<MessageCircle className="text-indigo-600 w-5 h-5" />
+										Secure Chatting
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
@@ -81,17 +116,24 @@ export default function Home() {
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><BarChart3 className="text-orange-600 w-5 h-5" />Stay Ahead</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<BarChart3 className="text-orange-600 w-5 h-5" />
+										Stay Ahead
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Stay informed on trends, insights, and discussions through the startup community newsfeed.
+										Stay informed on trends, insights, and discussions through
+										the startup community newsfeed.
 									</CardDescription>
 								</CardContent>
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><UserCheck className="text-indigo-600 w-5 h-5" />Smart Matching</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<UserCheck className="text-indigo-600 w-5 h-5" />
+										Smart Matching
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
@@ -106,12 +148,14 @@ export default function Home() {
 								<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 									<CardHeader>
 										<CardTitle className="flex items-center gap-2 text-lg">
-											<FileText className="text-green-700 w-5 h-5" />AI Pitch Analysis
+											<FileText className="text-green-700 w-5 h-5" />
+											AI Pitch Analysis
 										</CardTitle>
 									</CardHeader>
 									<CardContent>
 										<CardDescription className="text-base">
-											Evaluate pitch decks, research the market, and score opportunity quality using AI.
+											Evaluate pitch decks, research the market, and score
+											opportunity quality using AI.
 										</CardDescription>
 									</CardContent>
 								</Card>
@@ -128,7 +172,10 @@ export default function Home() {
 				</section>
 
 				{/* Features for Founders */}
-				<section id="founder-features" className="bg-gradient-to-br from-indigo-50 to-purple-50 py-20">
+				<section
+					id="founder-features"
+					className="bg-gradient-to-br from-indigo-50 to-purple-50 py-20"
+				>
 					<div className="max-w-7xl mx-auto px-6">
 						<h2 className="text-3xl font-bold text-center text-purple-900 mb-12 flex items-center justify-center gap-2">
 							<Rocket className="text-purple-600" /> For Founders
@@ -136,17 +183,24 @@ export default function Home() {
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><LineChart className="text-indigo-600 w-5 h-5" />Launch Fundraising</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<LineChart className="text-indigo-600 w-5 h-5" />
+										Launch Fundraising
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Launch your fundraising campaign and connect with potential investors to fuel your company's growth.
+										Launch your fundraising campaign and connect with potential
+										investors to fuel your company's growth.
 									</CardDescription>
 								</CardContent>
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Star className="text-yellow-500 w-5 h-5" />Share & Get Feedback</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Star className="text-yellow-500 w-5 h-5" />
+										Share & Get Feedback
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
@@ -156,7 +210,10 @@ export default function Home() {
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><MessageCircle className="text-indigo-600 w-5 h-5" />Secure Chatting</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<MessageCircle className="text-indigo-600 w-5 h-5" />
+										Secure Chatting
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
@@ -166,31 +223,43 @@ export default function Home() {
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Sparkles className="text-purple-500 w-5 h-5" />Pitch to Investors</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Sparkles className="text-purple-500 w-5 h-5" />
+										Pitch to Investors
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Pitch your idea to a bank of investors and get noticed by the right backers.
+										Pitch your idea to a bank of investors and get noticed by
+										the right backers.
 									</CardDescription>
 								</CardContent>
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Handshake className="text-pink-600 w-5 h-5" />Find Partners & Team Up</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Handshake className="text-pink-600 w-5 h-5" />
+										Find Partners & Team Up
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Find partners, cofounders, or people interested in your idea and team up.
+										Find partners, cofounders, or people interested in your idea
+										and team up.
 									</CardDescription>
 								</CardContent>
 							</Card>
 							<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">
 								<CardHeader>
-									<CardTitle className="flex items-center gap-2 text-lg"><Users className="text-indigo-600 w-5 h-5" />Network in Community</CardTitle>
+									<CardTitle className="flex items-center gap-2 text-lg">
+										<Users className="text-indigo-600 w-5 h-5" />
+										Network in Community
+									</CardTitle>
 								</CardHeader>
 								<CardContent>
 									<CardDescription className="text-base">
-										Network through the startup community with investors and other founders.
+										Network through the startup community with investors and
+										other founders.
 									</CardDescription>
 								</CardContent>
 							</Card>
@@ -212,24 +281,18 @@ export default function Home() {
 						<span className="text-xl font-bold">Unikorn</span>
 					</div>
 					<div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
-						<Link
-							href="#"
-							className="hover:text-indigo-300 transition-colors"
-						>
+						<Link href="#" className="hover:text-indigo-300 transition-colors">
 							Privacy Policy
 						</Link>
-						<Link
-							href="#"
-							className="hover:text-indigo-300 transition-colors"
-						>
+						<Link href="#" className="hover:text-indigo-300 transition-colors">
 							Terms of Service
 						</Link>
-						<Link
+						{/* <Link
 							href="#"
 							className="hover:text-indigo-300 transition-colors"
 						>
 							Contact Us
-						</Link>
+						</Link> */}
 					</div>
 				</div>
 			</footer>

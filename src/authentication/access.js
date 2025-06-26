@@ -8,15 +8,15 @@ import prisma from "../db.js";
 // const ChangePassword = ["ChangePassword"];
 
 const basicAccessCookieOptions = {
-	httpOnly: true,
-	secure: false,
+	httpOnly: process.env.NODE_ENV === "production",
+	secure: process.env.NODE_ENV === "production",
 	maxAge: 24 * 60 * 60 * 1000,
 	sameSite: "Lax",
 };
 
 const PasswordResetAccessCookie = {
-	httpOnly: true,
-	secure: false,
+	httpOnly: process.env.NODE_ENV === "production",
+	secure: process.env.NODE_ENV === "production",
 	maxAge: 15 * 60 * 1000,
 	sameSite: "Lax",
 };

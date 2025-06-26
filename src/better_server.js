@@ -10,7 +10,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
-import { generateRefreshToken } from "./authentication/refreshToken.js";
+import { generateRefreshToken } from "./authentication/refreshToken";
 import { generateBasicAccess } from "./authentication/access.js";
 import BasicRouter from "./router/profiles.js";
 
@@ -79,8 +79,8 @@ app.get(
 		});
 
 		res.cookie("token", token, {
-			httpOnly: false,
-			secure: false,
+			httpOnly: process.env.NODE_ENV === "production",
+			secure: process.env.NODE_ENV === "production",
 			sameSite: "Lax",
 			maxAge: 24 * 60 * 60 * 1000,
 		});
