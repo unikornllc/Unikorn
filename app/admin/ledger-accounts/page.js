@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/_ui/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/_components/_ui/Table"
 import axios from "axios";
 import { headers } from "next/headers";
-
+export const dynamic = 'force-dynamic'
 async function getLedgerAccounts() {
     try {
         const headersInstance = await headers();

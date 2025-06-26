@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
+console.log("JWT_SECRET in middleware:", process.env.JWT_SECRET);
+
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const routeRules = {
@@ -67,15 +69,16 @@ export async function middleware(req) {
 	try {
 		const { payload } = await jwtVerify(token, secretKey);
 		const role = payload.role;
+
 		if (routeRules.authRoutes.includes(pathname) || pathname == "/home") {
+			const homeUrl = role === "User" ? "/user/home" : "/company/home";
 			return withRoleResponse(
-				NextResponse.redirect(
-					new URL(role === "User" ? "/user/home" : "/company/home", req.url),
-				),
+				NextResponse.redirect(new URL(homeUrl, req.url)),
 				role,
 			);
 		}
 
+		// Allow access to shared routes and dynamic routes
 		if (
 			routeRules.sharedRoutes.includes(pathname) ||
 			isDynamicRoute(pathname, routeRules.dynamicRoutes)
@@ -83,20 +86,25 @@ export async function middleware(req) {
 			return withRoleResponse(NextResponse.next(), role);
 		}
 
+		// Check role-specific route access
 		if (role === "User" && routeRules.protectedUserRoutes.includes(pathname)) {
 			return withRoleResponse(NextResponse.next(), role);
 		}
-		if (
-			role === "Company" &&
-			routeRules.protectedCompanyRoutes.includes(pathname)
-		) {
+		
+		if (role === "Company" && routeRules.protectedCompanyRoutes.includes(pathname)) {
 			return withRoleResponse(NextResponse.next(), role);
 		}
 
-		// return NextResponse.rewrite(new URL("/not-found", req.url));
+		// For any other route, allow access (you can change this to redirect to 404 if needed)
 		return withRoleResponse(NextResponse.next(), role);
+		
 	} catch (error) {
-		return NextResponse.redirect(new URL("/signin", req.url));
+		console.error("Middleware token verification error:", error);
+		// If token is invalid, clear it and redirect to signin
+		const response = NextResponse.redirect(new URL("/signin", req.url));
+		response.cookies.delete("BSID");
+		response.cookies.delete("SID");
+		return response;
 	}
 }
 

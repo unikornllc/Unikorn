@@ -4,21 +4,35 @@ import { ArrowUpRight, DollarSign, Users, BarChart2, PieChart } from "lucide-rea
 import axios from "axios";
 import { headers } from "next/headers";
 
+// Force dynamic rendering since we're using headers()
+export const dynamic = 'force-dynamic'
+
 async function getDashboardData() {
-    const headersInstance = await headers();
-    const cookie = headersInstance.get("cookie");
-    const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_SERVER}/api/admin/metrics`,
-        {
-            params: {},
-            headers: {
-                cookie: cookie || "",
+    try {
+        const headersInstance = await headers();
+        const cookie = headersInstance.get("cookie");
+        const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_SERVER}/api/admin/metrics`,
+            {
+                params: {},
+                headers: {
+                    cookie: cookie || "",
+                },
             },
-        },
-    );
-    console.log(response.data);
-    return {
-        ...response.data
+        );
+        console.log(response.data);
+        return {
+            ...response.data
+        }
+    } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Return default values during build time or when API is unavailable
+        return {
+            totalTransactions: 0,
+            totalUsers: 0,
+            totalCompanies: 0,
+            totalFundRaising: 0
+        }
     }
 }
 

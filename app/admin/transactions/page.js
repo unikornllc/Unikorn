@@ -11,7 +11,7 @@ import { DatePickerWithRange } from "@/app/_components/_ui/DateRangePicker"
 import { useToast } from "@/app/_components/_hooks/useToast"
 import { EmptyState } from "@/app/_components/_ui/EmptyState"
 import axios from "axios";
-
+export const dynamic = 'force-dynamic'
 const ITEMS_PER_PAGE = 10
 
 export default function TransactionsPage() {
@@ -99,7 +99,7 @@ export default function TransactionsPage() {
                                 <SelectValue placeholder="Transaction Type" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value=" ">All Types</SelectItem>
+                                <SelectItem value="all">All Types</SelectItem>
                                 <SelectItem value="Wallet_Deposit">Wallet Deposit</SelectItem>
                                 <SelectItem value="Wallet_Withdraw">Wallet Withdraw</SelectItem>
                                 <SelectItem value="Surrender_Equity">Surrender Equity</SelectItem>

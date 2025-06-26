@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./Button";
 import { Menu, X, User, Building2, ArrowRight } from "lucide-react";
+import { createPortal } from "react-dom";
 
 const navItems = [
 	{ name: "Features", href: "#features" },
@@ -131,8 +132,10 @@ export default function Navbar() {
 					</div>
 				</div>
 			)}
-			{isSignUpModalOpen && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center">
+
+			{/* Modal rendered via Portal */}
+			{isSignUpModalOpen && typeof window !== "undefined" && createPortal(
+				<div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
 					{/* Backdrop */}
 					<div
 						className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -140,7 +143,7 @@ export default function Navbar() {
 					/>
 
 					{/* Modal Content */}
-					<div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transform transition-all">
+					<div className="relative z-10 w-full max-w-md mx-auto my-8 bg-white rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]">
 						{/* Close Button */}
 						<button
 							onClick={() => setIsSignUpModalOpen(false)}
@@ -221,7 +224,8 @@ export default function Navbar() {
 							</Link>
 						</div>
 					</div>
-				</div>
+				</div>,
+				document.body
 			)}
 		</header>
 	);

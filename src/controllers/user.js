@@ -419,7 +419,7 @@ export async function suggestUsernamePassport(email, name) {
 		trimmedRandomUsername = ensureMinLength(trimmedRandomUsername);
 
 		const accountExists = await prisma.account.findUnique({
-			where: { username: potentialUsername },
+			where: { username: trimmedRandomUsername },
 		});
 
 		if (

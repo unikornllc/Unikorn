@@ -2,8 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/app/_utils/utils"
-import { useToast } from "@/app/_components/_hooks/useToast"
-import { ToastContainer } from "@/app/_components/_ui/Toast"
+import { Toaster } from "@/app/_components/_ui/Toaster"
 
 const navItems = [
     { href: "/admin/dashboard", label: "Dashboard" },
@@ -15,7 +14,6 @@ const navItems = [
 
 export default function AdminLayout({ children }) {
     const pathname = usePathname()
-    const { toasts, removeToast } = useToast()
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -40,7 +38,7 @@ export default function AdminLayout({ children }) {
                 </ul>
             </nav>
             <main className="flex-1 overflow-y-auto p-8">{children}</main>
-            <ToastContainer toasts={toasts} removeToast={removeToast} />
+            <Toaster />
         </div>
     )
 }
