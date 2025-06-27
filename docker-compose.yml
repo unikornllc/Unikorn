@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: hazemsh/unikorn-frontend
+    image: unikorn-frontend
     container_name: unikorn-frontend
     environment:
       - NODE_ENV=production
