@@ -142,7 +142,7 @@ export default function Home() {
 								</CardContent>
 							</Card>
 							<div className="relative">
-								<div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold rounded-full px-3 py-1 shadow z-10">
+								<div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold rounded-full px-3 py-1 shadow z-1">
 									SOON
 								</div>
 								<Card className="p-6 shadow-xl hover:shadow-2xl border border-indigo-100 transition-shadow duration-300">

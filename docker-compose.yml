@@ -1,15 +1,11 @@
 services:
   frontend:
-    image: unikorn-frontend
     build:
       context: .
       dockerfile: app/Dockerfile
-      args:
-        - NEXT_PUBLIC_SERVER=http://backend:3001
     container_name: unikorn-frontend
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_SERVER=http://backend:3001
       - JWT_SECRET=${JWT_SECRET}
     ports:
       - "3000:3000"
