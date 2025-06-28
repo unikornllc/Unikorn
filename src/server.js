@@ -83,11 +83,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/", (req, res, next) => {
-	setTimeout(() => {
-		next(new Error("hello"));
-	}, 1);
-});
+// app.get("/", (req, res, next) => {
+// 	setTimeout(() => {
+// 		next(new Error("hello"));
+// 	}, 1);
+// });
 
 // app.use(
 // 	session({
