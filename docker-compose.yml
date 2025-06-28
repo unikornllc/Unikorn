@@ -1,6 +1,8 @@
 services:
   frontend:
     image: unikorn-frontend
+    args:
+      - NEXT_PUBLIC_SERVER=http://backend:3001
     container_name: unikorn-frontend
     environment:
       - NODE_ENV=production
