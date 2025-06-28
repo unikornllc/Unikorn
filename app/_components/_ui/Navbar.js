@@ -16,8 +16,7 @@ import {
 	CheckCircle2,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { usePathname, useSearchParams } from "next/navigation";
-
+import { usePathname } from "next/navigation";
 const navItems = [
 	// { name: "Features", href: "#features" },
 	{ name: "About", href: "/" },
@@ -31,7 +30,7 @@ export default function Navbar() {
 	const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
+	// const searchParams = useSearchParams();
 	const menuRef = useRef(null);
 	useEffect(() => {
 		const handleScroll = () => {
@@ -62,7 +61,7 @@ export default function Navbar() {
 
 	useEffect(() => {
 		setIsMenuOpen(false);
-	}, [pathname, searchParams]);
+	}, [pathname]);
 
 	useEffect(() => {
 		function handleClickOutside(event) {
