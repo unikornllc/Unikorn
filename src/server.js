@@ -175,7 +175,7 @@ app.get("/api/checkEmail", checkEmail);
 app.get("/api/suggestUsername", suggestUsername);
 
 app.post(
-	"/signin",
+	"/api/signin",
 	verifyRefreshToken,
 	handleNewDevice,
 	verifyCredentialsIfNoRefreshToken,
