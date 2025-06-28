@@ -1,0 +1,14 @@
+unikornlab.com {
+    redir https://www.unikornlab.com{uri}
+}
+
+www.unikornlab.com {
+    reverse_proxy frontend:3000
+
+    log {
+        output stdout
+        format console
+    }
+
+    encode gzip
+}
