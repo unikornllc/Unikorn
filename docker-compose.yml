@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
+      args:
+        NEXT_PUBLIC_SERVER: https://www.unikornlab.com
     container_name: unikorn-frontend
     environment:
       - NODE_ENV=production
@@ -13,6 +15,7 @@ services:
       - ./fileStorage:/app/fileStorage
     depends_on:
       - backend
+
 
   backend:
     build:

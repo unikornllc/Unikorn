@@ -4,7 +4,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
-ENV NEXT_PUBLIC_SERVER=http://backend:3001
+
+ARG NEXT_PUBLIC_SERVER
+ENV NEXT_PUBLIC_SERVER=$NEXT_PUBLIC_SERVER
+
 RUN npm run build
 
 FROM node:18-alpine
