@@ -607,6 +607,28 @@ export default function CompanySignUp() {
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
 								</div>
+								<div className="space-y-2">
+									<Label htmlFor="linkedin" className="text-indigo-900">
+										LinkedIn Company Page URL (Optional)
+									</Label>
+									<Input
+										id="linkedin"
+										type="url"
+										placeholder="https://linkedin.com/company/your-company"
+										{...register("linkedin", {
+											pattern: {
+												value: /^https?:\/\/(www\.)?linkedin\.com\/company\/[a-zA-Z0-9-]+\/?$/,
+												message: "Please enter a valid LinkedIn company page URL"
+											}
+										})}
+										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
+									/>
+									{errors.linkedin && (
+										<span className="text-red-500 text-sm">
+											{errors.linkedin.message}
+										</span>
+									)}
+								</div>
 								{/* <div className="space-y-2">
 									<Label htmlFor="files" className="text-indigo-900">
 										Upload Files

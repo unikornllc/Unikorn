@@ -33,6 +33,12 @@ export const createAccount = async (req, res) => {
 						description: data.description || "",
 						title: data.title,
 						isInvestor: isInvestor,
+						socialMedia: data.linkedin ? {
+							create: {
+								platform: "LinkedIn",
+								url: data.linkedin,
+							},
+						} : undefined,
 					},
 				} : undefined,
 				company: role === "Company" ? {
@@ -45,6 +51,9 @@ export const createAccount = async (req, res) => {
 						hqLocation: data.hqLocation,
 						industry: data.industry,
 						isInvestor: isInvestor,
+						socialMedia: data.linkedin ? {
+							LinkedIn: data.linkedin
+						} : null,
 					},
 				} : undefined,
 			},
