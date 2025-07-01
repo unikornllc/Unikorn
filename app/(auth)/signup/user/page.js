@@ -506,6 +506,28 @@ export default function UserSignUp() {
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
 								</div>
+								<div className="space-y-2">
+									<Label htmlFor="linkedin" className="text-indigo-900">
+										LinkedIn Profile URL (Optional)
+									</Label>
+									<Input
+										id="linkedin"
+										type="url"
+										placeholder="https://linkedin.com/in/your-profile"
+										{...register("linkedin", {
+											pattern: {
+												value: /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/,
+												message: "Please enter a valid LinkedIn profile URL"
+											}
+										})}
+										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
+									/>
+									{errors.linkedin && (
+										<span className="text-red-500 text-sm">
+											{errors.linkedin.message}
+										</span>
+									)}
+								</div>
 								{/* <div className="space-y-2">
 									<Label htmlFor="title" className="text-indigo-900">
 										Title
@@ -530,7 +552,7 @@ export default function UserSignUp() {
 									{loading ? "Signing Up..." : "Sign Up"}
 								</Button>
 							</form>
-							<div className="relative">
+							{/* <div className="relative">
 								<div className="absolute inset-0 flex items-center">
 									<Separator className="w-full" />
 								</div>
@@ -541,18 +563,18 @@ export default function UserSignUp() {
 								</div>
 							</div>
 							<div className="flex justify-center gap-4 mt-2">
-								{/* <button
+								<button
 									onClick={() => console.log("Facebook sign-in clicked")}
 									className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow"
 								>
 									<FaFacebook className="text-blue-600 h-6 w-6" />
-								</button> */}
+								</button>
 								<a href={`${process.env.NEXT_PUBLIC_SERVER}/auth/google`}>
 									<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
 										<FcGoogle className="h-6 w-6" />
 									</button>
 								</a>
-							</div>
+							</div> */}
 						</CardContent>
 						<CardFooter className="flex justify-center">
 							<div className="text-sm text-indigo-700">

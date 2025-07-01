@@ -146,7 +146,7 @@ export default function SignIn() {
 									{loading ? "Signing In..." : "Sign In"}
 								</Button>
 							</form>
-							<div className="relative">
+							{/* <div className="relative">
 								<div className="absolute inset-0 flex items-center">
 									<Separator className="w-full" />
 								</div>
@@ -157,18 +157,18 @@ export default function SignIn() {
 								</div>
 							</div>
 							<div className="flex justify-center gap-4 mt-2">
-								{/* <button
+								<button
 									onClick={() => console.log("Facebook sign-in clicked")}
 									className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow"
 								>
 									<FaFacebook className="text-blue-600 h-6 w-6" />
-								</button> */}
+								</button>
 								<a href={`${process.env.NEXT_PUBLIC_SERVER}/auth/google`}>
 									<button className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 p-2 rounded-full shadow">
 										<FcGoogle className="h-6 w-6" />
 									</button>
 								</a>
-							</div>
+							</div> */}
 						</CardContent>
 						<CardFooter className="flex flex-col space-y-4">
 							<div className="text-sm text-center text-indigo-700">

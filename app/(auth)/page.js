@@ -63,7 +63,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
       {/* Header/Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-indigo-100">
+      {/* <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-indigo-100">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center">
             <div className="flex items-center space-x-2">
@@ -74,7 +74,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
       <main className="flex-grow mt-20">
         {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-6 py-20">
