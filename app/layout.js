@@ -8,14 +8,21 @@ const geistSans = localFont({
 });
 const geistMono = localFont({
 	src: "./fonts/GeistMonoVF.woff",
-	variable: "--font-geist-mono",
+	variable:"--font-geist-mono",
 	weight: "100 900",
 });
 
 export const metadata = {
-	title: "Unikorn",
-	description:
-		"Unikorn is the social platform where innovative startups meet forward-thinking investors.",
+	title: "Unikorn - Where Startups Get Funded",
+	description: "Join the most vibrant startup community where founders connect with investors, share insights, and build the future together.",
+	icons: {
+		icon: [
+			{ url: '/unikorn_logo2.png' },
+			new URL('/unikorn_logo2.png', 'https://unikornlab.com')
+		],
+		shortcut: '/unikorn_logo2.png',
+		apple: '/unikorn_logo2.png',
+	},
 };
 
 export default function RootLayout({ children }) {

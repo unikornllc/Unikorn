@@ -19,7 +19,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 const navItems = [
 	// { name: "Features", href: "#features" },
-	{ name: "About", href: "/" },
+	// { name: "About", href: "/" },
 	{ name: "Contact", href: "#contact" },
 ];
 
@@ -106,7 +106,8 @@ export default function Navbar() {
 					className="flex items-center space-x-2"
 					onClick={() => setIsMenuOpen(false)}
 				>
-					<span className="text-2xl font-bold text-indigo-700">Unikorn</span>
+					<Image src="/unikorn_logo2.png" alt="Unikorn Logo" width={40} height={40} />
+					<span className="text-2xl font-bold text-indigo-900">Unikorn</span>
 				</Link>
 
 				{/* Desktop Menu */}
@@ -323,7 +324,7 @@ export default function Navbar() {
 								<div
 									className={`bg-indigo-50 rounded-xl p-6 transition-all cursor-pointer 
               ${copied ? "bg-green-50 border-2 border-green-200" : "hover:bg-indigo-100"}`}
-									onClick={() => copyToClipboard("unikorn@gmail.com")}
+									onClick={() => copyToClipboard("contact@unikornlab.com")}
 									role="button"
 									tabIndex={0}
 									aria-label="Copy email address"
@@ -350,7 +351,7 @@ export default function Navbar() {
 												<p
 													className={`font-medium ${copied ? "text-green-700" : "text-indigo-700"}`}
 												>
-													unikorn@gmail.com
+													contact@unikornlab.com
 												</p>
 												<div
 													className={`text-gray-500 ${copied ? "text-green-500" : "text-gray-500 hover:text-indigo-600"} transition-colors`}
