@@ -46,7 +46,7 @@ export default function SignIn() {
 
 		try {
 			const response = await axios.post(
-				`${process.env.NEXT_PUBLIC_SERVER}/signin`,
+				`${process.env.NEXT_PUBLIC_SERVER}/api/signin`,
 				{ email, password },
 				{ withCredentials: true },
 			);

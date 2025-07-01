@@ -9,7 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 
 const signIn = async (email, password) => {
 	return await axios.post(
-		`${process.env.NEXT_PUBLIC_SERVER}/signin`,
+		`${process.env.NEXT_PUBLIC_SERVER}/api/signin`,
 		{
 			email,
 			password,

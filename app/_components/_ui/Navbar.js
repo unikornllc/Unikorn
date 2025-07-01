@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./Button";
@@ -16,7 +16,7 @@ import {
 	CheckCircle2,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-
+import { usePathname } from "next/navigation";
 const navItems = [
 	// { name: "Features", href: "#features" },
 	{ name: "About", href: "/" },
@@ -29,7 +29,9 @@ export default function Navbar() {
 	const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 	const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
-
+	const pathname = usePathname();
+	// const searchParams = useSearchParams();
+	const menuRef = useRef(null);
 	useEffect(() => {
 		const handleScroll = () => {
 			setIsScrolled(window.scrollY > 10);
@@ -57,6 +59,26 @@ export default function Navbar() {
 		};
 	}, [isSignUpModalOpen, isContactModalOpen]);
 
+	useEffect(() => {
+		setIsMenuOpen(false);
+	}, [pathname]);
+
+	useEffect(() => {
+		function handleClickOutside(event) {
+			if (menuRef.current && !menuRef.current.contains(event.target)) {
+				setIsMenuOpen(false);
+			}
+		}
+
+		if (isMenuOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isMenuOpen]);
+
 	const handleSignUpClick = () => {
 		setIsSignUpModalOpen(true);
 		setIsMenuOpen(false);
@@ -79,7 +101,11 @@ export default function Navbar() {
 			}`}
 		>
 			<nav className="max-w-7xl mx-auto flex items-center justify-between">
-				<Link href="/" className="flex items-center space-x-2">
+				<Link
+					href="/"
+					className="flex items-center space-x-2"
+					onClick={() => setIsMenuOpen(false)}
+				>
 					<span className="text-2xl font-bold text-indigo-700">Unikorn</span>
 				</Link>
 
@@ -95,10 +121,14 @@ export default function Navbar() {
 							{item.name}
 						</Link>
 					))}
-					<Link href="/signin">
+					<Link
+						href="/signin"
+						className="block"
+						onClick={() => setIsMenuOpen(false)}
+					>
 						<Button
 							variant="outline"
-							className="text-indigo-600 border-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors"
+							className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors"
 						>
 							Log In
 						</Button>
@@ -126,13 +156,20 @@ export default function Navbar() {
 
 			{/* Mobile Menu */}
 			{isMenuOpen && (
-				<div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md py-4 px-6">
+				<div
+					ref={menuRef}
+					className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md py-4 px-6"
+				>
 					{navItems.map((item) => (
 						<Link
 							key={item.name}
 							href={item.href}
 							className="block py-2 text-indigo-600 hover:text-indigo-800 transition-colors"
-							onClick={() => setIsMenuOpen(false)}
+							onClick={
+								item.name === "Contact"
+									? handleContactClick
+									: () => setIsMenuOpen(false)
+							}
 						>
 							{item.name}
 						</Link>

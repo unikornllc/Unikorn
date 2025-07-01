@@ -10,7 +10,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import InMemorySessionStore from "./sessionStore.js";
 import InMemoryMessageStore from "./messageStore.js";
-import { generateRefreshToken } from "./authentication/refreshToken";
+import { generateRefreshToken } from "./authentication/refreshtoken";
 import { generateBasicAccess } from "./authentication/access.js";
 import BasicRouter from "./router/profiles.js";
 
