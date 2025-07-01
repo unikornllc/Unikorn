@@ -131,14 +131,14 @@ export const getTransactionsFiltered = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search?.trim() || '';
-        const type = req.query.type?.trim() || '';
+        const type = req.query.transactionType?.trim() || '';
         const fromDate = req.query.from ? new Date(req.query.from) : null;
         const toDate = req.query.to ? new Date(req.query.to) : null;
         const skip = (page - 1) * limit;
         const take = limit;
         const whereClause = {};
 
-        if (type) whereClause.transactionType = type;
+        if (type && type !== 'all') whereClause.transactionType = type;
         if (fromDate && toDate) {
             whereClause.date = {
                 gte: fromDate,
@@ -158,13 +158,14 @@ export const getTransactionsFiltered = async (req, res) => {
                 skip,
                 take,
                 orderBy: { date: 'desc' },
-                include: { user: true, company: true, Entry: true },
+                include: { account: true, Entry: true },
             }),
             prisma.transaction.count({ where: whereClause }),
         ]);
 
         res.json({ transactions, total });
     } catch (error) {
+        console.error("Error fetching transactions:", error);
         res.status(500).json({ error: 'Failed to fetch transactions' });
     }
 };

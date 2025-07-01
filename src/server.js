@@ -83,11 +83,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/", (req, res, next) => {
-	setTimeout(() => {
-		next(new Error("hello"));
-	}, 1);
-});
+// app.get("/", (req, res, next) => {
+// 	setTimeout(() => {
+// 		next(new Error("hello"));
+// 	}, 1);
+// });
 
 // app.use(
 // 	session({
@@ -154,8 +154,8 @@ import {
 	verifyAccessToken,
 	verifyAccessTokenRoute,
 } from "./authentication/auth.js";
-import { handleNewDevice } from "./authentication/loginDevice.js";
-import { generateRefreshTokenIfNeeded } from "./authentication/refreshToken.js";
+import { handleNewDevice } from "./authentication/logindevice.js";
+import { generateRefreshTokenIfNeeded } from "./authentication/refreshtoken.js";
 import {
 	generateAccessTokenIfNeeded,
 	verifyRefreshTokenAndGenerateAccessToken,
@@ -175,7 +175,7 @@ app.get("/api/checkEmail", checkEmail);
 app.get("/api/suggestUsername", suggestUsername);
 
 app.post(
-	"/signin",
+	"/api/signin",
 	verifyRefreshToken,
 	handleNewDevice,
 	verifyCredentialsIfNoRefreshToken,

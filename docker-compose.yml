@@ -1,0 +1,46 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+      args:
+        NEXT_PUBLIC_SERVER: https://www.unikornlab.com
+    container_name: unikorn-frontend
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./fileStorage:/app/fileStorage
+    depends_on:
+      - backend
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    container_name: unikorn-backend
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
+volumes:
+  caddy_data:
+  caddy_config:

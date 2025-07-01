@@ -3,11 +3,11 @@ import { UAParser } from "ua-parser-js";
 import prisma from "../db.js";
 import { comparePasswords } from "../auth.js";
 import NodeMailer from "nodemailer";
-import { sendNewLoginNotification } from "./loginDevice.js";
+import { sendNewLoginNotification } from "./logindevice.js";
 
 const refreshCookieOptions = {
-	httpOnly: true, // TODO: Change to true
-	secure: true, // TODO: Change to true
+	httpOnly: process.env.NODE_ENV === "production", // TODO: Change to true
+	secure: process.env.NODE_ENV === "production", // TODO: Change to true
 	maxAge: 7 * 24 * 60 * 60 * 1000,
 	sameSite: "Lax",
 };

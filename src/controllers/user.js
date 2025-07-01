@@ -184,7 +184,7 @@ export const suggestUsername = async (req, res) => {
 		const { email, name } = req.query;
 
 		if (!email || !name) {
-			return res.status(400).json({ message: "Email and name are required." });
+			return res.status(200).json({ message: "Email and name are required." });
 		}
 		const usernameSuggestions = await suggestUsernamePassport(email, name);
 		res.status(200).json({ usernameSuggestions: usernameSuggestions });
@@ -309,8 +309,8 @@ const sanitizeData = (model, data) => {
 };
 
 export async function suggestUsernamePassport(email, name) {
-	const MIN_USERNAME_LENGTH = 5;
-	const MAX_USERNAME_LENGTH = 16;
+	const MIN_USERNAME_LENGTH = 4;
+	const MAX_USERNAME_LENGTH = 20;
 
 	const ensureMinLength = (username) => {
 		if (username.length >= MIN_USERNAME_LENGTH) {
@@ -419,7 +419,7 @@ export async function suggestUsernamePassport(email, name) {
 		trimmedRandomUsername = ensureMinLength(trimmedRandomUsername);
 
 		const accountExists = await prisma.account.findUnique({
-			where: { username: potentialUsername },
+			where: { username: trimmedRandomUsername },
 		});
 
 		if (

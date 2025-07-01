@@ -44,8 +44,8 @@ export const checkEmail = async (req, res, next) => {
 
 export const checkUsername = async (req, res, next) => {
 	try {
-		const MIN_USERNAME_LENGTH = 5;
-		const MAX_USERNAME_LENGTH = 16;
+		const MIN_USERNAME_LENGTH = 4;
+		const MAX_USERNAME_LENGTH = 20;
 		const username = req.body.formData.username;
 
 		console.log(username);
@@ -79,8 +79,8 @@ export const checkUsername = async (req, res, next) => {
 
 export const checkUsernameAPI = async (req, res, next) => {
 	try {
-		const MIN_USERNAME_LENGTH = 5;
-		const MAX_USERNAME_LENGTH = 16;
+		const MIN_USERNAME_LENGTH = 4;
+		const MAX_USERNAME_LENGTH = 20;
 		const { username } = req.query;
 
 		console.log(username);

@@ -227,10 +227,10 @@ export default function FundraisingPage() {
 		setPagination((prev) => ({ ...prev, page: 1 }));
 	};
 
-	const handlePageChange = (newPage) => {
+	const handlePageChange = useCallback((newPage) => {
 		setPagination((prev) => ({ ...prev, page: newPage }));
 		window.scrollTo({ top: 0, behavior: "smooth" });
-	};
+	}, [pagination, toast]);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-background to-background/80">
