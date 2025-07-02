@@ -154,8 +154,8 @@ import {
 	verifyAccessToken,
 	verifyAccessTokenRoute,
 } from "./authentication/auth.js";
-import { handleNewDevice } from "./authentication/logindevice.js";
-import { generateRefreshTokenIfNeeded } from "./authentication/refreshtoken.js";
+import { handleNewDevice } from "./authentication/loginDevice.js";
+import { generateRefreshTokenIfNeeded } from "./authentication/refreshToken.js";
 import {
 	generateAccessTokenIfNeeded,
 	verifyRefreshTokenAndGenerateAccessToken,

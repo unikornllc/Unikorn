@@ -3,7 +3,7 @@ import { UAParser } from "ua-parser-js";
 import prisma from "../db.js";
 import { comparePasswords } from "../auth.js";
 import NodeMailer from "nodemailer";
-import { sendNewLoginNotification } from "./logindevice.js";
+import { sendNewLoginNotification } from "./loginDevice.js";
 
 const refreshCookieOptions = {
 	httpOnly: process.env.NODE_ENV === "production", // TODO: Change to true
