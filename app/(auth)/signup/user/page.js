@@ -263,7 +263,6 @@ export default function UserSignUp() {
 						<CardContent className="space-y-6">
 							{signUpSuccess && (
 								<Alert className="bg-green-50 text-green-700 border-green-500">
-									<AlertCircle className="h-4 w-4" />
 									<AlertTitle>Success</AlertTitle>
 									<AlertDescription>
 										Sign up successful! Redirecting...
@@ -272,8 +271,7 @@ export default function UserSignUp() {
 							)}
 							{signUpError && (
 								<Alert variant="destructive">
-									<AlertCircle className="h-4 w-4" />
-									<AlertTitle>Error</AlertTitle>
+									<AlertTitle>Failed</AlertTitle>
 									<AlertDescription>{signUpError}</AlertDescription>
 								</Alert>
 							)}
@@ -516,9 +514,10 @@ export default function UserSignUp() {
 										placeholder="https://linkedin.com/in/your-profile"
 										{...register("linkedin", {
 											pattern: {
-												value: /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/,
-												message: "Please enter a valid LinkedIn profile URL"
-											}
+												value:
+													/^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/,
+												message: "Please enter a valid LinkedIn profile URL",
+											},
 										})}
 										className="border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500"
 									/>
