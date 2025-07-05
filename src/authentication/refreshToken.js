@@ -70,7 +70,7 @@ export const generateRefreshToken = async (req, res, next) => {
 					pass: process.env.EMAIL_PASS,
 				},
 			});
-			const passwordResetLink = `${process.env.FRONTEND_URL}/resetpassword`;
+			const passwordResetLink = `${process.env.NEXT_PUBLIC_FRONTEND}/resetpassword`;
 			await transporter.sendMail({
 				from: process.env.EMAIL_USER,
 				to: account.email,

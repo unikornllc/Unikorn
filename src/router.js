@@ -155,6 +155,7 @@ import {
 	getRaisingFundById,
 	getRaisingFundsStats,
 	getActiveRaisingFundsFiltered,
+	createRaisingFund,
 } from "./controllers/raisingFunds.js";
 import {
 	depositWallet,
@@ -344,7 +345,7 @@ router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
 //raisingFunds and investments offers
-
+router.post("/raisingFunds/create", createRaisingFund);
 router.get("/raisingFunds/active", getActiveRaisingFundsFiltered);
 router.get("/raisingFunds/id/", getRaisingFundById);
 router.get("/raisingFunds/stats", getRaisingFundsStats);

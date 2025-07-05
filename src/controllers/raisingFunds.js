@@ -1,6 +1,62 @@
 import prisma from "../db.js";
 import axios from "axios";
 
+export const createRaisingFund = async (req, res) => {
+	const { equityPercentage, fundingAmount, date } = req.body.data;
+	if (!req.account || req.account.role !== "Company") {
+		return res.status(403).json({ message: "Unauthorized action" });
+	}
+
+	if (
+		!equityPercentage ||
+		!fundingAmount ||
+		!date ||
+		equityPercentage <= 0 ||
+		equityPercentage > 100 ||
+		fundingAmount <= 0
+	) {
+		return res.status(400).json({
+			message: "Invalid input data. Please check your values.",
+		});
+	}
+	try {
+		const existingFundraising = await prisma.raisingFunds.findFirst({
+			where: {
+				companyId: req.account.id,
+				status: { in: ["Pending", "Active"] },
+			},
+		});
+		if (existingFundraising) {
+			return res.status(400).json({
+				message: "You already have a pending or active fundraising.",
+			});
+		}
+		const newFundraising = await prisma.raisingFunds.create({
+			data: {
+				equityPercentage: equityPercentage,
+				fundingAmount: fundingAmount,
+				pricePerPortion: fundingAmount / 10,
+				totalPortions: 10,
+				remainingPortions: 10,
+				status: "Active",
+				date: new Date(date),
+				envelopeId: null,
+				company: { connect: { id: req.account.id } },
+			},
+		});
+		res.status(200).json({
+			// message: "Raising fund created successfully",
+			fundraising: newFundraising,
+		});
+	} catch (error) {
+		console.error("Error creating raising fund:", error);
+		res.status(500).json({
+			message: "Failed to create raising fund",
+			error: error.message,
+		});
+	}
+};
+
 export const getAllRaisingFunds = async (req, res) => {
 	try {
 		const raisingFunds = await prisma.raisingFunds.findMany({
@@ -260,7 +316,7 @@ export const getRaisingFundById = async (req, res) => {
 	try {
 		const { id } = req.query;
 		const fundraising = await prisma.raisingFunds.findUnique({
-			where: { id },
+			where: { id, status: "Active" },
 			include: {
 				company: { include: { account: { select: { username: true } } } },
 				fundraisers: {
@@ -309,8 +365,8 @@ export const getRaisingFundById = async (req, res) => {
 				fundraising.equityPercentage / fundraising.totalPortions
 			).toFixed(4),
 		};
-
-		res.status(200).json(processedFundraising);
+		const owner = fundraising.companyId === req.account.id;
+		res.status(200).json({ ...processedFundraising, owner });
 	} catch (e) {
 		console.error("Error in getRaisingFundById:", e);
 		res
@@ -451,6 +507,7 @@ export const getCompanyPastRaisingFunds = async (req, res) => {
 			},
 			include: {
 				company: true,
+				fundraisers: true,
 			},
 		});
 
@@ -572,9 +629,9 @@ export const investAtFixedPrice = async (req, res) => {
 	const { raisingFundsId, portions } = req.body;
 	const investorType = req.account.role;
 	const investorId = req.account.id;
-	const walletBalance = await prisma.wallet.findUnique({
-		where: { accountId: investorId },
-	}).amount;
+	// const walletBalance = await prisma.wallet.findUnique({
+	// 	where: { accountId: investorId },
+	// }).amount;
 
 	if (!raisingFundsId || !portions) {
 		return res.status(400).json({ message: "Missing required fields" });
@@ -609,9 +666,9 @@ export const investAtFixedPrice = async (req, res) => {
 
 		const fundingAmount = fundraising.pricePerPortion * portions;
 
-		if (fundingAmount > walletBalance) {
-			return res.status(400).json({ message: "Insufficient funds" });
-		}
+		// if (fundingAmount > walletBalance) {
+		// 	return res.status(400).json({ message: "Insufficient funds" });
+		// }
 
 		const additionalEquity =
 			(fundraising.equityPercentage / fundraising.totalPortions) * portions;
@@ -672,13 +729,15 @@ export const investAtFixedPrice = async (req, res) => {
 				},
 			});
 			//this here only holds the money till they all sign the contracts
-			await prisma.wallet.update({
-				where: { accountId: investorId },
-				data: {
-					amount: { decrement: fundingAmount },
-					onHold: { increment: fundingAmount },
-				},
-			});
+
+			// await prisma.wallet.update({
+			// 	where: { accountId: investorId },
+			// 	data: {
+			// 		amount: { decrement: fundingAmount },
+			// 		onHold: { increment: fundingAmount },
+			// 	},
+			// });
+
 			// if (newRaisingFunds.remainingPortions == 0) {
 			// 	await prisma.raisingFunds.update({
 			// 		where: { id: raisingFundsId },
@@ -729,9 +788,9 @@ export const makeInvestmentOffer = async (req, res) => {
 	}
 
 	try {
-		const walletBalance = await prisma.wallet.findUnique({
-			where: { accountId: investorId },
-		}).amount;
+		// const walletBalance = await prisma.wallet.findUnique({
+		// 	where: { accountId: investorId },
+		// }).amount;
 
 		const fundraising = await prisma.raisingFunds.findUnique({
 			where: { id: raisingFundsId },
@@ -760,9 +819,9 @@ export const makeInvestmentOffer = async (req, res) => {
 
 		const totalOfferedPrice = offeredPricePerPortion * portions;
 
-		if (totalOfferedPrice > walletBalance) {
-			return res.status(400).json({ message: "Insufficient funds" });
-		}
+		// if (totalOfferedPrice > walletBalance) {
+		// 	return res.status(400).json({ message: "Insufficient funds" });
+		// }
 
 		const offerData = {
 			investorType,
@@ -785,13 +844,13 @@ export const makeInvestmentOffer = async (req, res) => {
 				connect: { id: investorId },
 			};
 		}
-		await prisma.wallet.update({
-			where: { accountId: investorId },
-			data: {
-				amount: { decrement: totalOfferedPrice },
-				onHold: { increment: totalOfferedPrice },
-			},
-		});
+		// await prisma.wallet.update({
+		// 	where: { accountId: investorId },
+		// 	data: {
+		// 		amount: { decrement: totalOfferedPrice },
+		// 		onHold: { increment: totalOfferedPrice },
+		// 	},
+		// });
 		await prisma.investmentOffer.create({ data: offerData });
 
 		res.status(200).json({ message: "Investment offer submitted" });

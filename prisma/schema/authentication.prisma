@@ -24,7 +24,7 @@ model LoginDevices {
   browser   String
   os        String
   accountId String
-  account   Account @relation(fields: [accountId], references: [id])
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@unique([ip, browser, os, accountId])
 }

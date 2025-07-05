@@ -16,6 +16,16 @@ enum ContractStatus {
   Failed
 }
 
+model Financial {
+  id                 String         @id @default(uuid())
+  valuation          Float
+  investors          String[]
+  totalFundingAmount Float
+  fundingRounds      FundingRound[]
+  company            Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          String         @unique
+}
+
 model RaisingFunds {
   id                String            @id @default(uuid())
   equityPercentage  Float
@@ -23,16 +33,31 @@ model RaisingFunds {
   pricePerPortion   Float
   remainingPortions Int               @default(10)
   totalPortions     Int               @default(10)
-  date              DateTime
   status            ContractStatus    @default(Pending)
-  envelopeId        String            @unique
-  company           Company           @relation(fields: [companyId], references: [id])
+  envelopeId        String?           @unique
+  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId         String
   fundraisers       Fundraiser[]
   investmentOffers  InvestmentOffer[]
   journal           Journal?
-  FundingRound      FundingRound[]
-  posts          Post[]
+  fundingRound      FundingRound?     @relation(fields: [fundingRoundId], references: [id], onDelete: Cascade)
+  fundingRoundId    String?           @unique
+  posts             Post[]
+
+  date      DateTime
+  createdAt DateTime  @default(now())
+  endedAt   DateTime?
+}
+
+model FundingRound {
+  id            String        @id @default(uuid())
+  type          String
+  fundingAmount Float
+  roundDate     DateTime
+  leadInvestors String[]
+  financial     Financial     @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  financialId   String
+  raisingFunds  RaisingFunds?
 }
 
 model Fundraiser {
@@ -42,10 +67,10 @@ model Fundraiser {
   investorUser   User?        @relation("UserInvestments", fields: [investorUserId], references: [id], onDelete: Cascade)
   investorUserId String?
 
-  investorCompany   Company? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id])
+  investorCompany   Company? @relation("CompanyInvestments", fields: [investorCompanyId], references: [id], onDelete: Cascade)
   investorCompanyId String?
 
-  raisingFunds   RaisingFunds @relation(fields: [raisingFundsId], references: [id])
+  raisingFunds   RaisingFunds @relation(fields: [raisingFundsId], references: [id], onDelete: Cascade)
   raisingFundsId String
 
   equityPercentage Float
@@ -54,9 +79,20 @@ model Fundraiser {
   pricePerPortion  Float
   date             DateTime
   status           ContractStatus @default(Pending)
-  envelopeId       String
+  envelopeId       String?
+  investment       Investment?    @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  investmentId     String?        @unique
 
   @@unique([raisingFundsId, investorUserId, investorCompanyId])
+}
+
+model Investment {
+  id               String      @id @default(uuid())
+  companyName      String
+  amount           Float
+  equityPercentage Float
+  date             DateTime    @default(now())
+  fundraiser       Fundraiser?
 }
 
 model InvestmentOffer {
@@ -67,10 +103,10 @@ model InvestmentOffer {
   investorUser   User?   @relation("UserOffers", fields: [investorUserId], references: [id], onDelete: Cascade)
   investorUserId String?
 
-  investorCompany   Company? @relation("CompanyOffers", fields: [investorCompanyId], references: [id])
+  investorCompany   Company? @relation("CompanyOffers", fields: [investorCompanyId], references: [id], onDelete: Cascade)
   investorCompanyId String?
 
-  raisingFunds   RaisingFunds @relation(fields: [raisingFundsId], references: [id])
+  raisingFunds   RaisingFunds @relation(fields: [raisingFundsId], references: [id], onDelete: Cascade)
   raisingFundsId String
 
   portions               Int
@@ -78,27 +114,4 @@ model InvestmentOffer {
   totalOfferedPrice      Float
   status                 OfferStatus @default(Pending)
   date                   DateTime    @default(now())
-}
-
-model FundingRound {
-  id             String        @id @default(uuid())
-  type           String
-  fundingAmount  Float
-  roundDate      DateTime
-  leadInvestors  String[]
-  financial      Financial     @relation(fields: [financialId], references: [id])
-  financialId    String
-  raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
-  raisingFundsId String?
-
-}
-
-model Financial {
-  id                 String         @id @default(uuid())
-  valuation          Float
-  investors          String[]
-  totalFundingAmount Float
-  fundingRounds      FundingRound[]
-  company            Company        @relation(fields: [companyId], references: [id])
-  companyId          String         @unique
 }

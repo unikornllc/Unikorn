@@ -18,6 +18,7 @@ const DeleteButton = ({
 	size = "normal",
 	className = "",
 	disabled = false,
+	color = "red",
 }) => {
 	const [showDialog, setShowDialog] = useState(false);
 	const { toast } = useToast();
@@ -56,7 +57,7 @@ const DeleteButton = ({
 	return (
 		<>
 			<button
-				className={`text-red-500 hover:text-red-700 ${buttonStyles[size]} ${className}`}
+				className={`text-${color}-500 hover:text-${color}-700 ${buttonStyles[size]} ${className}`}
 				onClick={() => setShowDialog(true)}
 				disabled={disabled || loading}
 			>

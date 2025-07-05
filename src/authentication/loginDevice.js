@@ -11,7 +11,7 @@ export async function sendNewLoginNotification(email, ip, os, browser) {
 		},
 	});
 
-	const passwordResetLink = `${process.env.FRONTEND}/password-reset-request`;
+	const passwordResetLink = `${process.env.NEXT_PUBLIC_FRONTEND}/password-reset-request`;
 
 	try {
 		await transporter.sendMail({

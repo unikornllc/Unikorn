@@ -41,14 +41,14 @@ model Journal {
   name           String        @unique
   flowType       FlowType
   raisingFundsId String?       @unique
-  raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id])
+  raisingFunds   RaisingFunds? @relation(fields: [raisingFundsId], references: [id], onDelete: Cascade)
   Entry          Entry[]
 }
 
 model Entry {
   id            String        @id @default(uuid())
   transactionId String
-  transaction   Transaction   @relation(fields: [transactionId], references: [id])
+  transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   date          DateTime      @default(now())
   description   String?
   amount        Decimal

@@ -110,7 +110,7 @@ app.get(
 app.get(
 	"/auth/google/callback",
 	passport.authenticate("google", {
-		failureRedirect: `${process.env.FRONTEND}/`,
+		failureRedirect: `${process.env.NEXT_PUBLIC_FRONTEND}/`,
 	}),
 	(req, res, next) => {
 		req.account = req.user;
@@ -123,9 +123,9 @@ app.get(
 	generateAccessTokenIfNeeded,
 	(req, res) => {
 		if (req.user.role === "User") {
-			res.redirect(`${process.env.FRONTEND}/user/home`);
+			res.redirect(`${process.env.NEXT_PUBLIC_FRONTEND}/user/home`);
 		} else if (req.user.role === "Company") {
-			res.redirect(`${process.env.FRONTEND}/company/home`);
+			res.redirect(`${process.env.NEXT_PUBLIC_FRONTEND}/company/home`);
 		}
 	},
 );
@@ -136,7 +136,7 @@ app.get("/auth/logout", function (req, res, next) {
 			console.error("Error during logout:", err);
 			return next(err);
 		}
-		res.redirect(`${process.env.FRONTEND}/signin`);
+		res.redirect(`${process.env.NEXT_PUBLIC_FRONTEND}/signin`);
 	});
 });
 

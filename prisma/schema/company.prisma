@@ -22,7 +22,7 @@ enum CompanyPersonnel {
 
 model Company {
   id                 String               @id @unique @default(uuid())
-  account            Account              @relation(fields: [id], references: [id])
+  account            Account              @relation(fields: [id], references: [id], onDelete: Cascade)
   name               String
   description        String               @db.VarChar(600)
   website            String
@@ -49,9 +49,9 @@ model Personnel {
   name           String
   role           CompanyPersonnel
   crunchBaseLink String
-  company        Company          @relation(fields: [companyId], references: [id])
+  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId      String
-  user           User?            @relation(fields: [userId], references: [id])
+  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         String?
 }
 
@@ -68,7 +68,7 @@ model ProductInformation {
   product      String
   market       String
   partnerships String[]
-  company      Company  @relation(fields: [companyId], references: [id])
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId    String
 }
 
@@ -76,6 +76,6 @@ model Activity {
   id          String  @id @default(uuid())
   title       String
   description String  @db.VarChar(500)
-  company     Company @relation(fields: [companyId], references: [id])
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId   String
 }
