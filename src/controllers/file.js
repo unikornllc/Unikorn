@@ -10,9 +10,13 @@ export const uploadProfilePicture = async (req, res) => {
 		let fileName = req.body.fileName;
 
 		let [type, subtype] = req.file.mimetype.split("/");
+		console.log(subtype);
 
 		if (subtype != "jpg" && subtype != "png" && subtype != "jpeg") {
-			return res.status(400).json({ message: "Incorrect image Format" });
+			return res.status(400).json({
+				message:
+					"Incorrect image Format, Accepted Formats are: JPG, JPEG and PNG",
+			});
 		}
 
 		const savedPath = await fileStorage.saveFile(
@@ -21,6 +25,7 @@ export const uploadProfilePicture = async (req, res) => {
 			fileName,
 			req.file,
 		);
+
 		const file = await prisma.file.upsert({
 			where: {
 				fileName_accountId: {

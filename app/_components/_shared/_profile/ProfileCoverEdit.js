@@ -12,11 +12,14 @@ import AvatarEditor from "react-avatar-editor";
 import { Button } from "@/app/_components/_ui/Button";
 
 import { Transition } from "@headlessui/react";
+import { useToast } from "@/app/_components/_hooks/useToast";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
 const ProfileCoverEdit = ({ account, editable }) => {
 	const { username, name } = account;
 	const [profilePicture, setProfilePicture] = useState(null);
 	const [coverImage, setCoverImage] = useState(null);
+	const [uploadedCoverImage, setUploadedCoverImage] = useState(null);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isEditingCover, setIsEditingCover] = useState(false);
 	const [tempProfileImage, setTempProfileImage] = useState(null);
@@ -25,7 +28,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 	const [filter, setFilter] = useState("none");
 	const [isCameraOpen, setIsCameraOpen] = useState(false);
 	const webcamRef = useRef(null);
-
+	const { toast } = useToast();
 	const handleImageUpload = (e) => {
 		const file = e.target.files[0];
 		if (file) {
@@ -39,7 +42,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 		}
 	};
 
-	const handleSave = async () => {
+	const handleSaveProfile = async () => {
 		if (!tempProfileImage) {
 			setIsEditing(false);
 			return;
@@ -70,11 +73,17 @@ const ProfileCoverEdit = ({ account, editable }) => {
 					},
 				},
 			);
-			setProfilePicture(imageToSave);
 
+			setProfilePicture(imageToSave);
+			setTempProfileImage(null);
+			setEditor(null);
 			setIsEditing(false);
 		} catch (error) {
-			console.error("Error uploading profile picture:", error);
+			toast({
+				title: "Failed",
+				description: error?.response?.data?.message,
+				variant: "destructive",
+			});
 		}
 	};
 
@@ -82,7 +91,6 @@ const ProfileCoverEdit = ({ account, editable }) => {
 		e.preventDefault();
 		e.stopPropagation();
 		e.currentTarget.classList.remove("border-blue-500", "bg-blue-50");
-
 		const dt = e.dataTransfer;
 		const files = dt.files;
 
@@ -105,37 +113,44 @@ const ProfileCoverEdit = ({ account, editable }) => {
 		if (file) {
 			const reader = new FileReader();
 			reader.onloadend = () => {
-				setCoverImage(reader.result);
+				setUploadedCoverImage(reader.result);
 			};
 			reader.readAsDataURL(file);
 		}
 	};
 
 	const handleSaveCover = async () => {
-		if (coverImage) {
-			const response = await fetch(coverImage);
-			const blob = await response.blob();
-			const formData = new FormData();
-			formData.append("file", blob, "cover_picture.png");
-			formData.append("username", username);
-			formData.append("fileName", "cover_picture");
+		if (!uploadedCoverImage) {
+			setIsEditingCover(false);
+			return;
+		}
+		const response = await fetch(uploadedCoverImage);
+		const blob = await response.blob();
+		const formData = new FormData();
 
-			try {
-				const response = await axios.post(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/uploadProfilePicture`,
-					formData,
-					{
-						withCredentials: true,
-						headers: {
-							"Content-Type": "multipart/form-data",
-						},
+		formData.append("file", blob, "cover_picture.png");
+		formData.append("username", username);
+		formData.append("fileName", "cover_picture");
+
+		try {
+			await axios.post(
+				`${process.env.NEXT_PUBLIC_SERVER}/api/uploadProfilePicture`,
+				formData,
+				{
+					withCredentials: true,
+					headers: {
+						"Content-Type": "multipart/form-data",
 					},
-				);
-				console.log("Cover image uploaded successfully");
-				setIsEditingCover(false);
-			} catch (error) {
-				console.error("Error uploading cover image:", error);
-			}
+				},
+			);
+			setCoverImage(uploadedCoverImage);
+			setIsEditingCover(false);
+		} catch (error) {
+			toast({
+				title: "Failed",
+				description: error?.response?.data?.message,
+				variant: "destructive",
+			});
 		}
 	};
 
@@ -147,13 +162,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 			});
 			setProfilePicture(null);
 			setTempProfileImage(null);
-			// If we're in the edit dialog, just update the state
-			if (isEditing) {
-				setTempProfileImage(null);
-			} else {
-				// Otherwise reload the page to show the changes
-				// window.location.reload();
-			}
+			setIsEditing(false);
 		} catch (error) {
 			console.error("Error deleting profile picture:", error);
 		}
@@ -161,11 +170,15 @@ const ProfileCoverEdit = ({ account, editable }) => {
 
 	const deleteCoverPicture = async () => {
 		try {
-			await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteFile`, {
-				params: { username, fileName: "cover_picture" },
-				withCredentials: true,
-			});
-			setCoverImage(null);
+			if (!uploadedCoverImage && coverImage) {
+				await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/deleteFile`, {
+					params: { username, fileName: "cover_picture" },
+					withCredentials: true,
+				});
+				setCoverImage(null);
+				setIsEditingCover(false);
+			}
+			setUploadedCoverImage(null);
 		} catch (error) {
 			console.error("Error deleting cover image:", error);
 		}
@@ -262,7 +275,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 			<div className="relative h-60 w-full bg-gradient-to-r from-blue-500 to-purple-600 overflow-hidden group">
 				{coverImage ? (
 					<img
-						src={coverImage || "/placeholder.svg"}
+						src={coverImage}
 						alt={`${name}'s cover`}
 						className="object-cover w-full h-full"
 					/>
@@ -287,7 +300,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 				<div className="absolute -top-20 left-1/2 transform -translate-x-1/2 md:left-4 md:transform-none rounded-xl overflow-hidden border-4 border-white bg-white h-40 w-40 shadow-lg z-10 rounded-full overflow-hidden border-4 border-white group">
 					{profilePicture ? (
 						<img
-							src={profilePicture || "/placeholder.svg"}
+							src={profilePicture}
 							alt={`${name}'s profile`}
 							className="w-full h-full object-cover"
 						/>
@@ -439,7 +452,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 										<div className="mb-4 mx-auto relative h-40 w-40 overflow-hidden">
 											{profilePicture ? (
 												<img
-													src={profilePicture || "/placeholder.svg"}
+													src={profilePicture}
 													alt="Profile preview"
 													className="object-cover w-full h-full"
 												/>
@@ -489,17 +502,20 @@ const ProfileCoverEdit = ({ account, editable }) => {
 												Use Camera
 											</Button>
 											{profilePicture && (
-												<Button
-													type="button"
-													variant="destructive"
+												<div
 													onClick={(e) => {
 														e.stopPropagation();
-														deleteProfilePicture();
 													}}
+													className="ml-2 p-0 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center cursor-pointer"
 												>
-													<TrashIcon className="w-4 h-4 mr-2" />
-													Remove
-												</Button>
+													<DeleteButton
+														onDelete={() => deleteProfilePicture()}
+														itemType="Profile Image"
+														size="small"
+														color="white"
+														className="w-full h-full flex items-center justify-center"
+													/>
+												</div>
 											)}
 										</div>
 									</div>
@@ -519,7 +535,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 									</button>
 									<button
 										className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors"
-										onClick={handleSave}
+										onClick={handleSaveProfile}
 									>
 										Save
 									</button>
@@ -670,7 +686,7 @@ const ProfileCoverEdit = ({ account, editable }) => {
 											if (file.type.startsWith("image/")) {
 												const reader = new FileReader();
 												reader.onloadend = () => {
-													setCoverImage(reader.result);
+													setUploadedCoverImage(reader.result);
 												};
 												reader.readAsDataURL(file);
 											}
@@ -681,9 +697,9 @@ const ProfileCoverEdit = ({ account, editable }) => {
 									}
 								>
 									<div className="mb-4 relative h-40 w-full overflow-hidden rounded-md">
-										{coverImage ? (
+										{coverImage || uploadedCoverImage ? (
 											<img
-												src={coverImage || "/placeholder.svg"}
+												src={uploadedCoverImage || coverImage}
 												alt="Cover preview"
 												className="object-cover w-full h-full"
 											/>
@@ -710,22 +726,34 @@ const ProfileCoverEdit = ({ account, editable }) => {
 										className="cursor-pointer"
 										onClick={(e) => e.stopPropagation()}
 									>
-										<Button type="button" variant="outline" className="mr-2">
+										<Button
+											type="button"
+											variant="outline"
+											className="mr-2"
+											onClick={(e) => {
+												e.stopPropagation();
+												document.getElementById("cover-upload").click();
+											}}
+										>
+											<CameraIcon className="w-4 h-4 mr-2" />
 											Choose File
 										</Button>
 									</label>
-									{coverImage && (
-										<Button
-											type="button"
-											variant="destructive"
-											className="ml-2"
+									{!uploadedCoverImage && coverImage && (
+										<div
 											onClick={(e) => {
 												e.stopPropagation();
-												deleteCoverPicture();
 											}}
+											className="ml-2 p-0 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-md flex items-center justify-center cursor-pointer"
 										>
-											Remove
-										</Button>
+											<DeleteButton
+												onDelete={() => deleteCoverPicture()}
+												itemType="Cover Image"
+												size="small"
+												color="white"
+												className="w-full h-full flex items-center justify-center"
+											/>
+										</div>
 									)}
 								</div>
 							</div>

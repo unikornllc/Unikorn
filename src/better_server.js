@@ -67,7 +67,7 @@ app.get(
 app.get(
 	"/auth/google/callback",
 	passport.authenticate("google", {
-		failureRedirect: `${process.env.FRONTEND}/`,
+		failureRedirect: `${process.env.NEXT_PUBLIC_FRONTEND}/`,
 	}),
 	(req, res) => {
 		const account = req.user;
@@ -84,7 +84,7 @@ app.get(
 			sameSite: "Lax",
 			maxAge: 24 * 60 * 60 * 1000,
 		});
-		res.redirect(`${process.env.FRONTEND}/userHome`);
+		res.redirect(`${process.env.NEXT_PUBLIC_FRONTEND}/userHome`);
 	},
 );
 app.get("/auth/logout", function (req, res, next) {
@@ -93,7 +93,7 @@ app.get("/auth/logout", function (req, res, next) {
 			console.error("Error during logout:", err);
 			return next(err);
 		}
-		res.redirect(`${process.env.FRONTEND}/signin`);
+		res.redirect(`${process.env.NEXT_PUBLIC_FRONTEND}/signin`);
 	});
 });
 

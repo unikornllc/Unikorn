@@ -15,7 +15,7 @@ function generateResetToken(accountId) {
 
 const sendPasswordResetEmail = async (email) => {
 	const { token } = generateResetToken(account.id);
-	const resetLink = `${process.env.FRONTEND}/reset-password?token=${token}`;
+	const resetLink = `${process.env.NEXT_PUBLIC_FRONTEND}/reset-password?token=${token}`;
 	const transporter = NodeMailer.createTransport({
 		service: "gmail",
 		auth: {

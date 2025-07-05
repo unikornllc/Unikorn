@@ -89,7 +89,7 @@ export const callbackCalendly = async (req, res) => {
 			},
 		});
 
-		res.redirect(process.env.FRONTEND + "/user/profile");
+		res.redirect(process.env.NEXT_PUBLIC_FRONTEND + "/user/profile");
 	} catch (error) {
 		console.error(
 			"Error during OAuth callback:",
@@ -269,7 +269,7 @@ export const getSchedulingLinkCalendly = async (req, res) => {
 
 	try {
 		const profileUser = await prisma.user.findFirst({
-			where: { account:{username} },
+			where: { account: { username } },
 			include: { calendlyIntegration: true },
 		});
 

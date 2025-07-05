@@ -1,10 +1,10 @@
 enum PostType {
-  LOOKING_FOR_FUNDING  // Type 1
-  LOOKING_FOR_PARTNER  // Type 2
+  LOOKING_FOR_FUNDING // Type 1
+  LOOKING_FOR_PARTNER // Type 2
   LOOKING_FOR_GUIDANCE // Type 3
-  EVENT                // Type 4
-  POLL                 // Type 5
-  DOCUMENT             // Type 6
+  EVENT // Type 4
+  POLL // Type 5
+  DOCUMENT // Type 6
 }
 
 enum ReportReason {
@@ -14,31 +14,31 @@ enum ReportReason {
 }
 
 model Post {
-  id          String    @id @default(uuid())
-  author      Account   @relation("AccountPosts", fields: [authorId], references: [id])
-  authorId    String
-  type        PostType
-  content     String?   @db.VarChar(3000) // Text field for (LOOKING_FOR_FUNDING, LOOKING_FOR_PARTNER, LOOKING_FOR_GUIDANCE) post types
-  media       Media[]   // Stores media (image, video) for LOOKING_FOR_FUNDING post type
-  
+  id       String   @id @default(uuid())
+  author   Account  @relation("AccountPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+  type     PostType
+  content  String?  @db.VarChar(3000) // Text field for (LOOKING_FOR_FUNDING, LOOKING_FOR_PARTNER, LOOKING_FOR_GUIDANCE) post types
+  media    Media[] // Stores media (image, video) for LOOKING_FOR_FUNDING post type
+
   // LOOKING_FOR_FUNDING post type specific relation
-  round       RaisingFunds?    @relation(fields: [roundId], references: [id])
-  roundId     String?
-  
+  round   RaisingFunds? @relation(fields: [roundId], references: [id], onDelete: SetNull)
+  roundId String?
+
   // Event post type specific relation
-  event       Event?    @relation()
-  
+  event Event? @relation()
+
   // Poll post type specific relation
-  poll        Poll?     @relation()
-  
+  poll Poll? @relation()
+
   // Document post type specific relation
-  document    Document? @relation()
-  
-  createdAt   DateTime  @default(now())
-  likes       Like[]
-  comments    Comment[]
-  reposts     Repost[]
-  reports     Report[]
+  document Document? @relation()
+
+  createdAt DateTime  @default(now())
+  likes     Like[]
+  comments  Comment[]
+  reposts   Repost[]
+  reports   Report[]
 
   @@index([createdAt])
   @@index([id])
@@ -51,25 +51,25 @@ model Event {
   description String    @db.VarChar(3000)
   startTime   DateTime
   endTime     DateTime?
-  location    String?   // location for in-person events
-  virtualLink String?   // Link for virtual events
+  location    String? // location for in-person events
+  virtualLink String? // Link for virtual events
   isVirtual   Boolean   @default(false)
-  post        Post      @relation(fields: [postId], references: [id])
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId      String    @unique
 }
 
 model Document {
-  id          String    @id @default(uuid())
-  title       String
-  fileUrl     String
-  fileType    String    // "pdf", "ppt", "pptx" only
-  post        Post      @relation(fields: [postId], references: [id])
-  postId      String    @unique
+  id       String @id @default(uuid())
+  title    String
+  fileUrl  String
+  fileType String // "pdf", "ppt", "pptx" only
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId   String @unique
 }
 
 model Media {
   id       String @id @default(uuid())
-  post     Post   @relation(fields: [postId], references: [id])
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   String
   url      String
   mimeType String
@@ -80,7 +80,7 @@ model Poll {
   question String
   options  PollOption[]
   votes    PollVote[]
-  post     Post         @relation(fields: [postId], references: [id])
+  post     Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId   String       @unique
 
   @@index([id])
@@ -88,7 +88,7 @@ model Poll {
 
 model PollOption {
   id     String     @id @default(uuid())
-  poll   Poll       @relation(fields: [pollId], references: [id])
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
   pollId String
   text   String
   votes  PollVote[]
@@ -98,11 +98,11 @@ model PollOption {
 
 model PollVote {
   id        String     @id @default(uuid())
-  account   Account    @relation(fields: [accountId], references: [id])
+  account   Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
   accountId String
-  option    PollOption @relation(fields: [optionId], references: [id])
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   optionId  String
-  poll      Poll       @relation(fields: [pollId], references: [id])
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
   pollId    String
   votedAt   DateTime   @default(now())
 
@@ -111,42 +111,42 @@ model PollVote {
 }
 
 model Like {
-  id          String    @id @default(uuid())
-  account     Account   @relation(fields: [accountId], references: [id])
-  accountId   String
-  post        Post      @relation(fields: [postId], references: [id])
-  postId      String
-  createdAt   DateTime  @default(now())
+  id        String   @id @default(uuid())
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  createdAt DateTime @default(now())
 
   @@unique([accountId, postId])
 }
 
 model Comment {
-  id          String    @id @default(uuid())
-  author      Account   @relation("AccountComments", fields: [authorId], references: [id])
-  authorId    String
-  post        Post      @relation(fields: [postId], references: [id])
-  postId      String
-  content     String
-  createdAt   DateTime  @default(now())
+  id        String   @id @default(uuid())
+  author    Account  @relation("AccountComments", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  content   String
+  createdAt DateTime @default(now())
 }
 
 model Repost {
-  id          String    @id @default(uuid())
-  account     Account   @relation(fields: [accountId], references: [id])
-  accountId   String
-  post        Post      @relation(fields: [postId], references: [id])
-  postId      String
-  createdAt   DateTime  @default(now())
+  id        String   @id @default(uuid())
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  createdAt DateTime @default(now())
 
   @@unique([accountId, postId])
 }
 
 model Report {
   id          String       @id @default(uuid())
-  reporter    Account      @relation("ReporterAccount", fields: [reporterId], references: [id])
+  reporter    Account      @relation("ReporterAccount", fields: [reporterId], references: [id], onDelete: Cascade)
   reporterId  String
-  post        Post         @relation(fields: [postId], references: [id])
+  post        Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId      String
   reason      ReportReason
   description String?

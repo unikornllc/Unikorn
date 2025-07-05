@@ -9,7 +9,7 @@ const docusignRouter = Router();
 function makeRecipientViewRequest(name, email) {
 	const viewRequest = new docusign.RecipientViewRequest();
 
-	viewRequest.returnUrl = `${process.env.FRONTEND}/userHome`;
+	viewRequest.returnUrl = `${process.env.NEXT_PUBLIC_FRONTEND}/userHome`;
 	viewRequest.authenticationMethod = "none";
 
 	viewRequest.email = email;

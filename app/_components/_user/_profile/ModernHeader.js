@@ -73,12 +73,12 @@ const ModernHeader = ({ user, editable }) => {
 				<div className="ml-0 md:ml-44 space-y-4">
 					<p className="text-gray-600 max-w-3xl">{description}</p>
 
-					<div className="flex flex-wrap gap-4 text-sm text-gray-500">
+					{/* <div className="flex flex-wrap gap-4 text-sm text-gray-500">
 						<div className="flex items-center">
 							<Users className="h-4 w-4 mr-1" />
 							<span>{followerCount} followers</span>
 						</div>
-					</div>
+					</div> */}
 				</div>
 			</div>
 		</div>

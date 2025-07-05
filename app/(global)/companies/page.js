@@ -50,7 +50,7 @@ export default function FundraisingPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [showFilters, setShowFilters] = useState(false);
 	const [searchTerm, setSearchTerm] = useState("");
-	const [activeView, setActiveView] = useState("grid");
+	const [activeView, setActiveView] = useState("list");
 	const [sortOption, setSortOption] = useState("newest");
 	const [filters, setFilters] = useState({
 		minPrice: 0,
@@ -227,10 +227,13 @@ export default function FundraisingPage() {
 		setPagination((prev) => ({ ...prev, page: 1 }));
 	};
 
-	const handlePageChange = useCallback((newPage) => {
-		setPagination((prev) => ({ ...prev, page: newPage }));
-		window.scrollTo({ top: 0, behavior: "smooth" });
-	}, [pagination, toast]);
+	const handlePageChange = useCallback(
+		(newPage) => {
+			setPagination((prev) => ({ ...prev, page: newPage }));
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		},
+		[pagination, toast],
+	);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -353,6 +356,28 @@ export default function FundraisingPage() {
 							<div className="flex flex-wrap items-center gap-3">
 								<div className="flex items-center space-x-2">
 									<Button
+										variant={activeView === "list" ? "default" : "outline"}
+										size="sm"
+										className="h-9 w-9 p-0"
+										onClick={() => setActiveView("list")}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+										>
+											<line x1="3" x2="21" y1="6" y2="6" />
+											<line x1="3" x2="21" y1="12" y2="12" />
+											<line x1="3" x2="21" y1="18" y2="18" />
+										</svg>
+									</Button>
+									<Button
 										variant={activeView === "grid" ? "default" : "outline"}
 										size="sm"
 										className="h-9 w-9 p-0"
@@ -373,28 +398,6 @@ export default function FundraisingPage() {
 											<rect width="7" height="7" x="14" y="3" rx="1" />
 											<rect width="7" height="7" x="3" y="14" rx="1" />
 											<rect width="7" height="7" x="14" y="14" rx="1" />
-										</svg>
-									</Button>
-									<Button
-										variant={activeView === "list" ? "default" : "outline"}
-										size="sm"
-										className="h-9 w-9 p-0"
-										onClick={() => setActiveView("list")}
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<line x1="3" x2="21" y1="6" y2="6" />
-											<line x1="3" x2="21" y1="12" y2="12" />
-											<line x1="3" x2="21" y1="18" y2="18" />
 										</svg>
 									</Button>
 								</div>

@@ -22,21 +22,24 @@ import { useToast } from "@/app/_components/_hooks/useToast";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { formatCurrency } from "@/app/_utils/utils";
+import { useRouter } from "next/navigation";
 
 export function FundingCardForm({
 	fundraising,
 	portionEquity,
 	remainingEquity,
+	owner = false, // Default to false if not provided
 }) {
 	const [mode, setMode] = useState("invest");
 	const [partsToInvest, setPartsToInvest] = useState(1);
 	const [offeredPricePerPart, setOfferedPricePerPart] = useState(
 		fundraising.pricePerPortion,
 	);
-	const [walletBalance, setWalletBalance] = useState(null);
+	// const [walletBalance, setWalletBalance] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [confirmDialog, setConfirmDialog] = useState(false);
 	const [errorDialog, setErrorDialog] = useState(false);
+	const router = useRouter();
 
 	const { toast } = useToast();
 
@@ -52,35 +55,35 @@ export function FundingCardForm({
 			? partsToInvest * fundraising.pricePerPortion
 			: partsToInvest * offeredPricePerPart;
 
-	useEffect(() => {
-		const fetchWallet = async () => {
-			try {
-				const response = await axios.get(
-					`${process.env.NEXT_PUBLIC_SERVER}/api/getWallet`,
-					{ withCredentials: true },
-				);
-				setWalletBalance(response.data.amount);
-			} catch (err) {
-				console.error("Error fetching wallet:", err);
-				toast({
-					title: "Error",
-					description: "Could not fetch wallet balance",
-					variant: "destructive",
-				});
-			}
-		};
+	// useEffect(() => {
+	// 	const fetchWallet = async () => {
+	// 		try {
+	// 			const response = await axios.get(
+	// 				`${process.env.NEXT_PUBLIC_SERVER}/api/getWallet`,
+	// 				{ withCredentials: true },
+	// 			);
+	// 			setWalletBalance(response.data.amount);
+	// 		} catch (err) {
+	// 			console.error("Error fetching wallet:", err);
+	// 			toast({
+	// 				title: "Error",
+	// 				description: "Could not fetch wallet balance",
+	// 				variant: "destructive",
+	// 			});
+	// 		}
+	// 	};
 
-		fetchWallet();
-	}, []);
+	// 	fetchWallet();
+	// }, []);
 
 	const handleInvestment = () => {
-		if (walletBalance === null) {
-			toast({
-				title: "Please wait",
-				description: "Your wallet balance is still loading",
-			});
-			return;
-		}
+		// if (walletBalance === null) {
+		// 	toast({
+		// 		title: "Please wait",
+		// 		description: "Your wallet balance is still loading",
+		// 	});
+		// 	return;
+		// }
 
 		if (partsToInvest < 1 || partsToInvest > maxPartsToInvest) {
 			toast({
@@ -91,17 +94,19 @@ export function FundingCardForm({
 			return;
 		}
 
-		if (walletBalance < totalInvestment) {
-			setErrorDialog(true);
-		} else {
-			setConfirmDialog(true);
-		}
+		// if (walletBalance < totalInvestment) {
+		// 	setErrorDialog(true);
+		// } else {
+		setConfirmDialog(true);
+		// }
 	};
 
 	const handleConfirmInvestment = async () => {
 		setConfirmDialog(false);
+		if (owner) {
+			return;
+		}
 		setIsLoading(true);
-
 		try {
 			if (mode === "invest") {
 				await axios.post(
@@ -115,11 +120,13 @@ export function FundingCardForm({
 
 				toast({
 					title: "Success!",
-					description: "Your investment has been processed successfully",
+					description:
+						"Your proposal was sent to the company and they should be contacting you soon to meet and discuss the investment proposal",
 					variant: "success",
 				});
+				router.push(`/investments`);
 
-				setWalletBalance((prev) => prev - totalInvestment);
+				// setWalletBalance((prev) => prev - totalInvestment);
 			} else {
 				await axios.post(
 					`${process.env.NEXT_PUBLIC_SERVER}/api/investments/negotiatePrice`,
@@ -127,7 +134,7 @@ export function FundingCardForm({
 						raisingFundsId: fundraising.id,
 						portions: partsToInvest,
 						offeredPricePerPortion: offeredPricePerPart,
-						walletBalance,
+						// walletBalance,
 					},
 					{ withCredentials: true },
 				);
@@ -249,34 +256,35 @@ export function FundingCardForm({
 					<span>Equity to receive:</span>
 					<span className="font-semibold">{equityToReceive}%</span>
 				</div>
-				{walletBalance !== null && (
+				{/* {walletBalance !== null && (
 					<div className="flex justify-between">
 						<span>Your wallet balance:</span>
 						<span className="font-semibold">
 							{formatCurrency(walletBalance)}
 						</span>
 					</div>
-				)}
+				)} */}
 			</div>
-
-			<Button
-				className="w-full"
-				size="lg"
-				onClick={handleInvestment}
-				disabled={isLoading || walletBalance === null}
-			>
-				{isLoading ? (
-					<>
-						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-						Processing...
-					</>
-				) : mode === "invest" ? (
-					"Invest Now"
-				) : (
-					"Submit Offer"
-				)}
-			</Button>
-
+			{!owner && (
+				<Button
+					className="w-full"
+					size="lg"
+					onClick={handleInvestment}
+					disabled={isLoading}
+				>
+					{isLoading ? (
+						<>
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							Processing...
+						</>
+					) : mode === "invest" ? (
+						// "Invest Now"
+						"Submit Proposal"
+					) : (
+						"Submit Offer"
+					)}
+				</Button>
+			)}
 			<Dialog open={confirmDialog} onOpenChange={setConfirmDialog}>
 				<DialogContent>
 					<DialogHeader>
@@ -307,7 +315,7 @@ export function FundingCardForm({
 				</DialogContent>
 			</Dialog>
 
-			<Dialog open={errorDialog} onOpenChange={setErrorDialog}>
+			{/* <Dialog open={errorDialog} onOpenChange={setErrorDialog}>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Insufficient Funds</DialogTitle>
@@ -320,7 +328,7 @@ export function FundingCardForm({
 						<Button onClick={() => setErrorDialog(false)}>OK</Button>
 					</DialogFooter>
 				</DialogContent>
-			</Dialog>
+			</Dialog> */}
 		</div>
 	);
 }

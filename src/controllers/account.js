@@ -27,35 +27,45 @@ export const createAccount = async (req, res) => {
 						name: data.name,
 					},
 				},
-				user: role === "User" ? {
-					create: {
-						name: data.name,
-						description: data.description || "",
-						title: data.title,
-						isInvestor: isInvestor,
-						socialMedia: data.linkedin ? {
-							create: {
-								platform: "LinkedIn",
-								url: data.linkedin,
-							},
-						} : undefined,
-					},
-				} : undefined,
-				company: role === "Company" ? {
-					create: {
-						name: data.name,
-						description: data.description,
-						website: data.website,
-						founded: new Date(data.founded),
-						type: companyType,
-						hqLocation: data.hqLocation,
-						industry: data.industry,
-						isInvestor: isInvestor,
-						socialMedia: data.linkedin ? {
-							LinkedIn: data.linkedin
-						} : null,
-					},
-				} : undefined,
+				user:
+					role === "User"
+						? {
+								create: {
+									name: data.name,
+									description: data.description || "",
+									title: data.title,
+									isInvestor: isInvestor,
+									socialMedia: data.linkedin
+										? {
+												create: {
+													platform: "LinkedIn",
+													url: data.linkedin,
+												},
+											}
+										: undefined,
+								},
+							}
+						: undefined,
+				company:
+					role === "Company"
+						? {
+								create: {
+									name: data.name,
+									description: data.description,
+									website: data.website,
+									founded: new Date(data.founded),
+									type: companyType,
+									hqLocation: data.hqLocation,
+									industry: data.industry,
+									isInvestor: isInvestor,
+									socialMedia: data.linkedin
+										? {
+												LinkedIn: data.linkedin,
+											}
+										: null,
+								},
+							}
+						: undefined,
 			},
 		});
 		// await sendVerifyEmail(data.email, account.id);
@@ -78,7 +88,7 @@ function generateVerifyToken(accountId) {
 
 const sendVerifyEmail = async (email, accountId) => {
 	const { token } = generateVerifyToken(accountId);
-	const verificationLink = `${process.env.FRONTEND}/verifyAccount?token=${token}`;
+	const verificationLink = `${process.env.NEXT_PUBLIC_FRONTEND}/verifyAccount?token=${token}`;
 	const transporter = NodeMailer.createTransport({
 		service: "gmail",
 		auth: {
