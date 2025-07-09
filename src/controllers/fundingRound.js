@@ -47,9 +47,17 @@ export const updateFundingRound = async (req, res) => {
 	try {
 		const fundingRound = await prisma.fundingRound.findUnique({
 			where: { id: req.body.fundingRoundId },
+			include: { raisingFunds: true, financial: true },
 		});
-		if (fundingRound.raisingFundsId) {
+		if (!fundingRound) {
+			return res.status(400).send("Funding round not found");
+		}
+		if (fundingRound.raisingFunds) {
 			return res.status(400).send("Funding round cannot be edited");
+		}
+		const isAuthorized = req.account.id === fundingRound.financial.companyId;
+		if (!isAuthorized) {
+			return res.status(403).send("Unauthorized Update");
 		}
 		const updatedFundingRound = await prisma.fundingRound.update({
 			where: { id: req.body.fundingRoundId },
@@ -115,7 +123,7 @@ export const getAllFundingRound = async (req, res) => {
 			},
 		});
 		for (let round of fundingRounds) {
-			if (round.raisingFundsId) {
+			if (round.raisingFunds) {
 				round.external = false;
 				round.internalInvestors = round.raisingFunds.fundraisers.map(
 					(fundraiser) => {
@@ -148,10 +156,13 @@ export const getOneFundingRound = async (req, res) => {
 	try {
 		const fundingRound = await prisma.fundingRound.findMany({
 			where: {
-				id: req.body.fundingRoundId,
+				id: req.query.fundingRoundId,
 			},
 		});
-		res.status(200).json({ data: fundingRound });
+		if (!fundingRound) {
+			return res.status(400).send("Funding round not found");
+		}
+		res.status(200).json({ fundingRound });
 	} catch (e) {
 		res.status(400).send("Failed to retrieve");
 	}
@@ -160,15 +171,24 @@ export const getOneFundingRound = async (req, res) => {
 export const deleteOneFundingRound = async (req, res) => {
 	try {
 		const fundingRound = await prisma.fundingRound.findUnique({
-			where: { id: req.body.fundingRoundId },
+			where: { id: req.query.fundingRoundId },
+			include: { raisingFunds: true, financial: true },
 		});
-		if (fundingRound.raisingFundsId) {
+		if (!fundingRound) {
+			return res.status(400).send("Funding round not found");
+		}
+		if (fundingRound.raisingFunds) {
 			return res.status(400).send("Funding round cannot be deleted");
+		}
+
+		const isAuthorized = req.account.id === fundingRound.financial.companyId;
+
+		if (!isAuthorized) {
+			return res.status(403).send("Unauthorized Deletion");
 		}
 		await prisma.fundingRound.delete({
 			where: {
-				id: req.body.fundingRoundId,
-				// companyId: req.account.id,
+				id: req.query.fundingRoundId,
 			},
 		});
 		await prisma.financial.update({

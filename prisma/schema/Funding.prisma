@@ -50,14 +50,15 @@ model RaisingFunds {
 }
 
 model FundingRound {
-  id            String        @id @default(uuid())
-  type          String
-  fundingAmount Float
-  roundDate     DateTime
-  leadInvestors String[]
-  financial     Financial     @relation(fields: [financialId], references: [id], onDelete: Cascade)
-  financialId   String
-  raisingFunds  RaisingFunds?
+  id               String        @id @default(uuid())
+  type             String
+  fundingAmount    Float
+  equityPercentage Float
+  roundDate        DateTime
+  leadInvestors    String[]
+  financial        Financial     @relation(fields: [financialId], references: [id], onDelete: Cascade)
+  financialId      String
+  raisingFunds     RaisingFunds?
 }
 
 model Fundraiser {
@@ -93,6 +94,8 @@ model Investment {
   equityPercentage Float
   date             DateTime    @default(now())
   fundraiser       Fundraiser?
+  accountId        String
+  account          Account     @relation("AccountInvestments", fields: [accountId], references: [id], onDelete: Cascade)
 }
 
 model InvestmentOffer {

@@ -45,14 +45,14 @@ model Company {
 }
 
 model Personnel {
-  id             String           @id @default(uuid())
-  name           String
-  role           CompanyPersonnel
-  crunchBaseLink String
-  company        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId      String
-  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String?
+  id           String           @id @default(uuid())
+  name         String
+  role         CompanyPersonnel
+  linkedInLink String?
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String
+  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String?
 }
 
 // model KeyEmployees {
@@ -67,6 +67,7 @@ model ProductInformation {
   id           String   @id @default(uuid())
   product      String
   market       String
+  link         String?
   partnerships String[]
   company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId    String
