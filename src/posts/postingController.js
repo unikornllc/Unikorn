@@ -64,6 +64,76 @@ export const getAllPosts = async (req, res) => {
 	}
 };
 
+export const getOneProfilePosts = async (req, res) => {
+	try {
+		const username = req.query.username;
+		const accountId = (await prisma.account.findFirst({ where: { username } }))
+			.id;
+		const page = parseInt(req.query.page ?? "1", 10);
+		const limit = parseInt(req.query.limit ?? "20", 10);
+		if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+			return res.status(400).json({ message: "Invalid page or limit" });
+		}
+
+		const skip = (page - 1) * limit;
+		const currentUserId = req.account?.id;
+
+		const [posts, total] = await Promise.all([
+			prisma.post.findMany({
+				where: {
+					authorId: accountId,
+				},
+				skip,
+				take: limit,
+				orderBy: { createdAt: "desc" },
+				include: {
+					author: {
+						select: {
+							username: true,
+							role: true,
+						},
+					},
+					media: true,
+					round: true,
+					event: true,
+					poll: {
+						include: {
+							options: true,
+							votes: true,
+						},
+					},
+					document: true,
+					likes: true,
+					comments: true,
+					reposts: true,
+					reports: true,
+				},
+			}),
+			prisma.post.count(),
+		]);
+
+		const postsWithLikeStatus = posts.map((post) => ({
+			...post,
+			isLiked: currentUserId
+				? post.likes.some((like) => like.accountId === currentUserId)
+				: false,
+		}));
+
+		res.status(200).json({
+			posts: postsWithLikeStatus,
+			pagination: {
+				page,
+				limit,
+				total,
+				hasMore: skip + posts.length < total,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching posts:", error);
+		res.status(500).json({ message: error.message });
+	}
+};
+
 export const createType1Post = async (req, res) => {
 	try {
 		const {

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-	baseURL: "http://localhost:3001/api",
+	baseURL: process.env.NEXT_PUBLIC_SERVER + "/api",
 	headers: {
 		"Content-Type": "application/json",
 	},
@@ -9,6 +9,18 @@ const api = axios.create({
 });
 
 const POSTS_PER_PAGE = 20;
+
+export async function fetchCurrentProfilePosts(username, page) {
+	try {
+		const response = await api.get("/getOneProfilePosts", {
+			params: { page, limit: POSTS_PER_PAGE, username },
+		});
+		return response.data.posts;
+	} catch (error) {
+		console.error("Error fetching posts:", error);
+		return [];
+	}
+}
 
 export async function fetchPosts(page) {
 	try {
