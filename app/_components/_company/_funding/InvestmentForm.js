@@ -18,6 +18,8 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PercentIcon from "@mui/icons-material/Percent";
 import MuiAlert from "@mui/material/Alert";
 import { styled } from "@mui/system";
+import { useUnifiedPermissions } from "../../../_hooks/useUnifiedPermissions.js";
+import { FeatureGuard, UpgradePrompt } from "../../_ui/UpgradePrompt.js";
 
 const FormBox = styled(Box)(({ theme }) => ({
 	marginTop: theme.spacing(4),
@@ -31,24 +33,12 @@ export function InvestmentForm({ mode, fundingData }) {
 	const [user, setUser] = useState({ walletBalance: "loading..." });
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [openErrorDialog, setOpenErrorDialog] = useState(false);
-
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 	const [snackbarMessage, setSnackbarMessage] = useState("");
-	const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', etc.
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	//   const fetchUser = async () => {
-	//     try {
-	//       const response = await axios.get(
-	//         `${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
-	//         {
-	//           withCredentials: true,
-	//         }
-	//       );
-	//       setUser(response.data);
-	//     } catch (err) {
-	//       console.error("Error fetching user:", err);
-	//     }
-	//   };
+	const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+	const { checkPermission, loading, error } = useUnifiedPermissions();
+	const canInvest = checkPermission('INVESTING');
 
 	const fetchWallet = async () => {
 		try {
@@ -165,165 +155,207 @@ export function InvestmentForm({ mode, fundingData }) {
 		setOpenErrorDialog(false);
 	};
 
+	const handleUpgrade = () => {
+		// Redirect to upgrade page or show upgrade modal
+		window.location.href = "/settings?upgrade=true";
+	};
+
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center py-8">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex items-center justify-center py-8">
+				<div className="text-center">
+					<p className="text-red-600 mb-4">Error loading permissions</p>
+					<button 
+						onClick={() => window.location.reload()}
+						className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+					>
+						Try Again
+					</button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
-		<FormBox>
-			<Typography variant="h6" gutterBottom>
-				{mode === "invest"
-					? "Invest at Fixed Price"
-					: "Make an Investment Offer"}
-			</Typography>
-			<TextField
-				label="Number of Parts to Invest"
-				type="number"
-				InputProps={{
-					inputProps: {
-						min: 1,
-						max: maxPartsToInvest,
-					},
-					startAdornment: (
-						<InputAdornment position="start">
-							<IconButton disabled></IconButton>
-						</InputAdornment>
-					),
-				}}
-				value={partsToInvest}
-				onChange={(e) => {
-					const value = parseInt(e.target.value);
-					if (value > maxPartsToInvest) {
-						setPartsToInvest(maxPartsToInvest);
-					} else if (value < 1 || isNaN(value)) {
-						setPartsToInvest(1);
-					} else {
-						setPartsToInvest(value);
-					}
-				}}
-				variant="outlined"
-				fullWidth
-				margin="normal"
-			/>
-			{mode === "offer" && (
+		<FeatureGuard 
+			feature="INVESTING" 
+			permissions={{ canInvest }}
+			fallback={
+				<div className="flex items-center justify-center py-8">
+					<UpgradePrompt 
+						feature="INVESTING" 
+						onUpgrade={handleUpgrade}
+					/>
+				</div>
+			}
+		>
+			<FormBox>
+				<Typography variant="h6" gutterBottom>
+					{mode === "invest"
+						? "Invest at Fixed Price"
+						: "Make an Investment Offer"}
+				</Typography>
 				<TextField
-					label="Offered Price Per Part"
+					label="Number of Parts to Invest"
 					type="number"
 					InputProps={{
 						inputProps: {
 							min: 1,
+							max: maxPartsToInvest,
 						},
 						startAdornment: (
 							<InputAdornment position="start">
-								<IconButton disabled>
-									<AttachMoneyIcon />
-								</IconButton>
+								<IconButton disabled></IconButton>
 							</InputAdornment>
 						),
 					}}
-					value={offeredPricePerPart}
+					value={partsToInvest}
 					onChange={(e) => {
-						const value = parseFloat(e.target.value);
-						if (value < 1 || isNaN(value)) {
-							setOfferedPricePerPart(1);
+						const value = parseInt(e.target.value);
+						if (value > maxPartsToInvest) {
+							setPartsToInvest(maxPartsToInvest);
+						} else if (value < 1 || isNaN(value)) {
+							setPartsToInvest(1);
 						} else {
-							setOfferedPricePerPart(value);
+							setPartsToInvest(value);
 						}
 					}}
 					variant="outlined"
 					fullWidth
 					margin="normal"
 				/>
-			)}
-			<Typography variant="body1" gutterBottom>
-				Total Investment: ${totalInvestment.toLocaleString()}
-			</Typography>
-			<Typography variant="body1" gutterBottom>
-				Equity to Receive: {equityToReceive}%
-			</Typography>
-			{user && (
-				<Typography variant="body1" gutterBottom>
-					Your Wallet Balance: ${user.walletBalance.toLocaleString()}
-				</Typography>
-			)}
-			<Button
-				variant="contained"
-				color="primary"
-				onClick={handleInvestment}
-				size="large"
-				disabled={!user || isSubmitting}
-				sx={{
-					marginTop: 2,
-					transition: "transform 0.2s",
-					"&:hover": {
-						transform: "scale(1.05)",
-					},
-				}}
-			>
-				{isSubmitting ? (
-					<CircularProgress size={24} color="inherit" />
-				) : mode === "invest" ? (
-					"Invest Now"
-				) : (
-					"Submit Offer"
+				{mode === "offer" && (
+					<TextField
+						label="Offered Price Per Part"
+						type="number"
+						InputProps={{
+							inputProps: {
+								min: 1,
+							},
+							startAdornment: (
+								<InputAdornment position="start">
+									<IconButton disabled>
+										<AttachMoneyIcon />
+									</IconButton>
+								</InputAdornment>
+							),
+						}}
+						value={offeredPricePerPart}
+						onChange={(e) => {
+							const value = parseFloat(e.target.value);
+							if (value < 1 || isNaN(value)) {
+								setOfferedPricePerPart(1);
+							} else {
+								setOfferedPricePerPart(value);
+							}
+						}}
+						variant="outlined"
+						fullWidth
+						margin="normal"
+					/>
 				)}
-			</Button>
-
-			<Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
-				<DialogTitle>
-					{mode === "invest"
-						? "Confirm Investment"
-						: "Confirm Investment Offer"}
-				</DialogTitle>
-				<DialogContent>
-					<Typography>
-						{mode === "invest"
-							? `Are you sure you want to invest $${totalInvestment.toLocaleString()} for ${equityToReceive}% equity?`
-							: `Are you sure you want to offer $${offeredPricePerPart.toLocaleString()} per part for ${partsToInvest} parts? Total offer amount: $${totalInvestment.toLocaleString()}`}
+				<Typography variant="body1" gutterBottom>
+					Total Investment: ${totalInvestment.toLocaleString()}
+				</Typography>
+				<Typography variant="body1" gutterBottom>
+					Equity to Receive: {equityToReceive}%
+				</Typography>
+				{user && (
+					<Typography variant="body1" gutterBottom>
+						Your Wallet Balance: ${user.walletBalance.toLocaleString()}
 					</Typography>
-				</DialogContent>
-				<DialogActions>
-					<Button
-						onClick={handleCloseConfirmDialog}
-						color="primary"
-						disabled={isSubmitting}
-					>
-						Cancel
-					</Button>
-					<Button
-						onClick={handleConfirmInvestment}
-						color="primary"
-						disabled={isSubmitting}
-					>
-						{isSubmitting ? <CircularProgress size={24} /> : "Confirm"}
-					</Button>
-				</DialogActions>
-			</Dialog>
-
-			<Dialog open={openErrorDialog} onClose={handleCloseErrorDialog}>
-				<DialogTitle>Insufficient Funds</DialogTitle>
-				<DialogContent>
-					<Typography>
-						You do not have enough funds in your wallet to make this investment.
-					</Typography>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleCloseErrorDialog} color="primary">
-						OK
-					</Button>
-				</DialogActions>
-			</Dialog>
-			<Snackbar
-				open={snackbarOpen}
-				autoHideDuration={6000}
-				onClose={() => setSnackbarOpen(false)}
-				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-			>
-				<MuiAlert
-					elevation={6}
-					variant="filled"
-					onClose={() => setSnackbarOpen(false)}
-					severity={snackbarSeverity}
+				)}
+				<Button
+					variant="contained"
+					color="primary"
+					onClick={handleInvestment}
+					size="large"
+					disabled={!user || isSubmitting}
+					sx={{
+						marginTop: 2,
+						transition: "transform 0.2s",
+						"&:hover": {
+							transform: "scale(1.05)",
+						},
+					}}
 				>
-					{snackbarMessage}
-				</MuiAlert>
-			</Snackbar>
-		</FormBox>
+					{isSubmitting ? (
+						<CircularProgress size={24} color="inherit" />
+					) : mode === "invest" ? (
+						"Invest Now"
+					) : (
+						"Submit Offer"
+					)}
+				</Button>
+
+				<Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>
+					<DialogTitle>
+						{mode === "invest"
+							? "Confirm Investment"
+							: "Confirm Investment Offer"}
+					</DialogTitle>
+					<DialogContent>
+						<Typography>
+							{mode === "invest"
+								? `Are you sure you want to invest $${totalInvestment.toLocaleString()} for ${equityToReceive}% equity?`
+								: `Are you sure you want to offer $${offeredPricePerPart.toLocaleString()} per part for ${partsToInvest} parts? Total offer amount: $${totalInvestment.toLocaleString()}`}
+						</Typography>
+					</DialogContent>
+					<DialogActions>
+						<Button
+							onClick={handleCloseConfirmDialog}
+							color="primary"
+							disabled={isSubmitting}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleConfirmInvestment}
+							color="primary"
+							disabled={isSubmitting}
+						>
+							{isSubmitting ? <CircularProgress size={24} /> : "Confirm"}
+						</Button>
+					</DialogActions>
+				</Dialog>
+
+				<Dialog open={openErrorDialog} onClose={handleCloseErrorDialog}>
+					<DialogTitle>Insufficient Funds</DialogTitle>
+					<DialogContent>
+						<Typography>
+							You do not have enough funds in your wallet to make this investment.
+						</Typography>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={handleCloseErrorDialog} color="primary">
+							OK
+						</Button>
+					</DialogActions>
+				</Dialog>
+				<Snackbar
+					open={snackbarOpen}
+					autoHideDuration={6000}
+					onClose={() => setSnackbarOpen(false)}
+					anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				>
+					<MuiAlert
+						elevation={6}
+						variant="filled"
+						onClose={() => setSnackbarOpen(false)}
+						severity={snackbarSeverity}
+					>
+						{snackbarMessage}
+					</MuiAlert>
+				</Snackbar>
+			</FormBox>
+		</FeatureGuard>
 	);
 }

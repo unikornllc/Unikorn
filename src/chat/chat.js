@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import prisma from "../db.js";
 import { createServer } from "http";
+import { hasFeaturePermission } from "../middlewares/featurePermissions.js";
+
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -10,6 +12,7 @@ const io = new Server(httpServer, {
 		credentials: true,
 	},
 });
+  
 
 io.on("connection", async (socket) => {
 	const userId = socket.handshake.auth.userId;
@@ -208,6 +211,44 @@ io.on("connection", async (socket) => {
 				participants.push(userId);
 			}
 
+			// Get current user's User record
+			const account = await prisma.account.findUnique({
+				where: { username: userId },
+				include: { user: true }
+			});
+			const user = account?.user;
+
+			// Get other participants' User records
+			const otherUsernames = participants.filter(username => username !== userId);
+			const otherAccounts = await prisma.account.findMany({
+				where: { username: { in: otherUsernames } },
+				include: { user: true, company: true }
+			});
+			const otherEntities = otherAccounts.map(acc => acc.user || acc.company);
+
+			const accountSelf = await prisma.account.findUnique({
+				where: { username: userId },
+				include: { user: true, company: true }
+			});
+			const entity = accountSelf?.user || accountSelf?.company;
+
+			if (!entity || otherEntities.some(e => !e)) {
+				return socket.emit("error", {
+					message: "One or more users do not exist.",
+					error: "USER_NOT_FOUND"
+				});
+			}
+
+			const isStandardOrHolder = entity.tier === 'Standard' || entity.tier === 'Holder';
+			if (isStandardOrHolder) {
+				if (otherEntities.some(e => e.isInvestor)) {
+					return socket.emit("error", {
+						message: "Standard/Holder accounts can only initiate chats with non-investors.",
+						error: "INSUFFICIENT_PERMISSIONS"
+					});
+				}
+			}
+
 			if (!isGroupChat && participants.length !== 2) {
 				return socket.emit("error", {
 					message: "Direct chats must have exactly 2 participants",
@@ -355,10 +396,43 @@ io.on("connection", async (socket) => {
 				});
 			}
 
+			const chat = participant.chat;
+			const otherUsernames = chat.participants
+				.filter(p => p.username !== userId)
+				.map(p => p.username);
+
+			const otherAccounts = await prisma.account.findMany({
+				where: { username: { in: otherUsernames } },
+				include: { user: true, company: true }
+			});
+			const otherEntities = otherAccounts.map(acc => acc.user || acc.company);
+
+			const accountSelf = await prisma.account.findUnique({
+				where: { username: userId },
+				include: { user: true, company: true }
+			});
+			const entity = accountSelf?.user || accountSelf?.company;
+
+			if (!entity || otherEntities.some(e => !e)) {
+				return socket.emit("error", {
+					message: "One or more users do not exist.",
+					error: "USER_NOT_FOUND"
+				});
+			}
+
+			// Check if user can send messages in this chat
+			const canSend = await canSendMessageInChat(entity, chat.participants, chat.isGroupChat);
+			if (!canSend) {
+				return socket.emit("error", {
+					message: "You cannot send messages in this chat. Standard investors can only chat with non-investors unless a Pro user is present.",
+					error: "INSUFFICIENT_PERMISSIONS"
+				});
+			}
+
 			let isRequestMessage = false;
-			if (!participant.chat.isGroupChat) {
-				const otherParticipant = participant.chat.participants.find(
-					(p) => p.userId !== userId,
+			if (!chat.isGroupChat) {
+				const otherParticipant = chat.participants.find(
+					(p) => p.username !== userId,
 				);
 
 				if (otherParticipant) {
@@ -410,13 +484,13 @@ io.on("connection", async (socket) => {
 				},
 			});
 
-			participant.chat.participants.forEach((p) => {
+			chat.participants.forEach((p) => {
 				io.to(p.username).emit("new message", {
 					chatId: chatId,
 					message: message,
 				});
 			});
-			participant.chat.participants.forEach((p) => {
+			chat.participants.forEach((p) => {
 				if (p.username !== userId) {
 					io.to(p.username).emit("chat unread update", {
 						chatId: chatId,
@@ -425,7 +499,7 @@ io.on("connection", async (socket) => {
 			});
 
 			if (isRequestMessage) {
-				const otherParticipant = participant.chat.participants.find(
+				const otherParticipant = chat.participants.find(
 					(p) => p.username !== userId,
 				);
 
@@ -733,3 +807,62 @@ httpServer.listen(PORT, () => {
 });
 
 export default io;
+
+async function canChatWith(user, otherEntities) {
+	if (!user || !otherEntities || otherEntities.some(e => !e)) return false;
+	if (user.isInvestor && user.tier === 'Standard') {
+		return otherEntities.every(e => !e.isInvestor);
+	}
+	return true;
+}
+
+// New function to check if user can send messages in a chat
+async function canSendMessageInChat(sender, participants, isGroupChat) {
+  if (!sender || !participants || participants.some(u => !u)) return false;
+
+  // Get all participant user/company records
+  const participantUsernames = participants.map(p => p.username);
+  const participantAccounts = await prisma.account.findMany({
+    where: { username: { in: participantUsernames } },
+    include: { user: true, company: true }
+  });
+  const participantEntities = participantAccounts.map(acc => acc.user || acc.company).filter(Boolean);
+
+  // Use username for exclusion
+  const senderUsername = sender.username;
+
+  // Check if there's a Pro user (user: Pro, company: Hunter) in the chat
+  const hasProUser = participantEntities.some(
+    e => e.tier === 'Pro' || e.tier === 'Hunter'
+  );
+  if (hasProUser) {
+    return true;
+  }
+
+  // For Standard/Holder investors, they can only send messages if all other participants are non-investors
+  const isStandardInvestor =
+    sender.isInvestor &&
+    (sender.tier === 'Standard' || sender.tier === 'Holder');
+  if (isStandardInvestor) {
+    return participantEntities
+      .filter(e => e.id !== sender.id)
+      .every(e => !e.isInvestor);
+  }
+
+  // For Pro/Hunter and non-investors, allow
+  return true;
+}
+
+// --- API endpoint: Check if user is a participant in any chat ---
+// Express-style handler
+export async function userHasChatsHandler(req, res) {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ hasChats: false });
+    const count = await prisma.chatParticipant.count({ where: { username: userId } });
+    res.json({ hasChats: count > 0 });
+  } catch (error) {
+    console.error("Error checking user chat participation:", error);
+    res.status(500).json({ hasChats: false });
+  }
+}

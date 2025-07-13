@@ -6,21 +6,65 @@ import ChatList from "./ChatList.js";
 import ChatWindow from "./ChatWindow.js";
 import NewChatModal from "./NewChatModal.js";
 import NotificationToast from "./NotificationToast.js";
+import { usePermissions } from "../../_hooks/usePermissions.js";
+import { FeatureGuard, UpgradePrompt } from "../_ui/UpgradePrompt.js";
 import axios from "axios";
+import { useToast } from "../../_components/_hooks/useToast.js";
+import { useChatAccess } from "@/app/_hooks/useChatAccess";
+
+
 
 export default function ChatInterface({ userId, username }) {
+	const { canAccessChat, canCreateChat, loading, error } = useChatAccess(userId);
+
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<div className="text-center">
+					<p className="text-red-600 mb-4">Error loading permissions</p>
+					<button 
+						onClick={() => window.location.reload()}
+						className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+					>
+						Try Again
+					</button>
+				</div>
+			</div>
+		);
+	}
+
+	// if (!canAccessChat) {
+	// 	return (
+	// 		<div className="flex items-center justify-center h-full p-8">
+	// 			<UpgradePrompt 
+	// 				feature="CHATTING" 
+	// 				onUpgrade={handleUpgrade}
+	// 			/>
+	// 		</div>
+	// 	);
+	// }
+
 	return (
 		<SocketProvider userId={userId}>
-			<ChatApp userId={userId} username={username} />
+			<ChatApp userId={userId} username={username} canCreateChat={canCreateChat} />
 		</SocketProvider>
 	);
 }
 
-function ChatApp({ userId, username }) {
+function ChatApp({ userId, username, canCreateChat }) {
 	const [chats, setChats] = useState([]);
 	const [selectedChat, setSelectedChat] = useState(null);
 	const [messages, setMessages] = useState([]);
 	const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+	const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 	const [users, setUsers] = useState([]);
 	const [notifications, setNotifications] = useState([]);
 
@@ -35,6 +79,12 @@ function ChatApp({ userId, username }) {
 			console.error("Error fetching read receipts:", error);
 		}
 	};
+	const handleUpgrade = () => {
+		// Redirect to upgrade page or show upgrade modal
+		window.location.href = "/settings?upgrade=true";
+	};
+
+	const { toast } = useToast();
 
 	useEffect(() => {
 		async function getFollowing() {
@@ -215,6 +265,26 @@ function ChatApp({ userId, username }) {
 			);
 		});
 
+		// Add error event handler for socket errors
+		socket.on("error", (err) => {
+			const message = err?.message || err || "An unknown chat error occurred.";
+			
+			// Handle specific permission errors
+			if (err?.error === "INSUFFICIENT_PERMISSIONS") {
+				toast({
+					title: "Permission Denied",
+					description: message,
+					variant: "destructive",
+				});
+			} else {
+				toast({
+					title: "Chat Error",
+					description: message,
+					variant: "destructive",
+				});
+			}
+		});
+
 		return () => {
 			socket.off("chats");
 			socket.off("new message");
@@ -223,6 +293,7 @@ function ChatApp({ userId, username }) {
 			socket.off("users");
 			socket.off("chat unread update");
 			socket.off("updated chat");
+			socket.off("error");
 			socket.off("message read");
 			socket.off("read_receipts");
 		};
@@ -252,12 +323,44 @@ function ChatApp({ userId, username }) {
 		});
 	};
 
+	// Listen for send message errors and update UI accordingly
+	useEffect(() => {
+		if (!socket) return;
+
+		const handleSendError = (err) => {
+			if (err?.error === "INSUFFICIENT_PERMISSIONS" && selectedChat) {
+				// Update the chat to show it's read-only
+				setChats((prevChats) =>
+					prevChats.map((chat) =>
+						chat.chatID === selectedChat.chatID
+							? { ...chat, readOnly: true }
+							: chat
+					)
+				);
+			}
+		};
+
+		socket.on("error", handleSendError);
+
+		return () => {
+			socket.off("error", handleSendError);
+		};
+	}, [socket, selectedChat]);
+
 	const handleMarkAsRead = (chatId, messageId) => {
 		if (!socket) return;
 		socket.emit("mark as read", {
 			chatId: chatId,
 			messageId: messageId,
 		});
+	};
+
+	const handleNewChatClick = () => {
+		if (canCreateChat) {
+			setIsNewChatModalOpen(true);
+		} else {
+			setShowUpgradePrompt(true);
+		}
 	};
 
 	return (
@@ -279,7 +382,7 @@ function ChatApp({ userId, username }) {
 						Logged in as <span className="text-[#6366f1]">@{username}</span>
 					</p>
 					<button
-						onClick={() => setIsNewChatModalOpen(true)}
+						onClick={handleNewChatClick}
 						className="mt-4 w-full bg-[#6366f1] text-white rounded-md py-2 px-4 hover:bg-[#4f46e5] transition shadow-sm"
 					>
 						New Chat
@@ -327,8 +430,8 @@ function ChatApp({ userId, username }) {
 						onClose={() =>
 							setNotifications((prev) =>
 								prev.filter((notif) => notif.id !== n.id),
-							)
-						}
+						)
+					}
 					/>
 				))}
 			</div>
@@ -341,6 +444,23 @@ function ChatApp({ userId, username }) {
 					onCreateChat={handleCreateChat}
 				/>
 			)}
+
+{showUpgradePrompt && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+	<UpgradePrompt 
+					feature="CHATTING" 
+					onUpgrade={handleUpgrade}
+				/>
+      <button
+        className="mt-4 w-full py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
+        onClick={() => setShowUpgradePrompt(false)}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
 		</div>
 	);
 }

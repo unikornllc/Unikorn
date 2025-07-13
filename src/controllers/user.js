@@ -130,6 +130,8 @@ export const getOneUser = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
 	try {
 		const { include } = req.query;
+		
+		// First check if it's a user account
 		const user = await prisma.user.findUnique({
 			where: {
 				id: req.account.id,
@@ -150,15 +152,44 @@ export const getCurrentUser = async (req, res) => {
 					: {}),
 			},
 		});
-		if (!user) {
-			return res.status(400).json({ message: "User not found" });
-		}
-		const cleanedUser = removeUserIds(user);
 
-		res.status(200).json({ user: cleanedUser });
+		if (user) {
+			const cleanedUser = removeUserIds(user);
+			return res.status(200).json({ user: cleanedUser });
+		}
+
+		// If not a user, check if it's a company account
+		const company = await prisma.company.findUnique({
+			where: {
+				id: req.account.id,
+			},
+			include: {
+				account: {
+					select: { username: true },
+				},
+				...(include
+					? {
+							...Object.fromEntries(
+								Object.entries(include).map(([key, value]) => [
+									key,
+									value === "true",
+								]),
+							),
+						}
+					: {}),
+			},
+		});
+
+		if (company) {
+			const cleanedCompany = removeUserIds(company);
+			return res.status(200).json({ company: cleanedCompany });
+		}
+
+		// If neither user nor company found
+		return res.status(400).json({ message: "Account not found" });
 	} catch (e) {
 		console.error(e);
-		res.status(400).json({ message: "Error fetching user" });
+		res.status(400).json({ message: "Error fetching account" });
 	}
 };
 export const isCurrentUser = async (req, res) => {
@@ -524,5 +555,72 @@ export const updateTier = async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		res.status(400).json({ message: "Error updating tier" });
+	}
+};
+
+export const getUserPermissions = async (req, res) => {
+	try {
+		if (!req.account || !req.account.id) {
+			return res.status(401).json({ 
+				message: "Authentication required",
+				error: "UNAUTHORIZED"
+			});
+		}
+
+		// First try to find a user account
+		let user = await prisma.user.findUnique({
+			where: { id: req.account.id },
+			select: { tier: true, isInvestor: true }
+		});
+
+		let accountType = null;
+		let account = null;
+
+		if (user) {
+			accountType = 'user';
+			account = user;
+		} else {
+			// If no user found, try to find a company account
+			const company = await prisma.company.findUnique({
+				where: { id: req.account.id },
+				select: { tier: true, isInvestor: true }
+			});
+
+			if (company) {
+				accountType = 'company';
+				account = company;
+			}
+		}
+
+		if (!account) {
+			return res.status(404).json({ 
+				message: "Account not found",
+				error: "ACCOUNT_NOT_FOUND"
+			});
+		}
+
+		// Import the unified permission checking function
+		const { hasFeaturePermission } = await import('../middlewares/unifiedFeaturePermissions.js');
+
+		const permissions = {
+			accountType,
+			tier: account.tier,
+			isInvestor: account.isInvestor,
+			canPost: hasFeaturePermission(accountType, account.tier, account.isInvestor, 'POSTING'),
+			canChat: hasFeaturePermission(accountType, account.tier, account.isInvestor, 'CHATTING'),
+			canInvest: hasFeaturePermission(accountType, account.tier, account.isInvestor, 'INVESTING'),
+			canRaiseFunds: hasFeaturePermission(accountType, account.tier, account.isInvestor, 'RAISING_FUNDS')
+		};
+
+		res.status(200).json({
+			success: true,
+			permissions
+		});
+	} catch (error) {
+		console.error('Error getting account permissions:', error);
+		res.status(500).json({ 
+			message: "Internal server error",
+			error: "PERMISSION_CHECK_FAILED"
+		});
 	}
 };

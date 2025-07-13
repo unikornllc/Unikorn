@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { PaperclipIcon, XIcon } from "lucide-react";
 import axios from "axios";
 
-export default function MessageInput({ onSendMessage, username }) {
+export default function MessageInput({ onSendMessage, username, accountType, accountData, disabled = false, disabledMessage = "" }) {
 	const [message, setMessage] = useState("");
 	const [attachment, setAttachment] = useState(null);
 	const [isUploading, setIsUploading] = useState(false);
@@ -12,7 +12,7 @@ export default function MessageInput({ onSendMessage, username }) {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if ((!message.trim() && !attachment) || isUploading) return;
+		if ((!message.trim() && !attachment) || isUploading || disabled) return;
 
 		let attachmentData = null;
 		if (attachment) {
@@ -126,17 +126,28 @@ export default function MessageInput({ onSendMessage, username }) {
 						type="text"
 						value={message}
 						onChange={(e) => setMessage(e.target.value)}
-						placeholder="Type a message..."
-						className="flex-1 rounded-l-md border border-gray-200 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-[#6366f1] bg-[#f8f9fe]"
+						placeholder={
+							disabled 
+								? disabledMessage 
+								: accountType === "user" 
+									? `Hi, I'm ${accountData?.name || username}. How can I help you today?`
+									: accountType === "company" 
+										? `Hello from ${accountData?.name || username}. What can we assist you with?`
+										: "Type a message..."
+						}
+						disabled={disabled}
+						className={`flex-1 rounded-l-md border border-gray-200 py-2 px-4 focus:outline-none focus:ring-2 focus:ring-[#6366f1] bg-[#f8f9fe] ${
+							disabled ? "opacity-50 cursor-not-allowed" : ""
+						}`}
 					/>
 					<button
 						type="submit"
-						disabled={isUploading}
+						disabled={isUploading || disabled}
 						className={`${
-							isUploading ? "bg-gray-400" : "bg-[#6366f1] hover:bg-[#4f46e5]"
+							isUploading || disabled ? "bg-gray-400 cursor-not-allowed" : "bg-[#6366f1] hover:bg-[#4f46e5]"
 						} text-white rounded-r-md px-4 py-2 transition shadow-sm`}
 					>
-						{isUploading ? "Uploading..." : "Send"}
+						{isUploading ? "Uploading..." : disabled ? "Disabled" : "Send"}
 					</button>
 				</div>
 			</form>

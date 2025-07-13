@@ -121,7 +121,11 @@ export default function Navbar({ userRole }) {
 								>
 									Profile
 								</DropdownMenuItem>
-								<DropdownMenuItem>Settings</DropdownMenuItem>
+								<DropdownMenuItem onSelect={() => {
+										window.location.href =
+											"/settings"
+									}}
+								>Settings</DropdownMenuItem>
 								<DropdownMenuItem>Wallet</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem onSelect={handleLogout}>

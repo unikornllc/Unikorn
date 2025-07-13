@@ -18,6 +18,8 @@ import {
 import { Button } from "@/app/_components/_ui/Button.js";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useUnifiedPermissions } from "@/app/_hooks/useUnifiedPermissions.js";
+import { FeatureGuard, UpgradePrompt } from "@/app/_components/_ui/UpgradePrompt.js";
 import FundingPostForm from "@/app/_components/post_creation/funding-post-form";
 import PartnerPostForm from "@/app/_components/post_creation/partner-post-form";
 import GuidancePostForm from "@/app/_components/post_creation/guidance-post-form";
@@ -36,6 +38,13 @@ const postTypeLabels = {
 
 export default function CreatePostPage() {
 	const [selectedPostType, setSelectedPostType] = useState("");
+	const permissions = useUnifiedPermissions();
+	const { canPost, loading, error } = permissions;
+
+	const handleUpgrade = () => {
+		// Redirect to upgrade page or show upgrade modal
+		window.location.href = "/settings?upgrade=true";
+	};
 
 	const renderForm = () => {
 		switch (selectedPostType) {
@@ -77,9 +86,34 @@ export default function CreatePostPage() {
 		}
 	};
 
+	if (loading) {
+		return (
+			<main className="container max-w-4xl py-8">
+				<div className="flex items-center justify-center py-12">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+				</div>
+			</main>
+		);
+	}
+
+	if (error) {
+		return (
+			<main className="container max-w-4xl py-8">
+				<div className="flex items-center justify-center py-12">
+					<div className="text-center">
+						<p className="text-red-600 mb-4">Error loading permissions</p>
+						<Button onClick={() => window.location.reload()}>
+							Try Again
+						</Button>
+					</div>
+				</div>
+			</main>
+		);
+	}
+
 	return (
-		<main className="container max-w-4xl py-8">
-			<div className="mb-6">
+		<div className="min-h-screen flex flex-col">
+			<div className="p-4">
 				<Link
 					href="/newsfeed"
 					className="flex items-center text-muted-foreground hover:text-foreground"
@@ -88,34 +122,50 @@ export default function CreatePostPage() {
 					Back to Newsfeed
 				</Link>
 			</div>
+			<div className="flex-1 flex items-center justify-center">
+				<FeatureGuard 
+					feature="POSTING" 
+					permissions={permissions}
+					fallback={
+						<Card>
+							<CardContent className="pt-6">
+								<UpgradePrompt 
+									feature="POSTING" 
+									onUpgrade={handleUpgrade}
+								/>
+							</CardContent>
+						</Card>
+					}
+				>
+					<Card>
+						<CardHeader>
+							<CardTitle>Create a Post</CardTitle>
+							<CardDescription>
+								Select the type of post you want to create and fill out the form
+							</CardDescription>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Create a Post</CardTitle>
-					<CardDescription>
-						Select the type of post you want to create and fill out the form
-					</CardDescription>
-
-					<div className="mt-4">
-						<Select
-							value={selectedPostType}
-							onValueChange={setSelectedPostType}
-						>
-							<SelectTrigger className="w-full md:w-[300px]">
-								<SelectValue placeholder="Select post type" />
-							</SelectTrigger>
-							<SelectContent>
-								{Object.entries(postTypeLabels).map(([type, label]) => (
-									<SelectItem key={type} value={type}>
-										{label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-				</CardHeader>
-				<CardContent>{renderForm()}</CardContent>
-			</Card>
-		</main>
+							<div className="mt-4">
+								<Select
+									value={selectedPostType}
+									onValueChange={setSelectedPostType}
+								>
+									<SelectTrigger className="w-full md:w-[300px]">
+										<SelectValue placeholder="Select post type" />
+									</SelectTrigger>
+									<SelectContent>
+										{Object.entries(postTypeLabels).map(([type, label]) => (
+											<SelectItem key={type} value={type}>
+												{label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						</CardHeader>
+						<CardContent>{renderForm()}</CardContent>
+					</Card>
+				</FeatureGuard>
+			</div>
+		</div>
 	);
 }
