@@ -5,14 +5,41 @@ import MessageInput from "./MessageInput";
 import axios from "axios";
 import { Check, CheckCheck } from "lucide-react";
 
+
 export default function ChatWindow({
 	chat,
 	messages,
 	userId,
 	username,
+	accountType,
+	accountData,
 	onSendMessage,
 }) {
+	const [canSendMessage, setCanSendMessage] = useState(true);
+	const [sendMessageError, setSendMessageError] = useState("");
 	const messagesEndRef = useRef(null);
+
+	// Check if user can send messages in this chat
+	useEffect(() => {
+		if (!chat || !chat.participants) {
+			setCanSendMessage(true);
+			setSendMessageError("");
+			return;
+		}
+
+		// Check if chat is read-only (set by error handling)
+		if (chat.readOnly) {
+			setCanSendMessage(false);
+			setSendMessageError("You cannot send messages in this chat. Standard investors can only chat with non-investors unless a Pro user is present.");
+			return;
+		}
+
+		// For now, we'll assume the user can send messages
+		// The actual restriction will be enforced on the backend
+		// This is just for UI feedback
+		setCanSendMessage(true);
+		setSendMessageError("");
+	}, [chat]);
 	const [loadingAttachments, setLoadingAttachments] = useState({});
 	const [attachmentCache, setAttachmentCache] = useState({});
 	const [readReceipts, setReadReceipts] = useState({});
@@ -304,12 +331,24 @@ export default function ChatWindow({
 		<div className="flex flex-col h-full">
 			{/* Chat Header */}
 			<div className="p-4 border-b border-gray-100 bg-white">
-				<h2 className="font-semibold text-[#6366f1]">{chat.name}</h2>
-				<p className="text-sm text-gray-500">
-					{chat.isGroupChat
-						? `${chat.participants.length} participants`
-						: "Direct message"}
-				</p>
+				<div className="flex items-center justify-between">
+					<div>
+						<h2 className="font-semibold text-[#6366f1]">{chat.name}</h2>
+						<p className="text-sm text-gray-500">
+							{chat.isGroupChat
+								? `${chat.participants.length} participants`
+								: "Direct message"}
+						</p>
+					</div>
+					{!canSendMessage && (
+						<div className="flex items-center text-orange-600 text-sm">
+							<svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+								<path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+							</svg>
+							Read only
+						</div>
+					)}
+				</div>
 			</div>
 
 			{/* Messages */}
@@ -359,7 +398,14 @@ export default function ChatWindow({
 
 			{/* Message Input */}
 			<div className="p-4 border-t border-gray-200 bg-white">
-				<MessageInput onSendMessage={onSendMessage} username={username} />
+				<MessageInput 
+					onSendMessage={onSendMessage} 
+					username={username}
+					accountType={accountType}
+					accountData={accountData}
+					disabled={!canSendMessage}
+					disabledMessage={sendMessageError || "You cannot send messages in this chat"}
+				/>
 			</div>
 
 			{/* Image Modal */}

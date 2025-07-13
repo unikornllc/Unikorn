@@ -73,7 +73,7 @@ export default function NewChatModal({ users, userId, onClose, onCreateChat }) {
 								value={groupName}
 								onChange={(e) => setGroupName(e.target.value)}
 								placeholder="Enter group name"
-								cclassName="w-full p-2 border border-gray-200 rounded bg-[#f8f9fe] focus:outline-none focus:ring-2 focus:ring-[#6366f1]"
+								className="w-full p-2 border border-gray-200 rounded bg-[#f8f9fe] focus:outline-none focus:ring-2 focus:ring-[#6366f1]"
 							/>
 						</div>
 					)}

@@ -38,6 +38,7 @@ import { Badge } from "@/app/_components/_ui/Badge";
 
 export default function SettingsPage() {
 	const [user, setUser] = useState(null);
+	const [accountType, setAccountType] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("account");
@@ -56,7 +57,7 @@ export default function SettingsPage() {
 	});
 
 	useEffect(() => {
-		const fetchUserData = async () => {
+		const fetchAccountData = async () => {
 			try {
 				const response = await axios.get(
 					`${process.env.NEXT_PUBLIC_SERVER}/api/getCurrentUser`,
@@ -64,30 +65,48 @@ export default function SettingsPage() {
 						withCredentials: true,
 					},
 				);
-				setUser(response.data);
-				setFormData({
-					name: response.data.name || "",
-					email: response.data.email || "",
-					title: response.data.title || "",
-					description: response.data.description || "",
-					notifications: {
-						email: true,
-						push: true,
-						marketing: false,
-					},
-					language: "en",
-					timezone: "UTC",
-				});
+
+				let accountData = null;
+				let accountType = null;
+
+				// Handle both user and company accounts from single API
+				if (response.data && response.data.user) {
+					accountData = response.data.user;
+					accountType = "user";
+				} else if (response.data && response.data.company) {
+					accountData = response.data.company;
+					accountType = "company";
+				}
+
+				if (accountData) {
+					setUser(accountData);
+					setAccountType(accountType);
+					setFormData({
+						name: accountData.name || "",
+						email: accountData.email || "",
+						title: accountData.title || "",
+						description: accountData.description || "",
+						notifications: {
+							email: true,
+							push: true,
+							marketing: false,
+						},
+						language: "en",
+						timezone: "UTC",
+					});
+				} else {
+					throw new Error("No account data found");
+				}
 			} catch (error) {
-				console.error("Error fetching user data:", error);
+				console.error("Error fetching account data:", error);
 				// Redirect to login if not authenticated
-				router.push("/login");
+				// router.push("/login");
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchUserData();
+		fetchAccountData();
 	}, [router]);
 
 	const handleInputChange = (e) => {
@@ -154,13 +173,15 @@ export default function SettingsPage() {
 	return (
 		<div className="container mx-auto py-10 px-4">
 			<div className="flex items-center mb-8">
-				<Link href="/user/profile">
+				<Link href={accountType === "user" ? "/user/profile" : "/company/profile"}>
 					<Button variant="ghost" className="mr-4">
 						<ArrowLeft className="mr-2 h-4 w-4" />
-						Back to Profile
+						Back to {accountType === "user" ? "Profile" : "Company Profile"}
 					</Button>
 				</Link>
-				<h1 className="text-3xl font-bold">Settings</h1>
+				<h1 className="text-3xl font-bold">
+					{accountType === "user" ? "Personal" : "Company"} Settings
+				</h1>
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
@@ -231,21 +252,60 @@ export default function SettingsPage() {
 					{activeTab === "account" && (
 						<Card>
 							<CardHeader>
-								<CardTitle>Account Information</CardTitle>
+								<CardTitle>
+									{accountType === "user" ? "Personal Account" : "Company Account"} Information
+								</CardTitle>
 								<CardDescription>
-									Update your personal information and profile details.
+									{accountType === "user" 
+										? "Update your personal information and profile details."
+										: "Update your company information and profile details."
+									}
 								</CardDescription>
+								{/* Account Type Badge */}
+								{accountType && user && (
+									<div className="flex items-center gap-2 mt-2">
+										<Badge variant={accountType === "user" ? "default" : "secondary"}>
+											{accountType === "user" ? "Individual" : "Company"}
+										</Badge>
+										{accountType === "user" && user.tier && (
+											<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+												{user.tier} Tier
+											</Badge>
+										)}
+										{user.isInvestor && (
+											<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+												Investor
+											</Badge>
+										)}
+										{accountType === "company" && user.verified && (
+											<Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+												✓ Verified
+											</Badge>
+										)}
+										{accountType === "company" && user.type && (
+											<Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+												{user.type}
+											</Badge>
+										)}
+									</div>
+								)}
 							</CardHeader>
 							<CardContent className="space-y-6">
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<div className="space-y-2">
-										<Label htmlFor="name">Full Name</Label>
+										<Label htmlFor="name">
+											{accountType === "user" ? "Full Name" : "Company Name"}
+										</Label>
 										<Input
 											id="name"
 											name="name"
 											value={formData.name}
 											onChange={handleInputChange}
-											placeholder="Your full name"
+											placeholder={
+												accountType === "user" 
+													? "Your full name" 
+													: "Your company name"
+											}
 										/>
 									</div>
 									<div className="space-y-2">
@@ -256,27 +316,47 @@ export default function SettingsPage() {
 											type="email"
 											value={formData.email}
 											onChange={handleInputChange}
-											placeholder="Your email address"
+											placeholder={
+												accountType === "user" 
+													? "Your email address" 
+													: "Company email address"
+											}
 										/>
 									</div>
-									<div className="space-y-2">
-										<Label htmlFor="title">Title</Label>
-										<Select
-											value={formData.title}
-											onValueChange={(value) =>
-												setFormData({ ...formData, title: value })
-											}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Select a title" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="Mr">Mr</SelectItem>
-												<SelectItem value="Mrs">Mrs</SelectItem>
-												<SelectItem value="Ms">Ms</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
+									{accountType === "user" && (
+										<div className="space-y-2">
+											<Label htmlFor="title">Title</Label>
+											<Select
+												value={formData.title}
+												onValueChange={(value) =>
+													setFormData({ ...formData, title: value })
+												}
+											>
+												<SelectTrigger>
+													<SelectValue placeholder="Select a title" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="Mr">Mr</SelectItem>
+													<SelectItem value="Mrs">Mrs</SelectItem>
+													<SelectItem value="Ms">Ms</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+									)}
+									{accountType === "company" && (
+										<div className="space-y-2">
+											<Label htmlFor="companyType">Company Type</Label>
+											<Input
+												id="companyType"
+												value={user?.type || ""}
+												disabled
+												className="bg-gray-50"
+											/>
+											<p className="text-sm text-gray-500">
+												Company type cannot be changed
+											</p>
+										</div>
+									)}
 									<div className="space-y-2">
 										<Label htmlFor="username">Username</Label>
 										<Input
@@ -294,13 +374,19 @@ export default function SettingsPage() {
 								</div>
 
 								<div className="space-y-2">
-									<Label htmlFor="description">Bio</Label>
+									<Label htmlFor="description">
+										{accountType === "user" ? "Bio" : "Company Description"}
+									</Label>
 									<Textarea
 										id="description"
 										name="description"
 										value={formData.description}
 										onChange={handleInputChange}
-										placeholder="Tell us about yourself"
+										placeholder={
+											accountType === "user" 
+												? "Tell us about yourself" 
+												: "Tell us about your company"
+										}
 										rows={4}
 									/>
 									<p className="text-sm text-gray-500">

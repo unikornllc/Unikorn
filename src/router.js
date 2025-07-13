@@ -46,6 +46,7 @@ import {
 	updateTier,
 	updateUserItem,
 	searchUsers,
+	getUserPermissions,
 } from "./controllers/user.js";
 
 import {
@@ -87,6 +88,7 @@ import {
 	getOneCompanyProfile,
 	updateCompanyProfile,
 	getCurrentCompany,
+	getCompanyPermissions,
 } from "./controllers/companyProfile.js";
 
 import {
@@ -202,12 +204,15 @@ import {
 	createType5Post,
 	createType6Post,
 	getAllPosts,
-	getOneProfilePosts,
+  getOneProfilePosts,
 	getComments,
 	likePost,
 	unlikePost,
 	votePoll,
 } from "./posts/postingController.js";
+
+import { requireFeaturePermission } from "./middlewares/unifiedFeaturePermissions.js";
+import { userHasChatsHandler } from './chat/chat.js';
 
 const router = Router();
 
@@ -243,6 +248,7 @@ router.get("/getAllUsers", getAllUser);
 router.get("/getOneUser", getOneUser);
 router.get("/isCurrentUser", isCurrentUser);
 router.get("/getCurrentUser", getCurrentUser);
+router.get("/getUserPermissions", getUserPermissions);
 // router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
 router.put("/updateUserItem", updateUserItem);
@@ -291,6 +297,7 @@ router.get("/isFollowingCompany", isFollowingCompany);
 router.put("/followCompany", followCompany);
 router.put("/unfollowCompany", unfollowCompany);
 router.get("/getCurrentCompany", getCurrentCompany);
+router.get("/getCompanyPermissions", getCompanyPermissions);
 
 //get all companies that the user is following
 //returns an array of usernames
@@ -346,7 +353,7 @@ router.delete("/calendly/disconnect", disconnectCalendly);
 router.put("/calendly/settings", updateCalendlySettings);
 
 //raisingFunds and investments offers
-router.post("/raisingFunds/create", createRaisingFund);
+router.post("/raisingFunds/create", requireFeaturePermission('RAISING_FUNDS'), createRaisingFund);
 router.get("/raisingFunds/active", getActiveRaisingFundsFiltered);
 router.get("/raisingFunds/id/", getRaisingFundById);
 router.get("/raisingFunds/stats", getRaisingFundsStats);
@@ -356,16 +363,16 @@ router.get("/raisingFunds/company/past", getCompanyPastRaisingFunds);
 router.get("/raisingFunds/fundraisers", getRaisingFundFundraisers);
 
 router.get("/raisingFunds/offers", getFundingInvestmentOffers);
-router.post("/raisingFunds/offer/accept", acceptInvestmentOffer);
-router.post("/raisingFunds/offer/reject", rejectInvestmentOffer);
-router.post("/raisingFunds/cancel", cancelRaisingFunds);
+router.post("/raisingFunds/offer/accept", requireFeaturePermission('RAISING_FUNDS'), acceptInvestmentOffer);
+router.post("/raisingFunds/offer/reject", requireFeaturePermission('RAISING_FUNDS'), rejectInvestmentOffer);
+router.post("/raisingFunds/cancel", requireFeaturePermission('RAISING_FUNDS'), cancelRaisingFunds);
 
-router.post("/investments/fixedPrice", investAtFixedPrice);
-router.post("/investments/negotiatePrice", makeInvestmentOffer);
+router.post("/investments/fixedPrice", requireFeaturePermission('INVESTING'), investAtFixedPrice);
+router.post("/investments/negotiatePrice", requireFeaturePermission('INVESTING'), makeInvestmentOffer);
 router.get("/investments/my", getMyInvestments);
-router.post("/investments/cancel", cancelInvestment);
+router.post("/investments/cancel", requireFeaturePermission('INVESTING'), cancelInvestment);
 router.get("/investments/offers", getMyInvestmentOffers);
-router.post("/investments/offer/cancel", cancelInvestmentOffer);
+router.post("/investments/offer/cancel", requireFeaturePermission('INVESTING'), cancelInvestmentOffer);
 
 router.get("/getAllRaisingFunds", getAllRaisingFunds);
 // router.get("/getRaisingFundsById", getRaisingFundById);
@@ -427,12 +434,12 @@ router.get("/getCompanyPersonnel", getCompanyPersonnel);
 router.get("/getUserInvestments", getUserInvestments);
 
 // posting api
-router.post("/createType1Post", createType1Post);
-router.post("/createType2Post", createType2Post);
-router.post("/createType3Post", createType3Post);
-router.post("/createType4Post", createType4Post);
-router.post("/createType5Post", createType5Post);
-router.post("/createType6Post", createType6Post);
+router.post("/createType1Post", requireFeaturePermission('POSTING'), createType1Post);
+router.post("/createType2Post", requireFeaturePermission('POSTING'), createType2Post);
+router.post("/createType3Post", requireFeaturePermission('POSTING'), createType3Post);
+router.post("/createType4Post", requireFeaturePermission('POSTING'), createType4Post);
+router.post("/createType5Post", requireFeaturePermission('POSTING'), createType5Post);
+router.post("/createType6Post", requireFeaturePermission('POSTING'), createType6Post);
 router.get("/getAllPosts", getAllPosts);
 router.get("/getOneProfilePosts", getOneProfilePosts);
 router.post("/voteOption", votePoll);
@@ -441,5 +448,7 @@ router.get("/post/:postId/comments", getComments);
 router.post("/addComment", addComment);
 router.post("/likePost", likePost);
 router.post("/unlikePost", unlikePost);
+
+router.get('/userHasChats', userHasChatsHandler);
 
 export default router;

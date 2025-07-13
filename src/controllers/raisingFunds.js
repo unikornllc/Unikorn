@@ -765,11 +765,11 @@ export const investAtFixedPrice = async (req, res) => {
 			totalRaised >= updatedFundraising.fundingAmount ||
 			updatedFundraising.remainingPortions === 0;
 
-		if (isComplete) {
-			await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/docusigninvestor`, {
-				raisingFundsId: raisingFundsId,
-			});
-		}
+		// if (isComplete) {
+		// 	await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/docusigninvestor`, {
+		// 		raisingFundsId: raisingFundsId,
+		// 	});
+		// }
 
 		res.status(200).json({ message: "Investment successful" });
 	} catch (error) {

@@ -279,3 +279,49 @@ export const getOneCompanyProfile = async (req, res) => {
 		res.status(400).json({ message: "Error fetching Profile" });
 	}
 };
+
+export const getCompanyPermissions = async (req, res) => {
+	try {
+		if (!req.account || !req.account.id) {
+			return res.status(401).json({ 
+				message: "Authentication required",
+				error: "UNAUTHORIZED"
+			});
+		}
+
+		const company = await prisma.company.findUnique({
+			where: { id: req.account.id },
+			select: { tier: true, isInvestor: true }
+		});
+
+		if (!company) {
+			return res.status(404).json({ 
+				message: "Company not found",
+				error: "COMPANY_NOT_FOUND"
+			});
+		}
+
+		// Import the permission checking function
+		const { hasCompanyFeaturePermission } = await import('../middlewares/companyFeaturePermissions.js');
+
+		const permissions = {
+			tier: company.tier,
+			isInvestor: company.isInvestor,
+			canPost: hasCompanyFeaturePermission(company.tier, company.isInvestor, 'POSTING'),
+			canChat: hasCompanyFeaturePermission(company.tier, company.isInvestor, 'CHATTING'),
+			canInvest: hasCompanyFeaturePermission(company.tier, company.isInvestor, 'INVESTING'),
+			canRaiseFunds: hasCompanyFeaturePermission(company.tier, company.isInvestor, 'RAISING_FUNDS')
+		};
+
+		res.status(200).json({
+			success: true,
+			permissions
+		});
+	} catch (error) {
+		console.error('Error getting company permissions:', error);
+		res.status(500).json({ 
+			message: "Internal server error",
+			error: "PERMISSION_CHECK_FAILED"
+		});
+	}
+};
