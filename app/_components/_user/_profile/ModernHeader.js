@@ -5,18 +5,31 @@ import { CheckCircle, MessageSquare, Users } from "lucide-react";
 import { Button } from "@/app/_components/_ui/Button";
 import { useState } from "react";
 import axios from "axios";
+import { followAccount, unfollowAccount } from "@/app/_utils/_api/followAPIs";
+
 const ModernHeader = ({ user, editable }) => {
 	const { name, username, title, tier, unikornVerified, description } = user;
 	const [isFollowing, setIsFollowing] = useState(user.isFollowing);
 	const [followerCount, setFollowerCount] = useState(128);
 
-	const handleFollow = () => {
-		if (isFollowing) {
-			setFollowerCount(followerCount - 1);
-		} else {
-			setFollowerCount(followerCount + 1);
+	const handleFollow = async () => {
+		try {
+			await followAccount({ username: company.username }).then(() => {
+				setIsFollowing(true);
+			});
+		} catch (err) {
+			console.log(err);
 		}
-		setIsFollowing(!isFollowing);
+	};
+
+	const handleUnfollow = async () => {
+		try {
+			await unfollowAccount({ username: company.username }).then(() => {
+				setIsFollowing(false);
+			});
+		} catch (err) {
+			console.log(err);
+		}
 	};
 
 	return (
@@ -57,7 +70,7 @@ const ModernHeader = ({ user, editable }) => {
 							<div className="flex gap-3">
 								<Button
 									variant={isFollowing ? "outline" : "default"}
-									onClick={handleFollow}
+									onClick={isFollowing ? handleUnfollow : handleFollow}
 								>
 									{isFollowing ? "Following" : "Follow"}
 								</Button>
@@ -72,13 +85,6 @@ const ModernHeader = ({ user, editable }) => {
 
 				<div className="ml-0 md:ml-44 space-y-4">
 					<p className="text-gray-600 max-w-3xl">{description}</p>
-
-					{/* <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-						<div className="flex items-center">
-							<Users className="h-4 w-4 mr-1" />
-							<span>{followerCount} followers</span>
-						</div>
-					</div> */}
 				</div>
 			</div>
 		</div>
