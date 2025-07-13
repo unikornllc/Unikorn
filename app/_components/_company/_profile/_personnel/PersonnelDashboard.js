@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/app/_components/_hooks/useToast";
-import PersonnelGrid from "./PersonnelGrid";
+import PersonnelGrid from "../../_company_profile/PersonnelGrid";
 import PersonnelModal from "./PersonnelModal";
 import axios from "axios";
 

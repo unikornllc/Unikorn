@@ -18,6 +18,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
+	DialogDescription,
 } from "@/app/_components/_ui/Dialog";
 import { Input } from "@/app/_components/_ui/Input";
 import { Label } from "@/app/_components/_ui/Label";
@@ -28,93 +29,132 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/app/_components/_ui/Select";
+import { updateCompany } from "@/app/_utils/_api/companyAPIs";
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
-export default function SocialLinks({ isOwner }) {
-	// Mock data
-	const [links, setLinks] = useState([
-		{
-			id: "1",
-			platform: "facebook",
-			url: "https://facebook.com/company",
-			icon: <Facebook className="h-5 w-5" />,
-		},
-		{
-			id: "2",
-			platform: "linkedin",
-			url: "https://linkedin.com/company",
-			icon: <Linkedin className="h-5 w-5" />,
-		},
-		{
-			id: "3",
-			platform: "twitter",
-			url: "https://twitter.com/company",
-			icon: <Twitter className="h-5 w-5" />,
-		},
-	]);
+export default function SocialLinks({ company, isOwner }) {
+	const [links, setLinks] = useState(
+		Array.isArray(company?.socialMedia) ? [...company.socialMedia] : [],
+	);
 
 	const [isAddingLink, setIsAddingLink] = useState(false);
-	const [isEditingLink, setIsEditingLink] = useState(null);
+	const [isEditingLink, setIsEditingLink] = useState(false);
 	const [newLink, setNewLink] = useState({ platform: "", url: "" });
+	const [editLink, setEditLink] = useState({
+		id: "",
+		platform: "",
+		url: "",
+	});
+	const iconMap = {
+		Facebook: <Facebook className="h-5 w-5" />,
+		LinkedIn: <Linkedin className="h-5 w-5" />,
+		Twitter: <Twitter className="h-5 w-5" />,
+		Instagram: <Instagram className="h-5 w-5" />,
+	};
 
-	const handleAddLink = () => {
-		const iconMap = {
-			facebook: <Facebook className="h-5 w-5" />,
-			linkedin: <Linkedin className="h-5 w-5" />,
-			twitter: <Twitter className="h-5 w-5" />,
-			instagram: <Instagram className="h-5 w-5" />,
-		};
+	const allPlatforms = ["Facebook", "LinkedIn", "Twitter", "Instagram"];
 
-		setLinks([
-			...links,
-			{
+	const usedPlatforms = Array.isArray(company?.socialMedia)
+		? company.socialMedia.map((entry) => entry.platform)
+		: [];
+
+	const [platforms, setPlatforms] = useState(
+		allPlatforms.filter((platform) => !usedPlatforms.includes(platform)),
+	);
+
+	const handleAddLink = async () => {
+		try {
+			if (!newLink.platform || !newLink.url) return;
+
+			if (links.some((link) => link.platform === newLink.platform)) {
+				alert("This platform already exists.");
+				return;
+			}
+			setIsAddingLink(false);
+
+			console.log("Adding new link:", newLink);
+			const newLinkObj = {
 				id: Date.now().toString(),
 				platform: newLink.platform,
 				url: newLink.url,
-				icon: iconMap[newLink.platform] || <Globe className="h-5 w-5" />,
-			},
-		]);
-
-		setNewLink({ platform: "", url: "" });
-		setIsAddingLink(false);
-	};
-
-	const handleEditLink = (id) => {
-		const link = links.find((l) => l.id === id);
-		if (link) {
-			setNewLink({ platform: link.platform, url: link.url });
-			setIsEditingLink(id);
-		}
-	};
-
-	const handleUpdateLink = () => {
-		if (isEditingLink) {
-			const iconMap = {
-				facebook: <Facebook className="h-5 w-5" />,
-				linkedin: <Linkedin className="h-5 w-5" />,
-				twitter: <Twitter className="h-5 w-5" />,
-				instagram: <Instagram className="h-5 w-5" />,
+				// icon: iconMap[newLink.platform] || <Globe className="h-5 w-5" />,
 			};
 
-			setLinks(
-				links.map((link) =>
-					link.id === isEditingLink
-						? {
-								...link,
-								platform: newLink.platform,
-								url: newLink.url,
-								icon: iconMap[newLink.platform] || link.icon,
-							}
-						: link,
-				),
+			const updatedLinks = [...links, newLinkObj];
+
+			setLinks(updatedLinks);
+			setPlatforms((prev) =>
+				prev.filter((platform) => platform !== newLink.platform),
 			);
 
+			await updateCompany({ socialMedia: updatedLinks });
+
 			setNewLink({ platform: "", url: "" });
-			setIsEditingLink(null);
+		} catch (error) {
+			console.error("Error adding link:", error);
 		}
 	};
 
-	const handleDeleteLink = (id) => {
-		setLinks(links.filter((link) => link.id !== id));
+	const handleUpdateLink = async () => {
+		try {
+			if (!editLink.platform || !editLink.url) return;
+
+			if (
+				links.some(
+					(link) =>
+						link.platform === editLink.platform && link.id !== editLink.id,
+				)
+			) {
+				alert("This platform already exists.");
+				return;
+			}
+			setIsEditingLink(false);
+
+			const oldLink = links.find((link) => link.id === editLink.id);
+			const oldPlatform = oldLink?.platform;
+
+			const updatedLinks = links.map((link) =>
+				link.id === editLink.id
+					? {
+							...link,
+							platform: editLink.platform,
+							url: editLink.url,
+							// icon: iconMap[editLink.platform] || link.icon,
+						}
+					: link,
+			);
+
+			setLinks(updatedLinks);
+
+			setPlatforms((prev) =>
+				prev
+					.filter((p) => p !== editLink.platform)
+					.concat(oldPlatform)
+					.filter((v, i, a) => a.indexOf(v) === i),
+			);
+
+			await updateCompany({ socialMedia: updatedLinks });
+
+			setEditLink({ platform: "", url: "", id: "" });
+		} catch (error) {
+			console.error("Error updating link:", error);
+		}
+	};
+
+	const handleDeleteLink = async (id) => {
+		try {
+			const linkToDelete = links.find((link) => link.id === id);
+			if (linkToDelete) {
+				const updatedLinks = links.filter((link) => link.id !== id);
+
+				setLinks(updatedLinks);
+				setPlatforms((prev) => [...prev, linkToDelete.platform]);
+
+				await updateCompany({ socialMedia: updatedLinks });
+			}
+		} catch (error) {
+			console.error("Error deleting link:", error);
+		}
 	};
 
 	return (
@@ -128,7 +168,7 @@ export default function SocialLinks({ isOwner }) {
 						rel="noopener noreferrer"
 						className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors relative group"
 					>
-						{link.icon}
+						{iconMap[link.platform] || <Globe className="h-5 w-5" />}
 
 						{isOwner && (
 							<div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
@@ -138,22 +178,25 @@ export default function SocialLinks({ isOwner }) {
 									className="h-5 w-5 rounded-full"
 									onClick={(e) => {
 										e.preventDefault();
-										handleEditLink(link.id);
+										setEditLink(link);
+										setIsEditingLink(true);
 									}}
 								>
 									<Edit className="h-3 w-3" />
 								</Button>
-								<Button
-									size="icon"
-									variant="destructive"
-									className="h-5 w-5 rounded-full"
+								<div
 									onClick={(e) => {
 										e.preventDefault();
-										handleDeleteLink(link.id);
 									}}
 								>
-									<Trash2 className="h-3 w-3" />
-								</Button>
+									<DeleteButton
+										onDelete={() => {
+											handleDeleteLink(link.id);
+										}}
+										itemType="Social Link"
+										size="small"
+									/>
+								</div>
 							</div>
 						)}
 					</a>
@@ -169,6 +212,7 @@ export default function SocialLinks({ isOwner }) {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Add Social Link</DialogTitle>
+								<DialogDescription></DialogDescription>
 							</DialogHeader>
 							<div className="space-y-4">
 								<div className="space-y-2">
@@ -182,11 +226,13 @@ export default function SocialLinks({ isOwner }) {
 										<SelectTrigger>
 											<SelectValue placeholder="Select platform" />
 										</SelectTrigger>
+
 										<SelectContent>
-											<SelectItem value="facebook">Facebook</SelectItem>
-											<SelectItem value="linkedin">LinkedIn</SelectItem>
-											<SelectItem value="twitter">Twitter</SelectItem>
-											<SelectItem value="instagram">Instagram</SelectItem>
+											{platforms.map((platform) => (
+												<SelectItem key={platform} value={platform}>
+													{platform}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</div>
@@ -212,30 +258,39 @@ export default function SocialLinks({ isOwner }) {
 
 			{/* Edit Link Dialog */}
 			<Dialog
-				open={isEditingLink !== null}
-				onOpenChange={(open) => !open && setIsEditingLink(null)}
+				open={isEditingLink}
+				onOpenChange={(open) => !open && setIsEditingLink(false)}
 			>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Edit Social Link</DialogTitle>
+						<DialogDescription></DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="edit-platform">Platform</Label>
 							<Select
-								value={newLink.platform}
+								value={editLink.platform}
 								onValueChange={(value) =>
-									setNewLink({ ...newLink, platform: value })
+									setNewLink({ ...editLink, platform: value })
 								}
 							>
 								<SelectTrigger>
 									<SelectValue placeholder="Select platform" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="facebook">Facebook</SelectItem>
-									<SelectItem value="linkedin">LinkedIn</SelectItem>
-									<SelectItem value="twitter">Twitter</SelectItem>
-									<SelectItem value="instagram">Instagram</SelectItem>
+									{[
+										...new Set([
+											...platforms,
+											links.find((l) => l.id === editLink.id)?.platform,
+										]),
+									]
+										.filter(Boolean)
+										.map((platform) => (
+											<SelectItem key={platform} value={platform}>
+												{platform}
+											</SelectItem>
+										))}
 								</SelectContent>
 							</Select>
 						</div>
@@ -243,9 +298,9 @@ export default function SocialLinks({ isOwner }) {
 							<Label htmlFor="edit-url">URL</Label>
 							<Input
 								id="edit-url"
-								value={newLink.url}
+								value={editLink.url}
 								onChange={(e) =>
-									setNewLink({ ...newLink, url: e.target.value })
+									setNewLink({ ...editLink, url: e.target.value })
 								}
 								placeholder="https://example.com"
 							/>

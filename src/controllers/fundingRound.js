@@ -25,6 +25,7 @@ export const createFundingRound = async (req, res) => {
 			data: {
 				type: req.body.type,
 				fundingAmount: req.body.fundingAmount,
+				equityPercentage: req.body.equityPercentage,
 				roundDate: new Date(req.body.roundDate),
 				leadInvestors: req.body.leadInvestors,
 				financial: {
@@ -37,7 +38,8 @@ export const createFundingRound = async (req, res) => {
 			where: { id: financial.id },
 			data: { totalFundingAmount: { increment: req.body.fundingAmount } },
 		});
-		res.status(200).json({ fundingRound: fundingRound });
+		fundingRound.external = true;
+		res.status(200).json({ fundingRound });
 	} catch (e) {
 		console.log(e);
 		res.status(400).send("Failed to create");
@@ -50,20 +52,23 @@ export const updateFundingRound = async (req, res) => {
 			include: { raisingFunds: true, financial: true },
 		});
 		if (!fundingRound) {
-			return res.status(400).send("Funding round not found");
+			return res.status(400).json({ message: "Funding round not found" });
 		}
 		if (fundingRound.raisingFunds) {
-			return res.status(400).send("Funding round cannot be edited");
+			return res
+				.status(400)
+				.json({ message: "Funding round cannot be edited" });
 		}
 		const isAuthorized = req.account.id === fundingRound.financial.companyId;
 		if (!isAuthorized) {
-			return res.status(403).send("Unauthorized Update");
+			return res.status(403).json({ message: "Unauthorized Update" });
 		}
 		const updatedFundingRound = await prisma.fundingRound.update({
 			where: { id: req.body.fundingRoundId },
 			data: {
 				type: req.body.type,
 				fundingAmount: req.body.fundingAmount,
+				equityPercentage: req.body.equityPercentage,
 				roundDate: new Date(req.body.roundDate),
 				leadInvestors: req.body.leadInvestors,
 			},
@@ -75,6 +80,7 @@ export const updateFundingRound = async (req, res) => {
 				data: { totalFundingAmount: { increment: amountDiff } },
 			});
 		}
+		updatedFundingRound.external = true;
 		res.status(200).json({ fundingRound: updatedFundingRound });
 	} catch (e) {
 		console.log(e);
@@ -82,7 +88,7 @@ export const updateFundingRound = async (req, res) => {
 	}
 };
 
-export const getAllFundingRound = async (req, res) => {
+export const getCompanyFinancialInfo = async (req, res) => {
 	try {
 		const company = await prisma.company.findFirst({
 			where: { account: { username: req.query.username } },

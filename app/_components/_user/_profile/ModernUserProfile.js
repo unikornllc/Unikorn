@@ -11,7 +11,7 @@ import Expertise from "@/app/_components/_user/_profile/Expertise";
 import Certifications from "@/app/_components/_user/_profile/Certifications";
 import Sidebar from "@/app/_components/_user/_profile/Sidebar";
 import Files from "@/app/_components/_user/_profile/Files";
-import Investments from "@/app/_components/_user/_profile/Investments";
+import InvestmentsSection from "@/app/_components/_shared/_profile/InvestmentsSection";
 import {
 	Tabs,
 	TabsContent,
@@ -73,24 +73,24 @@ export default function ModernUserProfile({ user, editable = false }) {
 		return () => window.removeEventListener("resize", checkMobile);
 	}, []);
 
-	useEffect(() => {
-		if (user) {
-			fetchProfileStats();
-		}
-	}, [user]);
+	// useEffect(() => {
+	// 	if (user) {
+	// 		fetchProfileStats();
+	// 	}
+	// }, [user]);
 
-	const fetchProfileStats = async () => {
-		try {
-			setProfileStats({
-				followers: user.followers?.length || 0,
-				following: user.following?.length || 0,
-				posts: user.posts?.length || 0,
-				investments: user.investments?.length || 0,
-			});
-		} catch (error) {
-			console.error("Error fetching profile stats:", error);
-		}
-	};
+	// const fetchProfileStats = async () => {
+	// 	try {
+	// 		setProfileStats({
+	// 			followers: user.followers?.length || 0,
+	// 			following: user.following?.length || 0,
+	// 			posts: user.posts?.length || 0,
+	// 			investments: user.investments?.length || 0,
+	// 		});
+	// 	} catch (error) {
+	// 		console.error("Error fetching profile stats:", error);
+	// 	}
+	// };
 
 	if (!user) {
 		return (
@@ -117,7 +117,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 		setActiveTab(value);
 	};
 
-	const completionPercentage = calculateProfileCompletion(user);
+	// const completionPercentage = calculateProfileCompletion(user);
 
 	const tabs = [
 		{ value: "home", label: "Home", icon: Home, priority: 1 },
@@ -173,7 +173,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 
 			<div className="container mx-auto px-4 py-6">
 				{/* Profile Completion Banner */}
-				{editable && completionPercentage < 100 && (
+				{/* {editable && completionPercentage < 100 && (
 					<Card className="mb-6 border-l-4 border-l-blue-500 bg-blue-50">
 						<CardContent className="p-4">
 							<div className="flex items-center justify-between">
@@ -200,10 +200,10 @@ export default function ModernUserProfile({ user, editable = false }) {
 							</div>
 						</CardContent>
 					</Card>
-				)}
+				)} */}
 
 				{/* Quick Stats */}
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+				{/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 					<Card className="hover:shadow-md transition-shadow">
 						<CardContent className="p-4 text-center">
 							<Eye className="h-6 w-6 text-blue-500 mx-auto mb-2" />
@@ -240,7 +240,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 							<div className="text-sm text-gray-500">Investments</div>
 						</CardContent>
 					</Card>
-				</div>
+				</div> */}
 
 				<Tabs
 					defaultValue="home"
@@ -465,7 +465,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 							value="investments"
 							className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-3 duration-500"
 						>
-							<Investments
+							<InvestmentsSection
 								investments={user.investments || []}
 								editable={editable}
 							/>
@@ -477,22 +477,22 @@ export default function ModernUserProfile({ user, editable = false }) {
 	);
 }
 
-function calculateProfileCompletion(user) {
-	let completed = 0;
-	const total = 10;
+// function calculateProfileCompletion(user) {
+// 	let completed = 0;
+// 	const total = 10;
 
-	if (user.name) completed++;
-	if (user.description) completed++;
-	if (user.education && user.education.length > 0) completed++;
-	if (user.corporateExperience && user.corporateExperience.length > 0)
-		completed++;
-	if (user.startupExperience && user.startupExperience.length > 0) completed++;
-	if (user.expertise && user.expertise.length > 0) completed++;
-	if (user.certificationsCourses && user.certificationsCourses.length > 0)
-		completed++;
-	if (user.language && user.language.length > 0) completed++;
-	if (user.socialMedia && user.socialMedia.length > 0) completed++;
-	if (user.interest && user.interest.length > 0) completed++;
+// 	if (user.name) completed++;
+// 	if (user.description) completed++;
+// 	if (user.education && user.education.length > 0) completed++;
+// 	if (user.corporateExperience && user.corporateExperience.length > 0)
+// 		completed++;
+// 	if (user.startupExperience && user.startupExperience.length > 0) completed++;
+// 	if (user.expertise && user.expertise.length > 0) completed++;
+// 	if (user.certificationsCourses && user.certificationsCourses.length > 0)
+// 		completed++;
+// 	if (user.language && user.language.length > 0) completed++;
+// 	if (user.socialMedia && user.socialMedia.length > 0) completed++;
+// 	if (user.interest && user.interest.length > 0) completed++;
 
-	return Math.round((completed / total) * 100);
-}
+// 	return Math.round((completed / total) * 100);
+// }

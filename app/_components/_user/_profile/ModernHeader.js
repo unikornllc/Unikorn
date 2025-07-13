@@ -7,7 +7,7 @@ import { useState } from "react";
 import axios from "axios";
 const ModernHeader = ({ user, editable }) => {
 	const { name, username, title, tier, unikornVerified, description } = user;
-	const [isFollowing, setIsFollowing] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(user.isFollowing);
 	const [followerCount, setFollowerCount] = useState(128);
 
 	const handleFollow = () => {

@@ -79,12 +79,12 @@ export default function PersonnelGrid({ personnel, onEdit }) {
 							)}
 
 							<a
-								href={person.crunchBaseLink}
+								href={person.linkedInLink}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="text-sm text-blue-600 hover:underline"
 							>
-								View on CrunchBase
+								View on LinkedIn
 							</a>
 						</div>
 					</div>

@@ -23,7 +23,9 @@ import { Label } from "@/app/_components/_ui/Label";
 import { Textarea } from "@/app/_components/_ui/Textarea";
 import { formatDate } from "@/app/_utils/utils";
 
-export default function NewsSection({ company, isOwner, updateCompany }) {
+import { updateCompany } from "@/app/_utils/_api/companyAPIs";
+
+export default function NewsSection({ company, isOwner }) {
 	const [activities, setActivities] = useState(company.activities || []);
 	const [isAddingActivity, setIsAddingActivity] = useState(false);
 	const [isEditingActivity, setIsEditingActivity] = useState(false);
@@ -38,7 +40,7 @@ export default function NewsSection({ company, isOwner, updateCompany }) {
 		description: "",
 	});
 
-	const handleAddActivity = () => {
+	const handleAddActivity = async () => {
 		if (!newActivity.title || !newActivity.description) return;
 
 		const activity = {
@@ -51,7 +53,7 @@ export default function NewsSection({ company, isOwner, updateCompany }) {
 
 		const updatedActivities = [activity, ...activities];
 		setActivities(updatedActivities);
-		updateCompany({ activities: updatedActivities });
+		await updateCompany({ activities: updatedActivities });
 		setNewActivity({ title: "", description: "" });
 		setIsAddingActivity(false);
 	};
@@ -66,7 +68,7 @@ export default function NewsSection({ company, isOwner, updateCompany }) {
 		setIsEditingActivity(true);
 	};
 
-	const handleSaveEditActivity = () => {
+	const handleSaveEditActivity = async () => {
 		if (!editActivity.title || !editActivity.description) return;
 
 		const updatedActivity = {
@@ -80,16 +82,16 @@ export default function NewsSection({ company, isOwner, updateCompany }) {
 		);
 
 		setActivities(updatedActivities);
-		updateCompany({ activities: updatedActivities });
+		await updateCompany({ activities: updatedActivities });
 		setIsEditingActivity(false);
 	};
 
-	const handleDeleteActivity = (id) => {
+	const handleDeleteActivity = async (id) => {
 		const updatedActivities = activities.filter(
 			(activity) => activity.id !== id,
 		);
 		setActivities(updatedActivities);
-		updateCompany({ activities: updatedActivities });
+		await updateCompany({ activities: updatedActivities });
 	};
 
 	return (

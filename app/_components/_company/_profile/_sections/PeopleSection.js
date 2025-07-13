@@ -41,13 +41,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-
-export default function PeopleSection({
-	company,
-	isOwner,
-	updateCompany,
+import {
 	deletePersonnel,
-}) {
+	updatePersonnel,
+} from "@/app/_utils/_api/companyAPIs";
+
+import DeleteButton from "@/app/_components/_ui/DeleteButton";
+
+export default function PeopleSection({ company, isOwner }) {
 	const [activeTab, setActiveTab] = useState("leadership");
 	const [isAddingPerson, setIsAddingPerson] = useState(false);
 	const [isEditingPerson, setIsEditingPerson] = useState(false);
@@ -69,7 +70,6 @@ export default function PeopleSection({
 			.map((person) => ({ ...person, avatar: "/placeholder.svg" })),
 	);
 
-	// Mock data for investors
 	const [investors, setInvestors] = useState(
 		company.personnel
 			.filter(
@@ -82,7 +82,7 @@ export default function PeopleSection({
 	const [newPerson, setNewPerson] = useState({
 		name: "",
 		role: "Founder",
-		crunchBaseLink: "",
+		linkedInLink: "",
 		userId: null,
 		user: null,
 	});
@@ -91,12 +91,11 @@ export default function PeopleSection({
 		id: "",
 		name: "",
 		role: "",
-		crunchBaseLink: "",
+		linkedInLink: "",
 		userId: null,
 		user: null,
 	});
 
-	// User search state
 	const [searchTerm, setSearchTerm] = useState("");
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [users, setUsers] = useState([]);
@@ -253,72 +252,72 @@ export default function PeopleSection({
 		setSearchTerm("");
 	};
 
-	const handleAddPerson = () => {
-		if (!newPerson.name) return;
-
-		const person = {
-			id: Date.now().toString(),
-			name: newPerson.name,
-			role: newPerson.role,
-			crunchBaseLink: newPerson.crunchBaseLink,
-			companyId: company.id,
-			userId: newPerson.userId,
-			user: newPerson.user,
-			username: newPerson.user?.account?.username,
-		};
-
-		// First call updateCompany with the model and id for upsert
-		updateCompany({
-			model: "personnel",
-			id: person.id,
-			data: person,
-		});
-
-		// Then update the local state based on the role
-		if (newPerson.role === "KeyEmployee" || newPerson.role === "Employee") {
-			setEmployees((prev) => [
-				...prev,
-				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
-			]);
-		} else if (leaderRoles.includes(newPerson.role)) {
-			setLeaders((prev) => [
-				...prev,
-				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
-			]);
-		} else if (
-			newPerson.role === "Investor" ||
-			newPerson.role === "LeadInvestor"
-		) {
-			setInvestors((prev) => [
-				...prev,
-				{ ...person, avatar: person.user?.avatar || "/placeholder.svg" },
-			]);
-		} else {
-			// For other roles, keep the original behavior
-			const updatedPersonnel = [...(company.personnel || []), person];
-			updateCompany({ personnel: updatedPersonnel });
-		}
-
-		setNewPerson({
-			name: "",
-			role: "Founder",
-			crunchBaseLink: "",
-			userId: null,
-			user: null,
-		});
+	const handleAddPerson = async () => {
 		setSelectedUser(null);
 		setIsAddingPerson(false);
+		if (!newPerson.name || !newPerson.role) return;
+		try {
+			const person = {
+				name: newPerson.name,
+				role: newPerson.role,
+				linkedInLink: newPerson.linkedInLink,
+				userId: newPerson.userId,
+				user: newPerson.user,
+				username: newPerson.user?.account?.username || null,
+			};
+
+			await updatePersonnel(person).then((response) => {
+				const newPersonData = response.personnel;
+				if (newPerson.role === "KeyEmployee" || newPerson.role === "Employee") {
+					setEmployees((prev) => [
+						...prev,
+						{
+							...newPersonData,
+							avatar: newPersonData.user?.avatar || "/placeholder.svg",
+						},
+					]);
+				} else if (leaderRoles.includes(newPerson.role)) {
+					setLeaders((prev) => [
+						...prev,
+						{
+							...newPersonData,
+							avatar: newPersonData.user?.avatar || "/placeholder.svg",
+						},
+					]);
+				} else if (
+					newPerson.role === "Investor" ||
+					newPerson.role === "LeadInvestor"
+				) {
+					setInvestors((prev) => [
+						...prev,
+						{
+							...newPersonData,
+							avatar: newPersonData.user?.avatar || "/placeholder.svg",
+						},
+					]);
+				} else {
+					const updatedPersonnel = [
+						...(company.personnel || []),
+						newPersonData,
+					];
+					// updateCompany({ personnel: updatedPersonnel });
+				}
+
+				setNewPerson({
+					name: "",
+					role: "Founder",
+					linkedInLink: "",
+					userId: null,
+					user: null,
+				});
+			});
+		} catch (error) {
+			console.error("Error adding person:", error);
+		}
 	};
 
 	const handleEditPerson = (person) => {
-		setEditPerson({
-			id: person.id,
-			name: person.name,
-			role: person.role,
-			crunchBaseLink: person.crunchBaseLink || "",
-			userId: person.userId || null,
-			user: person.user || null,
-		});
+		setEditPerson(person);
 		if (person.user) {
 			setSelectedUser({
 				...person.user,
@@ -334,159 +333,133 @@ export default function PeopleSection({
 		setIsEditingPerson(true);
 	};
 
-	const handleSaveEditPerson = () => {
-		if (!editPerson.name) return;
-
-		const updatedPerson = {
-			id: editPerson.id,
-			name: editPerson.name,
-			role: editPerson.role,
-			crunchBaseLink: editPerson.crunchBaseLink,
-			companyId: company.id,
-			userId: editPerson.userId,
-			user: editPerson.user,
-			username: editPerson.user?.account?.username,
-		};
-
-		if (editPerson.role === "KeyEmployee" || editPerson.role === "Employee") {
-			updateCompany({
-				model: "personnel",
-				id: editPerson.id,
-				data: updatedPerson,
-			});
-
-			setEmployees((prev) =>
-				prev.map((person) =>
-					person.id === editPerson.id
-						? {
-								...person,
-								...updatedPerson,
-								avatar:
-									updatedPerson.user?.avatar ||
-									person.avatar ||
-									"/placeholder.svg",
-							}
-						: person,
-				),
-			);
-
-			setLeaders((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-			setInvestors((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-		} else if (leaderRoles.includes(editPerson.role)) {
-			updateCompany({
-				model: "personnel",
-				id: editPerson.id,
-				data: updatedPerson,
-			});
-			setLeaders((prev) =>
-				prev.map((person) =>
-					person.id === editPerson.id
-						? {
-								...person,
-								...updatedPerson,
-								avatar:
-									updatedPerson.user?.avatar ||
-									person.avatar ||
-									"/placeholder.svg",
-							}
-						: person,
-				),
-			);
-			setEmployees((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-			setInvestors((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-
-			// If the person wasn't in leaders before (role changed), add them
-			if (!leaders.some((person) => person.id === editPerson.id)) {
-				setLeaders((prev) => [
-					...prev,
-					{
-						...updatedPerson,
-						avatar: updatedPerson.user?.avatar || "/placeholder.svg",
-					},
-				]);
-			}
-		} else if (
-			editPerson.role === "Investor" ||
-			editPerson.role === "LeadInvestor"
-		) {
-			updateCompany({
-				model: "personnel",
-				id: editPerson.id,
-				data: updatedPerson,
-			});
-
-			setInvestors((prev) =>
-				prev.map((person) =>
-					person.id === editPerson.id
-						? {
-								...person,
-								...updatedPerson,
-								avatar:
-									updatedPerson.user?.avatar ||
-									person.avatar ||
-									"/placeholder.svg",
-							}
-						: person,
-				),
-			);
-
-			setLeaders((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-			setEmployees((prev) =>
-				prev.filter((person) => person.id !== editPerson.id),
-			);
-
-			// If the person wasn't in investors before (role changed), add them
-			if (!investors.some((person) => person.id === editPerson.id)) {
-				setInvestors((prev) => [
-					...prev,
-					{
-						...updatedPerson,
-						avatar: updatedPerson.user?.avatar || "/placeholder.svg",
-					},
-				]);
-			}
-		} else {
-			setInvestors((prev) =>
-				prev.map((person) =>
-					person.id === editPerson.id
-						? {
-								...person,
-								...updatedPerson,
-								avatar:
-									updatedPerson.user?.avatar ||
-									person.avatar ||
-									"/placeholder.svg",
-							}
-						: person,
-				),
-			);
-		}
-
+	const handleSaveEditPerson = async () => {
 		setSelectedUser(null);
 		setIsEditingPerson(false);
+		if (!editPerson.name || !editPerson.role) {
+			return;
+		}
+		try {
+			if (editPerson.role === "KeyEmployee" || editPerson.role === "Employee") {
+				setEmployees((prev) =>
+					prev.map((person) =>
+						person.id === editPerson.id
+							? {
+									...person,
+									...editPerson,
+									avatar:
+										editPerson.user?.avatar ||
+										person.avatar ||
+										"/placeholder.svg",
+								}
+							: person,
+					),
+				);
+
+				setLeaders((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+				setInvestors((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+			} else if (leaderRoles.includes(editPerson.role)) {
+				setLeaders((prev) =>
+					prev.map((person) =>
+						person.id === editPerson.id
+							? {
+									...person,
+									...editPerson,
+									avatar:
+										editPerson.user?.avatar ||
+										person.avatar ||
+										"/placeholder.svg",
+								}
+							: person,
+					),
+				);
+				setEmployees((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+				setInvestors((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+
+				if (!leaders.some((person) => person.id === editPerson.id)) {
+					setLeaders((prev) => [
+						...prev,
+						{
+							...editPerson,
+							avatar: editPerson.user?.avatar || "/placeholder.svg",
+						},
+					]);
+				}
+			} else if (
+				editPerson.role === "Investor" ||
+				editPerson.role === "LeadInvestor"
+			) {
+				setInvestors((prev) =>
+					prev.map((person) =>
+						person.id === editPerson.id
+							? {
+									...person,
+									...editPerson,
+									avatar:
+										editPerson.user?.avatar ||
+										person.avatar ||
+										"/placeholder.svg",
+								}
+							: person,
+					),
+				);
+
+				setLeaders((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+				setEmployees((prev) =>
+					prev.filter((person) => person.id !== editPerson.id),
+				);
+
+				if (!investors.some((person) => person.id === editPerson.id)) {
+					setInvestors((prev) => [
+						...prev,
+						{
+							...editPerson,
+							avatar: editPerson.user?.avatar || "/placeholder.svg",
+						},
+					]);
+				}
+			} else {
+				setInvestors((prev) =>
+					prev.map((person) =>
+						person.id === editPerson.id
+							? {
+									...person,
+									...editPerson,
+									avatar:
+										editPerson.user?.avatar ||
+										person.avatar ||
+										"/placeholder.svg",
+								}
+							: person,
+					),
+				);
+			}
+			await updatePersonnel(editPerson);
+		} catch (error) {
+			console.error("Error saving edited person:", error);
+		}
 	};
 
-	const handleDeletePerson = (id, role) => {
-		if (role === "KeyEmployee") {
-			deletePersonnel(id);
+	const handleDeletePerson = async (id, role) => {
+		if (role == "KeyEmployee" || role == "Employee") {
 			setEmployees((prev) => prev.filter((person) => person.id !== id));
+			await deletePersonnel(id);
 		} else if (leaderRoles.includes(role)) {
-			deletePersonnel(id);
 			setLeaders((prev) => prev.filter((person) => person.id !== id));
+			await deletePersonnel(id);
 		} else {
-			// Handle investor deletion here
-			deletePersonnel(id);
 			setInvestors((prev) => prev.filter((person) => person.id !== id));
+			await deletePersonnel(id);
 		}
 	};
 
@@ -494,7 +467,7 @@ export default function PeopleSection({
 		setNewPerson({
 			name: "",
 			role: "KeyEmployee",
-			crunchBaseLink: "",
+			linkedInLink: "",
 			userId: null,
 			user: null,
 		});
@@ -506,7 +479,7 @@ export default function PeopleSection({
 		setNewPerson({
 			name: "",
 			role: "Founder",
-			crunchBaseLink: "",
+			linkedInLink: "",
 			userId: null,
 			user: null,
 		});
@@ -518,7 +491,7 @@ export default function PeopleSection({
 		setNewPerson({
 			name: "",
 			role: "Investor",
-			crunchBaseLink: "",
+			linkedInLink: "",
 			userId: null,
 			user: null,
 		});
@@ -642,16 +615,14 @@ export default function PeopleSection({
 															>
 																<Edit className="h-4 w-4" />
 															</Button>
-															<Button
-																variant="ghost"
-																size="icon"
-																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-																onClick={() =>
-																	handleDeletePerson(person.id, person.role)
-																}
-															>
-																<Trash2 className="h-4 w-4" />
-															</Button>
+
+															<DeleteButton
+																onDelete={() => {
+																	handleDeletePerson(person.id, person.role);
+																}}
+																itemType="Leader"
+																size="small"
+															/>
 														</div>
 													)}
 												</div>
@@ -669,7 +640,7 @@ export default function PeopleSection({
 											onClick={handleAddLeader}
 										>
 											<Plus className="h-4 w-4 mr-2" />
-											Add Team Member
+											Add Leader
 										</Button>
 									)}
 								</div>
@@ -740,16 +711,17 @@ export default function PeopleSection({
 															>
 																<Edit className="h-4 w-4" />
 															</Button>
-															<Button
-																variant="ghost"
-																size="icon"
-																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-																onClick={() =>
-																	handleDeletePerson(employee.id, employee.role)
-																}
-															>
-																<Trash2 className="h-4 w-4" />
-															</Button>
+
+															<DeleteButton
+																onDelete={() => {
+																	handleDeletePerson(
+																		employee.id,
+																		employee.role,
+																	);
+																}}
+																itemType="Employee"
+																size="small"
+															/>
 														</div>
 													)}
 												</div>
@@ -834,16 +806,14 @@ export default function PeopleSection({
 															>
 																<Edit className="h-4 w-4" />
 															</Button>
-															<Button
-																variant="ghost"
-																size="icon"
-																className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-																onClick={() =>
-																	handleDeletePerson(investor.id, "investor")
-																}
-															>
-																<Trash2 className="h-4 w-4" />
-															</Button>
+
+															<DeleteButton
+																onDelete={() => {
+																	handleDeletePerson(investor.id, "investor");
+																}}
+																itemType="Investor"
+																size="small"
+															/>
 														</div>
 													)}
 												</div>
@@ -949,16 +919,16 @@ export default function PeopleSection({
 							)}
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="person-crunchbase" className="text-right">
-								CrunchBase Link
+							<Label htmlFor="person-LinkedIn" className="text-right">
+								LinkedIn Link
 							</Label>
 							<Input
-								id="person-crunchbase"
-								value={newPerson.crunchBaseLink}
+								id="person-LinkedIn"
+								value={newPerson.linkedInLink}
 								onChange={(e) =>
-									setNewPerson({ ...newPerson, crunchBaseLink: e.target.value })
+									setNewPerson({ ...newPerson, linkedInLink: e.target.value })
 								}
-								placeholder="https://crunchbase.com/person/name"
+								placeholder="https://linkedin.com/in/name"
 								className="col-span-3"
 							/>
 						</div>
@@ -1199,19 +1169,19 @@ export default function PeopleSection({
 							)}
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="edit-person-crunchbase" className="text-right">
-								CrunchBase Link
+							<Label htmlFor="edit-person-LinkedIn" className="text-right">
+								LinkedIn Link
 							</Label>
 							<Input
-								id="edit-person-crunchbase"
-								value={editPerson.crunchBaseLink}
+								id="edit-person-LinkedIn"
+								value={editPerson.linkedInLink}
 								onChange={(e) =>
 									setEditPerson({
 										...editPerson,
-										crunchBaseLink: e.target.value,
+										linkedInLink: e.target.value,
 									})
 								}
-								placeholder="https://crunchbase.com/person/name"
+								placeholder="https://linkedin.com/in/name"
 								className="col-span-3"
 							/>
 						</div>

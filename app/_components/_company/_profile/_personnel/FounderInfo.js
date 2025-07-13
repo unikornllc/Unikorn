@@ -5,7 +5,7 @@ import AddIcon from "@/app/_icons/AddIcon";
 import DeleteIcon from "@/app/_icons/DeleteIcon";
 import EditIcon from "@/app/_icons/EditIcon";
 import SaveIcon from "@/app/_icons/SaveIcon";
-import ExternalLink from "../../ExternalLink";
+import ExternalLink from "../../../ExternalLink";
 
 const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [localFounders, setLocalFounders] = useState(founders);
@@ -13,7 +13,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 	const [tempFounder, setTempFounder] = useState({
 		name: "",
 		role: "",
-		crunchBaseLink: "",
+		linkedInLink: "",
 	});
 	const [isAdding, setIsAdding] = useState(false);
 
@@ -30,7 +30,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 
 	const cancelEditing = () => {
 		setEditingIndex(null);
-		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
+		setTempFounder({ name: "", role: "", linkedInLink: "" });
 		setIsAdding(false);
 	};
 
@@ -39,7 +39,7 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 		updatedFounders[editingIndex] = tempFounder;
 		setLocalFounders(updatedFounders);
 		setEditingIndex(null);
-		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
+		setTempFounder({ name: "", role: "", linkedInLink: "" });
 		onUpdate("founders", updatedFounders);
 	};
 
@@ -51,14 +51,14 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 
 	const handleAddClick = () => {
 		setIsAdding(true);
-		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
+		setTempFounder({ name: "", role: "", linkedInLink: "" });
 	};
 
 	const handleAddSubmit = () => {
 		const updatedFounders = [...localFounders, tempFounder];
 		setLocalFounders(updatedFounders);
 		setIsAdding(false);
-		setTempFounder({ name: "", role: "", crunchBaseLink: "" });
+		setTempFounder({ name: "", role: "", linkedInLink: "" });
 		onUpdate("founders", updatedFounders);
 	};
 
@@ -99,27 +99,25 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 							)}
 						</div>
 						<div className="flex items-center mb-2">
-							<span className="font-medium w-1/3">CrunchBase Link:</span>
+							<span className="font-medium w-1/3">LinkedIn Link:</span>
 							{editingIndex === index ? (
 								<input
 									type="text"
-									value={tempFounder.crunchBaseLink}
-									onChange={(e) =>
-										handleChange("crunchBaseLink", e.target.value)
-									}
+									value={tempFounder.linkedInLink}
+									onChange={(e) => handleChange("linkedInLink", e.target.value)}
 									className="border rounded px-2 py-1 flex-grow mr-2"
 								/>
-							) : founder.crunchBaseLink ? (
+							) : founder.linkedInLink ? (
 								<ExternalLink
 									href={
-										founder.crunchBaseLink.startsWith("http://") ||
-										founder.crunchBaseLink.startsWith("https://")
-											? founder.crunchBaseLink
-											: `https://${founder.crunchBaseLink}`
+										founder.linkedInLink.startsWith("http://") ||
+										founder.linkedInLink.startsWith("https://")
+											? founder.linkedInLink
+											: `https://${founder.linkedInLink}`
 									}
 									className="flex-grow mr-2 text-blue-500 underline"
 								>
-									{founder.crunchBaseLink}
+									{founder.linkedInLink}
 								</ExternalLink>
 							) : (
 								<span className="flex-grow mr-2">-</span>
@@ -187,11 +185,11 @@ const FounderInfo = ({ founders = [], onUpdate }) => {
 						/>
 					</div>
 					<div className="flex items-center mb-2">
-						<span className="font-medium w-1/3">CrunchBase Link:</span>
+						<span className="font-medium w-1/3">LinkedIn Link:</span>
 						<input
 							type="text"
-							value={tempFounder.crunchBaseLink}
-							onChange={(e) => handleChange("crunchBaseLink", e.target.value)}
+							value={tempFounder.linkedInLink}
+							onChange={(e) => handleChange("linkedInLink", e.target.value)}
 							className="border rounded px-2 py-1 flex-grow mr-2"
 						/>
 					</div>

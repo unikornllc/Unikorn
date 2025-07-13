@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon } from "@heroicons/react/24/solid";
 import {
 	Card,
@@ -23,10 +23,25 @@ import { Input } from "@/app/_components/_ui/Input";
 import { Label } from "@/app/_components/_ui/Label";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
 
-const Investments = ({ investments, editable }) => {
+import {
+	fetchInvestments,
+	updateInvestment,
+	createInvestment,
+	deleteInvestment,
+} from "@/app/_utils/_api/sharedAPIs";
+
+import { formatDate, formatCurrency } from "@/app/_utils/utils";
+
+export default function InvestmentsSection({
+	username,
+	investmentsData,
+	editable,
+}) {
+	const [investments, setInvestments] = useState(investmentsData || []);
 	const [isAddingInvestment, setIsAddingInvestment] = useState(false);
-	const [editingInvestmentId, setEditingInvestmentId] = useState(null);
+	const [editingInvestment, setEditingInvestment] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [pageLoading, setPageLoading] = useState(true);
 
 	const [newInvestment, setNewInvestment] = useState({
 		companyName: "",
@@ -45,14 +60,20 @@ const Investments = ({ investments, editable }) => {
 		try {
 			setLoading(true);
 			console.log("Adding investment:", newInvestment);
-			// const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER}/api/investments`, newInvestment)
 
 			setIsAddingInvestment(false);
-			setNewInvestment({
-				companyName: "",
-				amount: 0,
-				equityPercentage: 0,
-				date: new Date().toISOString().split("T")[0],
+
+			await createInvestment(newInvestment).then((res) => {
+				setInvestments((prevInvestments) => [
+					...prevInvestments,
+					res.investment,
+				]);
+				setNewInvestment({
+					companyName: "",
+					amount: 0,
+					equityPercentage: 0,
+					date: new Date().toISOString().split("T")[0],
+				});
 			});
 		} catch (error) {
 			console.error("Error adding investment:", error);
@@ -65,13 +86,25 @@ const Investments = ({ investments, editable }) => {
 		try {
 			setLoading(true);
 			console.log("Updating investment:", editData);
+			setEditingInvestment(false);
 
-			setEditingInvestmentId(null);
-			setEditData({
-				companyName: "",
-				amount: 0,
-				equityPercentage: 0,
-				date: "",
+			await updateInvestment(editData).then((res) => {
+				setInvestments((prevInvestments) => {
+					return prevInvestments.map((investment) => {
+						if (investment.id === res.investment.id) {
+							return res.investment;
+						}
+						return investment;
+					});
+				});
+				console.log(res.investment);
+
+				setEditData({
+					companyName: "",
+					amount: 0,
+					equityPercentage: 0,
+					date: "",
+				});
 			});
 		} catch (error) {
 			console.error("Error updating investment:", error);
@@ -84,7 +117,13 @@ const Investments = ({ investments, editable }) => {
 		try {
 			setLoading(true);
 			console.log("Deleting investment:", investmentId);
-			// await axios.delete(`${process.env.NEXT_PUBLIC_SERVER}/api/investments/${investmentId}`)
+			await deleteInvestment(investmentId).then(() => {
+				setInvestments((prevInvestments) => {
+					return prevInvestments.filter(
+						(investment) => investment.id !== investmentId,
+					);
+				});
+			});
 		} catch (error) {
 			console.error("Error deleting investment:", error);
 		} finally {
@@ -92,21 +131,28 @@ const Investments = ({ investments, editable }) => {
 		}
 	};
 
-	const formatDate = (dateString) => {
-		return new Date(dateString).toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "long",
-			day: "numeric",
-		});
-	};
+	useEffect(() => {
+		const fetchInvestmentsData = async () => {
+			try {
+				await fetchInvestments().then((res) => {
+					setInvestments(res.investments);
+				});
+			} catch (e) {
+				console.log(e);
+			} finally {
+				setPageLoading(false);
+			}
+		};
+		fetchInvestmentsData();
+	}, []);
 
-	const formatCurrency = (amount) => {
-		return new Intl.NumberFormat("en-US", {
-			style: "currency",
-			currency: "USD",
-		}).format(amount);
-	};
-
+	if (pageLoading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			</div>
+		);
+	}
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
@@ -140,20 +186,16 @@ const Investments = ({ investments, editable }) => {
 						<Card key={investment.id} className="overflow-hidden">
 							<CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-2">
 								<div className="flex justify-between items-start">
-									<CardTitle>{investment.raisingFunds.company.name}</CardTitle>
-									{editable && (
+									<CardTitle>{investment.companyName}</CardTitle>
+									{editable && investment.external && (
 										<button
 											className="p-2 rounded-full bg-white hover:bg-gray-100"
 											onClick={() => {
-												setEditingInvestmentId(investment.id);
 												setEditData({
-													companyName: investment.raisingFunds.company.name,
-													amount: investment.fundingAmount,
-													equityPercentage: investment.equityPercentage,
-													date: new Date(investment.date)
-														.toISOString()
-														.split("T")[0],
+													...investment,
+													investmentId: investment.id,
 												});
+												setEditingInvestment(true);
 											}}
 										>
 											<PencilIcon className="w-4 h-4 text-gray-600" />
@@ -169,7 +211,7 @@ const Investments = ({ investments, editable }) => {
 									<div className="flex justify-between">
 										<span className="text-gray-500">Investment Amount:</span>
 										<span className="font-medium">
-											{formatCurrency(investment.fundingAmount)}
+											{formatCurrency(investment.amount)}
 										</span>
 									</div>
 									<div className="flex justify-between">
@@ -187,7 +229,7 @@ const Investments = ({ investments, editable }) => {
 								>
 									{investment.status} Investment
 								</Badge>
-								{editable && (
+								{editable && investment.external && (
 									<DeleteButton
 										onDelete={() => handleDeleteInvestment(investment.id)}
 										itemType="Investment"
@@ -288,8 +330,8 @@ const Investments = ({ investments, editable }) => {
 			</Dialog>
 
 			<Dialog
-				open={!!editingInvestmentId}
-				onOpenChange={(open) => !open && setEditingInvestmentId(null)}
+				open={editingInvestment}
+				onOpenChange={(open) => !open && setEditingInvestment(false)}
 			>
 				<DialogContent>
 					<DialogHeader>
@@ -362,7 +404,7 @@ const Investments = ({ investments, editable }) => {
 					<DialogFooter>
 						<Button
 							variant="outline"
-							onClick={() => setEditingInvestmentId(null)}
+							onClick={() => setEditingInvestment(false)}
 						>
 							Cancel
 						</Button>
@@ -374,6 +416,4 @@ const Investments = ({ investments, editable }) => {
 			</Dialog>
 		</div>
 	);
-};
-
-export default Investments;
+}

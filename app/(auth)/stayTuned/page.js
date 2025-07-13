@@ -2,15 +2,21 @@
 
 import { motion } from "framer-motion";
 import { Button } from "../../_components/_ui/Button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../_components/_ui/Card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "../../_components/_ui/Card";
 import { Clock, Rocket, Users, Building2, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import Navbar from "../../_components/_ui/Navbar";
+import LandingNavbar from "../../_components/LandingNavbar";
 
 export default function StayTuned() {
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-			<Navbar />
+			<LandingNavbar />
 			<div className="container mx-auto px-4 py-20">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
@@ -32,7 +38,8 @@ export default function StayTuned() {
 								Stay Tuned!
 							</CardTitle>
 							<CardDescription className="text-xl text-indigo-700">
-								Thank you for joining Unikorn! We're working hard to bring you the future of equity fundraising.
+								Thank you for joining Unikorn! We're working hard to bring you
+								the future of equity fundraising.
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-8">
@@ -44,10 +51,13 @@ export default function StayTuned() {
 							>
 								<div className="flex items-center justify-center space-x-2 mb-4">
 									<Clock className="w-6 h-6 text-indigo-600" />
-									<h3 className="text-lg font-semibold text-indigo-900">Coming Soon</h3>
+									<h3 className="text-lg font-semibold text-indigo-900">
+										Coming Soon
+									</h3>
 								</div>
 								<p className="text-indigo-700">
-									We're in the final stages of development. Get ready to revolutionize your investment journey with our platform.
+									We're in the final stages of development. Get ready to
+									revolutionize your investment journey with our platform.
 								</p>
 							</motion.div>
 
@@ -60,19 +70,26 @@ export default function StayTuned() {
 								<div className="flex items-center space-x-3 p-4 bg-indigo-50 rounded-lg">
 									<Users className="w-6 h-6 text-indigo-600" />
 									<div>
-										<h4 className="font-semibold text-indigo-900">Angel Investors/VCs</h4>
-										<p className="text-sm text-indigo-700">Discover and invest in promising companies</p>
+										<h4 className="font-semibold text-indigo-900">
+											Angel Investors/VCs
+										</h4>
+										<p className="text-sm text-indigo-700">
+											Discover and invest in promising companies
+										</p>
 									</div>
 								</div>
 								<div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg">
 									<Building2 className="w-6 h-6 text-purple-600" />
 									<div>
-										<h4 className="font-semibold text-purple-900">Founders/Startups</h4>
-										<p className="text-sm text-purple-700">Connect with potential investors worldwide</p>
+										<h4 className="font-semibold text-purple-900">
+											Founders/Startups
+										</h4>
+										<p className="text-sm text-purple-700">
+											Connect with potential investors worldwide
+										</p>
 									</div>
 								</div>
 							</motion.div>
-
 
 							<motion.div
 								initial={{ opacity: 0, y: 20 }}
@@ -90,7 +107,10 @@ export default function StayTuned() {
 										</Button>
 									</Link>
 									<Link href="/signin">
-										<Button variant="outline" className="border-indigo-300 text-indigo-700 hover:bg-indigo-50 px-6 py-2">
+										<Button
+											variant="outline"
+											className="border-indigo-300 text-indigo-700 hover:bg-indigo-50 px-6 py-2"
+										>
 											Sign In
 										</Button>
 									</Link>
@@ -102,4 +122,4 @@ export default function StayTuned() {
 			</div>
 		</div>
 	);
-} 
+}
