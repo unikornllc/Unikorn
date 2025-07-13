@@ -50,3 +50,15 @@ export const deleteInvestment = async (investmentId) => {
 		throw error;
 	}
 };
+
+export const getAccountStats = async (username) => {
+	try {
+		const response = await axios.get(`${API_BASE_URL}/getAccountStats`, {
+			withCredentials: true,
+			params: { username },
+		});
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+};

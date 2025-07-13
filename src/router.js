@@ -50,17 +50,13 @@ import {
 } from "./controllers/user.js";
 
 import {
-	followUser,
-	isFollowingUser,
-	unfollowUser,
+	followAccount,
+	unfollowAccount,
+	isFollowingAccount,
 	getFollowers,
 	getFollowing,
-	followCompany,
-	unfollowCompany,
-	isFollowingCompany,
-	getFollowingCompanies,
-	getMyFollowing,
 	getMyFollowers,
+	getMyFollowing,
 } from "./controllers/follow.js";
 
 import {
@@ -253,9 +249,6 @@ router.get("/getUserPermissions", getUserPermissions);
 // router.delete("/deleteUser", deleteUser);
 router.put("/updateUser", updateUser);
 router.put("/updateUserItem", updateUserItem);
-router.put("/followUser", followUser);
-router.get("/isFollowing", isFollowingUser);
-router.put("/unfollowUser", unfollowUser);
 router.get("/getTier", getTier);
 router.put("/updateTier", updateTier);
 
@@ -269,6 +262,10 @@ router.get("/getFollowers", getFollowers);
 router.get("/getFollowing", getFollowing);
 router.get("/getMyFollowing", getMyFollowing);
 router.get("/getMyFollowers", getMyFollowers);
+router.post("/followAccount", followAccount);
+router.post("/unfollowAccount", unfollowAccount);
+router.get("/isFollowing", isFollowingAccount);
+router.get("/getAccountStats", getAccountStats);
 
 //Certifications_Courses
 router.post("/createCertificationsCourses", createCertificationsCourses);
@@ -295,15 +292,11 @@ router.get("/isCurrentCompany", isCurrentCompany);
 router.get("/getOneCompanyProfile", getOneCompanyProfile);
 // router.put("/updateCompanyProfile", updateCompanyProfile);
 // router.put("/updateCompanyProfile", updateCompanyProfile);
-router.get("/isFollowingCompany", isFollowingCompany);
-router.put("/followCompany", followCompany);
-router.put("/unfollowCompany", unfollowCompany);
 router.get("/getCurrentCompany", getCurrentCompany);
 router.get("/getCompanyPermissions", getCompanyPermissions);
 
 //get all companies that the user is following
 //returns an array of usernames
-router.get("/getFollowingCompanies", getFollowingCompanies);
 
 //key employee
 router.post("/createKeyEmployee", createKeyEmployee);
@@ -458,6 +451,7 @@ import {
 	getInvestments,
 	updateInvestment,
 } from "./controllers/investment.js";
+import { getAccountStats } from "./controllers/account.js";
 
 router.put("/updatePersonnel", updatePersonnel);
 router.delete("/deletePersonnel", deletePersonnel);

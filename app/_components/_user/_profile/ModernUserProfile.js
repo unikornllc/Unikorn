@@ -49,16 +49,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/app/_components/_ui/DropdownMenu";
+import { getAccountStats } from "@/app/_utils/_api/sharedAPIs";
 
 export default function ModernUserProfile({ user, editable = false }) {
 	const [activeTab, setActiveTab] = useState("home");
 	const [tabContentHeight, setTabContentHeight] = useState("auto");
 	const [isMobile, setIsMobile] = useState(false);
 	const [profileStats, setProfileStats] = useState({
-		followers: 0,
-		following: 0,
-		posts: 0,
-		investments: 0,
+		followersCount: 0,
+		followingCount: 0,
+		postsCount: 0,
+		investmentsCount: 0,
 	});
 	const [isLoading, setIsLoading] = useState(false);
 	const { toast } = useToast();
@@ -73,24 +74,23 @@ export default function ModernUserProfile({ user, editable = false }) {
 		return () => window.removeEventListener("resize", checkMobile);
 	}, []);
 
-	// useEffect(() => {
-	// 	if (user) {
-	// 		fetchProfileStats();
-	// 	}
-	// }, [user]);
-
-	// const fetchProfileStats = async () => {
-	// 	try {
-	// 		setProfileStats({
-	// 			followers: user.followers?.length || 0,
-	// 			following: user.following?.length || 0,
-	// 			posts: user.posts?.length || 0,
-	// 			investments: user.investments?.length || 0,
-	// 		});
-	// 	} catch (error) {
-	// 		console.error("Error fetching profile stats:", error);
-	// 	}
-	// };
+	useEffect(() => {
+		const fetchProfileStats = async () => {
+			try {
+				await getAccountStats(user.username).then((data) => {
+					setProfileStats({
+						followersCount: data.followersCount,
+						followingCount: data.followingCount,
+						postsCount: data.postsCount,
+						investmentsCount: data.investmentsCount,
+					});
+				});
+			} catch (error) {
+				console.error("Error fetching profile stats:", error);
+			}
+		};
+		fetchProfileStats();
+	}, [user]);
 
 	if (!user) {
 		return (
@@ -203,12 +203,12 @@ export default function ModernUserProfile({ user, editable = false }) {
 				)} */}
 
 				{/* Quick Stats */}
-				{/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 					<Card className="hover:shadow-md transition-shadow">
 						<CardContent className="p-4 text-center">
 							<Eye className="h-6 w-6 text-blue-500 mx-auto mb-2" />
 							<div className="text-2xl font-bold text-gray-900">
-								{profileStats.followers}
+								{profileStats.followersCount}
 							</div>
 							<div className="text-sm text-gray-500">Followers</div>
 						</CardContent>
@@ -217,7 +217,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 						<CardContent className="p-4 text-center">
 							<Users className="h-6 w-6 text-green-500 mx-auto mb-2" />
 							<div className="text-2xl font-bold text-gray-900">
-								{profileStats.following}
+								{profileStats.followingCount}
 							</div>
 							<div className="text-sm text-gray-500">Following</div>
 						</CardContent>
@@ -226,7 +226,7 @@ export default function ModernUserProfile({ user, editable = false }) {
 						<CardContent className="p-4 text-center">
 							<MessageSquare className="h-6 w-6 text-purple-500 mx-auto mb-2" />
 							<div className="text-2xl font-bold text-gray-900">
-								{profileStats.posts}
+								{profileStats.postsCount}
 							</div>
 							<div className="text-sm text-gray-500">Posts</div>
 						</CardContent>
@@ -235,12 +235,12 @@ export default function ModernUserProfile({ user, editable = false }) {
 						<CardContent className="p-4 text-center">
 							<TrendingUp className="h-6 w-6 text-orange-500 mx-auto mb-2" />
 							<div className="text-2xl font-bold text-gray-900">
-								{profileStats.investments}
+								{profileStats.investmentsCount}
 							</div>
 							<div className="text-sm text-gray-500">Investments</div>
 						</CardContent>
 					</Card>
-				</div> */}
+				</div>
 
 				<Tabs
 					defaultValue="home"

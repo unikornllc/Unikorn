@@ -35,11 +35,10 @@ import { formatDate } from "@/app/_utils/utils";
 import ProfileCoverEdit from "@/app/_components/_shared/_profile/ProfileCoverEdit";
 
 import { updateCompany } from "@/app/_utils/_api/companyAPIs";
+import { followAccount, unfollowAccount } from "@/app/_utils/_api/followAPIs";
 
 export default function ProfileHeader({ company, isOwner }) {
 	const [isFollowing, setIsFollowing] = useState(company.isFollowing);
-	const [followerCount, setFollowerCount] = useState(1234);
-
 	const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false);
 	const [companyInfo, setCompanyInfo] = useState({
 		name: company.name,
@@ -50,15 +49,26 @@ export default function ProfileHeader({ company, isOwner }) {
 		type: company.type,
 	});
 
-	const username = company.account.username;
+	const username = company.username;
 	const name = company.name;
-	const handleFollow = () => {
-		if (isFollowing) {
-			setFollowerCount(followerCount - 1);
-		} else {
-			setFollowerCount(followerCount + 1);
+	const handleFollow = async () => {
+		try {
+			await followAccount({ username: company.username }).then(() => {
+				setIsFollowing(true);
+			});
+		} catch (err) {
+			console.log(err);
 		}
-		setIsFollowing(!isFollowing);
+	};
+
+	const handleUnfollow = async () => {
+		try {
+			await unfollowAccount({ username: company.username }).then(() => {
+				setIsFollowing(false);
+			});
+		} catch (err) {
+			console.log(err);
+		}
 	};
 
 	const handleSaveCompanyInfo = async () => {
@@ -101,7 +111,7 @@ export default function ProfileHeader({ company, isOwner }) {
 							<div className="flex gap-3">
 								<Button
 									variant={isFollowing ? "outline" : "default"}
-									onClick={handleFollow}
+									onClick={isFollowing ? handleUnfollow : handleFollow}
 								>
 									{isFollowing ? "Following" : "Follow"}
 								</Button>
@@ -153,11 +163,6 @@ export default function ProfileHeader({ company, isOwner }) {
 							>
 								{company.website.replace(/^https?:\/\//, "")}
 							</Link>
-						</div>
-
-						<div className="flex items-center">
-							<Users className="h-4 w-4 mr-1" />
-							<span>{followerCount} followers</span>
 						</div>
 					</div>
 				</div>

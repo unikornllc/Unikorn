@@ -172,7 +172,7 @@ export const getFollowers = async (req, res) => {
 	}
 };
 
-export const followUser = async (req, res) => {
+export const followAccount = async (req, res) => {
 	try {
 		const follow = await prisma.account.findUnique({
 			where: {
@@ -205,7 +205,7 @@ export const followUser = async (req, res) => {
 	}
 };
 
-export const isFollowingUser = async (req, res) => {
+export const isFollowingAccount = async (req, res) => {
 	try {
 		if (!req.query.username) {
 			return res.status(400).json({ message: "Username is required" });
@@ -231,7 +231,7 @@ export const isFollowingUser = async (req, res) => {
 	}
 };
 
-export const unfollowUser = async (req, res) => {
+export const unfollowAccount = async (req, res) => {
 	try {
 		const unfollow = await prisma.account.findUnique({
 			where: { username: req.body.username },
@@ -262,100 +262,5 @@ export const unfollowUser = async (req, res) => {
 	} catch (error) {
 		console.error(error);
 		res.status(400).json({ message: "Error unfollowing user or company" });
-	}
-};
-
-export const isFollowingCompany = async (req, res) => {
-	try {
-		const company = await prisma.company.findFirst({
-			where: {
-				account: {
-					username: req.query.username,
-				},
-			},
-			select: {
-				id: true,
-			},
-		});
-		const isFollowing = await prisma.userFollowsCompany.findFirst({
-			where: {
-				companyId: company.id,
-				userId: req.account.id,
-			},
-		});
-
-		isFollowing
-			? res.status(200).json({ isFollowing: true })
-			: res.status(200).json({ isFollowing: false });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching Profile" });
-	}
-};
-
-export const followCompany = async (req, res) => {
-	try {
-		const company = await prisma.company.findFirst({
-			where: {
-				account: {
-					username: req.body.username,
-				},
-			},
-			select: {
-				id: true,
-			},
-		});
-		await prisma.userFollowsCompany.create({
-			data: {
-				companyId: company.id,
-				userId: req.account.id,
-			},
-		});
-		res.status(200).json({ message: "Company followed successfully" });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error following company" });
-	}
-};
-
-export const unfollowCompany = async (req, res) => {
-	try {
-		const company = await prisma.company.findFirst({
-			where: {
-				account: {
-					username: req.body.username,
-				},
-			},
-			select: {
-				id: true,
-			},
-		});
-		await prisma.userFollowsCompany.deleteMany({
-			where: {
-				companyId: company.id,
-				userId: req.account.id,
-			},
-		});
-		res.status(200).json({ message: "Company unfollowed successfully" });
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error unfollowing company" });
-	}
-};
-
-export const getFollowingCompanies = async (req, res) => {
-	try {
-		const followingCompanies = await prisma.userFollowsCompany.findMany({
-			where: {
-				userId: req.account.id,
-			},
-			select: {
-				company: true,
-			},
-		});
-		res.status(200).json(followingCompanies.map((c) => c.company.username));
-	} catch (e) {
-		console.error(e);
-		res.status(400).json({ message: "Error fetching following companies" });
 	}
 };

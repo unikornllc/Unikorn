@@ -47,6 +47,8 @@ import {
 	DollarSign,
 } from "lucide-react";
 
+import { getAccountStats } from "@/app/_utils/_api/sharedAPIs";
+
 export default function CompanyProfile({ company, isOwner }) {
 	const [isMobile, setIsMobile] = useState(false);
 	const { toast } = useToast();
@@ -54,6 +56,12 @@ export default function CompanyProfile({ company, isOwner }) {
 	const [companyData, setCompanyData] = useState(company);
 
 	const [tabContentHeight, setTabContentHeight] = useState("auto");
+	const [profileStats, setProfileStats] = useState({
+		followersCount: 0,
+		followingCount: 0,
+		postsCount: 0,
+		investmentsCount: 0,
+	});
 
 	useEffect(() => {
 		const checkMobile = () => {
@@ -114,12 +122,68 @@ export default function CompanyProfile({ company, isOwner }) {
 			<span className="hidden sm:inline truncate">{tab.label}</span>
 		</TabsTrigger>
 	);
+	useEffect(() => {
+		const fetchProfileStats = async () => {
+			try {
+				await getAccountStats(company.username).then((data) => {
+					setProfileStats({
+						followersCount: data.followersCount,
+						followingCount: data.followingCount,
+						postsCount: data.postsCount,
+						investmentsCount: data.investmentsCount,
+					});
+				});
+			} catch (error) {
+				console.error("Error fetching profile stats:", error);
+			}
+		};
+		fetchProfileStats();
+	}, [companyData]);
 
 	return (
 		<div className="min-h-screen bg-gray-50">
 			<ProfileHeader company={companyData} isOwner={isOwner} />
 
 			<div className="container mx-auto px-4 py-6">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+					<Card className="hover:shadow-md transition-shadow">
+						<CardContent className="p-4 text-center">
+							<Eye className="h-6 w-6 text-blue-500 mx-auto mb-2" />
+							<div className="text-2xl font-bold text-gray-900">
+								{profileStats.followersCount}
+							</div>
+							<div className="text-sm text-gray-500">Followers</div>
+						</CardContent>
+					</Card>
+					<Card className="hover:shadow-md transition-shadow">
+						<CardContent className="p-4 text-center">
+							<Users className="h-6 w-6 text-green-500 mx-auto mb-2" />
+							<div className="text-2xl font-bold text-gray-900">
+								{profileStats.followingCount}
+							</div>
+							<div className="text-sm text-gray-500">Following</div>
+						</CardContent>
+					</Card>
+					<Card className="hover:shadow-md transition-shadow">
+						<CardContent className="p-4 text-center">
+							<MessageSquare className="h-6 w-6 text-purple-500 mx-auto mb-2" />
+							<div className="text-2xl font-bold text-gray-900">
+								{profileStats.postsCount}
+							</div>
+							<div className="text-sm text-gray-500">Posts</div>
+						</CardContent>
+					</Card>
+					<Card className="hover:shadow-md transition-shadow">
+						<CardContent className="p-4 text-center">
+							<TrendingUp className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+							<div className="text-2xl font-bold text-gray-900">
+								{profileStats.investmentsCount}
+							</div>
+							<div className="text-sm text-gray-500">Investments</div>
+						</CardContent>
+					</Card>
+				</div>
+
 				<Tabs
 					defaultValue={isOwner ? "about" : "home"}
 					value={activeTab}

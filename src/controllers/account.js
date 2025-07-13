@@ -143,3 +143,38 @@ export const verifyAccount = async (req, res) => {
 		}
 	}
 };
+
+export const getAccountStats = async (req, res) => {
+	try {
+		const { username } = req.query;
+		const account = await prisma.account.findUnique({
+			where: { username },
+			select: { id: true },
+		});
+
+		if (!account) {
+			return res.status(400).json({ error: "Account not found" });
+		}
+
+		const accountId = account.id;
+
+		const [followersCount, followingCount, investmentsCount, postsCount] =
+			await Promise.all([
+				prisma.follow.count({ where: { followingId: accountId } }),
+				prisma.follow.count({ where: { followerId: accountId } }),
+				prisma.investment.count({ where: { accountId } }),
+				prisma.post.count({ where: { authorId: accountId } }),
+			]);
+
+		res.status(200).json({
+			username,
+			followersCount,
+			followingCount,
+			investmentsCount,
+			postsCount,
+		});
+	} catch (error) {
+		console.error("Failed to fetch account stats:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+};
