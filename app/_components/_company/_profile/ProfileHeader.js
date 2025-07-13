@@ -34,8 +34,10 @@ import SocialLinks from "@/app/_components/_company/_profile/SocialLinks";
 import { formatDate } from "@/app/_utils/utils";
 import ProfileCoverEdit from "@/app/_components/_shared/_profile/ProfileCoverEdit";
 
-export default function ProfileHeader({ company, isOwner, updateCompany }) {
-	const [isFollowing, setIsFollowing] = useState(false);
+import { updateCompany } from "@/app/_utils/_api/companyAPIs";
+
+export default function ProfileHeader({ company, isOwner }) {
+	const [isFollowing, setIsFollowing] = useState(company.isFollowing);
 	const [followerCount, setFollowerCount] = useState(1234);
 
 	const [isEditingCompanyInfo, setIsEditingCompanyInfo] = useState(false);
@@ -59,8 +61,8 @@ export default function ProfileHeader({ company, isOwner, updateCompany }) {
 		setIsFollowing(!isFollowing);
 	};
 
-	const handleSaveCompanyInfo = () => {
-		updateCompany(companyInfo);
+	const handleSaveCompanyInfo = async () => {
+		await updateCompany(companyInfo);
 		setIsEditingCompanyInfo(false);
 	};
 
@@ -137,10 +139,10 @@ export default function ProfileHeader({ company, isOwner, updateCompany }) {
 							<span>Founded {formatDate(company.founded)}</span>
 						</div>
 
-						<div className="flex items-center">
+						{/* <div className="flex items-center">
 							<Briefcase className="h-4 w-4 mr-1" />
 							<span>{company.type} Company</span>
-						</div>
+						</div> */}
 
 						<div className="flex items-center">
 							<Globe className="h-4 w-4 mr-1" />
@@ -161,7 +163,7 @@ export default function ProfileHeader({ company, isOwner, updateCompany }) {
 				</div>
 
 				<div className="mt-6">
-					<SocialLinks isOwner={isOwner} />
+					<SocialLinks company={company} isOwner={isOwner} />
 				</div>
 			</div>
 

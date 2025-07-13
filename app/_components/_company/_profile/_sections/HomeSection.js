@@ -29,38 +29,26 @@ import { Textarea } from "@/app/_components/_ui/Textarea";
 import { formatDate, formatCurrency } from "@/app/_utils/utils";
 import { BarChart3, TrendingUp, Award, Edit, Plus } from "lucide-react";
 import MutualFollowers from "@/app/_components/_company/_profile/MutualFollowers";
-// import { LoadingWrapper } from "@/app/_components/_ui/_loading/LoadingWrapper";
-import {
-	SkeletonText,
-	SkeletonAvatar,
-} from "@/app/_components/_ui/_loading/Skeleton";
 
-export default function HomeSection({ company, isOwner, updateCompany }) {
+import { useRouter } from "next/navigation";
+
+import {
+	fetchCompanyFinancialInfo,
+	fetchCompanyActiveRaisingFunds,
+} from "@/app/_utils/_api/companyAPIs";
+
+export default function HomeSection({ company, isOwner }) {
+	const [loading, setLoading] = useState(true);
+
 	const [activities, setActivities] = useState(company.activities || []);
-	const [isEditingOverview, setIsEditingOverview] = useState(false);
-	const [isAddingActivity, setIsAddingActivity] = useState(false);
-	const [isAddingPerson, setIsAddingPerson] = useState(false);
-	const [isEditingFinancials, setIsEditingFinancials] = useState(false);
 
 	const [companyOverview, setCompanyOverview] = useState({
-		founded: company.founded || new Date().toISOString(),
-		hqLocation: company.hqLocation || "",
-		type: company.type || "Private",
-		industry: company.industry || "",
-		website: company.website || "https://example.com",
-		companySize: "51-200 employees",
-		specialties: ["SaaS", "Fintech", "AI", "Blockchain"],
-	});
-
-	const [newActivity, setNewActivity] = useState({
-		title: "",
-		description: "",
-	});
-
-	const [newPerson, setNewPerson] = useState({
-		name: "",
-		role: "Founder",
-		crunchBaseLink: "",
+		founded: company.founded,
+		hqLocation: company.hqLocation,
+		type: company.type,
+		website: company.website,
+		companySize: company.companySize,
+		industry: company.industry || [],
 	});
 
 	const [financialInfo, setFinancialInfo] = useState({
@@ -69,112 +57,51 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 		investors: company.financials?.investors?.join(", ") || "",
 	});
 
-	// Function to save company overview - replace with API call
-	const handleSaveOverview = async () => {
-		try {
-			// Replace with actual API call
-			// await axios.put(`/api/company/${company.id}/overview`, companyOverview);
+	const [activeFundraising, setActiveFundraising] = useState(null);
 
-			updateCompany({
-				founded: companyOverview.founded,
-				hqLocation: companyOverview.hqLocation,
-				type: companyOverview.type,
-				industry: companyOverview.industry,
-				website: companyOverview.website,
-			});
+	const router = useRouter();
 
-			setIsEditingOverview(false);
-		} catch (error) {
-			console.error("Error saving overview:", error);
-		}
-	};
-
-	// Function to add activity - replace with API call
-	const handleAddActivity = async () => {
-		if (!newActivity.title || !newActivity.description) return;
-
-		const activity = {
-			id: Date.now().toString(),
-			title: newActivity.title,
-			description: newActivity.description,
-			companyId: company.id,
-			date: new Date(),
+	useEffect(() => {
+		const fetchFinancials = async () => {
+			try {
+				const response = await fetchCompanyFinancialInfo(company.username);
+				if (response.financials) {
+					setFinancialInfo({
+						valuation: response.financials?.valuation || 0,
+						totalFundingAmount: response.financials?.totalFundingAmount || 0,
+						investors: response.financials?.investors?.join(", ") || "",
+						fundingRounds: response.financials?.fundingRounds || [],
+					});
+				}
+				const response2 = await fetchCompanyActiveRaisingFunds(
+					company.username,
+				);
+				if (response2.activeFundraising) {
+					setActiveFundraising(response2.activeFundraising);
+				}
+			} catch (error) {
+				console.error(
+					"Error fetching financials or active fundraising:",
+					error,
+				);
+			} finally {
+				setLoading(false);
+			}
 		};
+		fetchFinancials();
+	}, []);
 
-		try {
-			// Replace with actual API call
-			// const response = await axios.post(`/api/company/${company.id}/activities`, activity);
-			// const savedActivity = response.data;
-
-			const updatedActivities = [activity].concat(activities);
-			setActivities(updatedActivities);
-			updateCompany({ activities: updatedActivities });
-
-			setNewActivity({ title: "", description: "" });
-			setIsAddingActivity(false);
-		} catch (error) {
-			console.error("Error adding activity:", error);
-		}
-	};
-
-	// Function to add person - replace with API call
-	const handleAddPerson = async () => {
-		if (!newPerson.name || !newPerson.role) return;
-
-		const person = {
-			id: Date.now().toString(),
-			name: newPerson.name,
-			role: newPerson.role,
-			crunchBaseLink: newPerson.crunchBaseLink,
-			companyId: company.id,
-		};
-
-		try {
-			// Replace with actual API call
-			// const response = await axios.post(`/api/company/${company.id}/personnel`, person);
-			// const savedPerson = response.data;
-
-			const updatedPersonnel = (company.personnel || []).concat([person]);
-			updateCompany({ personnel: updatedPersonnel });
-
-			setNewPerson({ name: "", role: "Founder", crunchBaseLink: "" });
-			setIsAddingPerson(false);
-		} catch (error) {
-			console.error("Error adding person:", error);
-		}
-	};
-
-	// Function to save financials - replace with API call
-	const handleSaveFinancials = async () => {
-		const financials = {
-			id: company.financials?.id || "f" + Date.now(),
-			valuation: Number(financialInfo.valuation) || 0,
-			totalFundingAmount: Number(financialInfo.totalFundingAmount) || 0,
-			investors: financialInfo.investors
-				.split(",")
-				.map((i) => i.trim())
-				.filter((i) => i),
-			fundingRounds: company.financials?.fundingRounds || [],
-			companyId: company.id,
-		};
-
-		try {
-			// Replace with actual API call
-			// const response = await axios.put(`/api/company/${company.id}/financials`, financials);
-			// const savedFinancials = response.data;
-
-			updateCompany({ financials: financials });
-			setIsEditingFinancials(false);
-		} catch (error) {
-			console.error("Error saving financials:", error);
-		}
-	};
+	if (loading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 			<div className="lg:col-span-2 space-y-6">
-				{/* Company Overview */}
-				{/* <LoadingWrapper sectionName="home-overview"> */}
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between">
 						<div>
@@ -183,18 +110,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 								Key information about {company.name}
 							</CardDescription>
 						</div>
-						{isOwner && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => {
-									setIsEditingOverview(true);
-								}}
-							>
-								<Edit className="h-4 w-4 mr-2" />
-								Edit
-							</Button>
-						)}
 					</CardHeader>
 					<CardContent>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -211,12 +126,12 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 										{company.hqLocation || "Not specified"}
 									</p>
 								</div>
-								<div>
+								{/* <div>
 									<h3 className="text-sm font-medium text-gray-500">
 										Company Type
 									</h3>
 									<p className="text-lg">{company.type}</p>
-								</div>
+								</div> */}
 								<div>
 									<h3 className="text-sm font-medium text-gray-500">
 										Industry
@@ -251,19 +166,22 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 									<h3 className="text-sm font-medium text-gray-500">
 										Company Size
 									</h3>
-									<p className="text-lg">51-200 employees</p>
+									<p className="text-lg">{companyOverview.companySize}</p>
 								</div>
-								<div>
+								{/* <div>
 									<h3 className="text-sm font-medium text-gray-500">
-										Specialties
+										Industries
 									</h3>
 									<div className="flex flex-wrap gap-2 mt-1">
-										<Badge variant="secondary">SaaS</Badge>
-										<Badge variant="secondary">Fintech</Badge>
-										<Badge variant="secondary">AI</Badge>
-										<Badge variant="secondary">Blockchain</Badge>
+										{companyOverview.industry.map((industry, index) => {
+											return (
+												<Badge variant="secondary" key={index}>
+													{industry}
+												</Badge>
+											);
+										})}
 									</div>
-								</div>
+								</div> */}
 							</div>
 						</div>
 					</CardContent>
@@ -280,18 +198,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 								Latest updates from {company.name}
 							</CardDescription>
 						</div>
-						{isOwner && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => {
-									setIsAddingActivity(true);
-								}}
-							>
-								<Plus className="h-4 w-4 mr-2" />
-								Add Activity
-							</Button>
-						)}
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-6">
@@ -315,17 +221,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 							) : (
 								<div className="text-center py-8 text-gray-500">
 									<p>No recent activities to display</p>
-									{isOwner && (
-										<Button
-											variant="outline"
-											className="mt-4"
-											onClick={() => {
-												setIsAddingActivity(true);
-											}}
-										>
-											Add Your First Activity
-										</Button>
-									)}
 								</div>
 							)}
 						</div>
@@ -341,18 +236,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 							<CardTitle>Key People</CardTitle>
 							<CardDescription>Leadership and key personnel</CardDescription>
 						</div>
-						{isOwner && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => {
-									setIsAddingPerson(true);
-								}}
-							>
-								<Plus className="h-4 w-4 mr-2" />
-								Add Person
-							</Button>
-						)}
 					</CardHeader>
 					<CardContent>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -381,17 +264,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 							) : (
 								<div className="col-span-2 text-center py-8 text-gray-500">
 									<p>No key people added yet</p>
-									{isOwner && (
-										<Button
-											variant="outline"
-											className="mt-4"
-											onClick={() => {
-												setIsAddingPerson(true);
-											}}
-										>
-											Add Key Personnel
-										</Button>
-									)}
 								</div>
 							)}
 						</div>
@@ -409,18 +281,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between">
 						<CardTitle>Funding Summary</CardTitle>
-						{isOwner && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => {
-									setIsEditingFinancials(true);
-								}}
-							>
-								<Edit className="h-4 w-4 mr-2" />
-								Edit
-							</Button>
-						)}
 					</CardHeader>
 					<CardContent>
 						{company.financials ? (
@@ -460,17 +320,6 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 						) : (
 							<div className="text-center py-8 text-gray-500">
 								<p>No financial information available</p>
-								{isOwner && (
-									<Button
-										variant="outline"
-										className="mt-4"
-										onClick={() => {
-											setIsEditingFinancials(true);
-										}}
-									>
-										Add Financial Information
-									</Button>
-								)}
 							</div>
 						)}
 					</CardContent>
@@ -487,36 +336,41 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 						<CardTitle className="text-purple-800">Raising Funds</CardTitle>
 					</CardHeader>
 					<CardContent>
-						{company.raisingFunds && company.raisingFunds.length > 0 ? (
+						{activeFundraising ? (
 							<div className="space-y-4">
 								<div className="bg-white rounded-lg p-4 border border-purple-200">
 									<div className="flex items-center justify-between mb-2">
 										<span className="text-gray-500">Equity Offered</span>
 										<span className="font-medium">
-											{company.raisingFunds[0].equityPercentage}%
+											{activeFundraising.equityPercentage}%
 										</span>
 									</div>
 									<div className="flex items-center justify-between mb-2">
 										<span className="text-gray-500">Funding Goal</span>
 										<span className="font-medium">
-											{formatCurrency(company.raisingFunds[0].fundingAmount)}
+											{formatCurrency(activeFundraising.fundingAmount)}
 										</span>
 									</div>
 									<div className="flex items-center justify-between mb-2">
 										<span className="text-gray-500">Price Per Portion</span>
 										<span className="font-medium">
-											{formatCurrency(company.raisingFunds[0].pricePerPortion)}
+											{formatCurrency(activeFundraising.pricePerPortion)}
 										</span>
 									</div>
 									<div className="flex items-center justify-between">
 										<span className="text-gray-500">Portions Available</span>
 										<span className="font-medium">
-											{company.raisingFunds[0].remainingPortions}/
-											{company.raisingFunds[0].totalPortions}
+											{activeFundraising.remainingPortions}/
+											{activeFundraising.totalPortions}
 										</span>
 									</div>
 								</div>
-								<Button className="w-full bg-purple-600 hover:bg-purple-700">
+								<Button
+									className="w-full bg-purple-600 hover:bg-purple-700"
+									onClick={() => {
+										router.push("/companies/" + activeFundraising.id);
+									}}
+								>
 									<TrendingUp className="h-4 w-4 mr-2" />
 									Invest Now
 								</Button>
@@ -524,352 +378,13 @@ export default function HomeSection({ company, isOwner, updateCompany }) {
 						) : (
 							<div className="text-center py-8 text-gray-500">
 								<p>Not currently raising funds</p>
-								{isOwner && (
-									<Button variant="outline" className="mt-4">
-										Start Fundraising
-									</Button>
-								)}
 							</div>
 						)}
 					</CardContent>
 				</Card>
-				{/* </LoadingWrapper> */}
 
-				{/* Mutual Followers */}
-				{/* <LoadingWrapper sectionName="home-mutual-followers" skeletonType="card"> */}
-				<MutualFollowers />
-				{/* </LoadingWrapper> */}
+				{/* <MutualFollowers /> */}
 			</div>
-
-			{/* Edit Overview Dialog */}
-			<Dialog open={isEditingOverview} onOpenChange={setIsEditingOverview}>
-				<DialogContent className="max-w-2xl">
-					<DialogHeader>
-						<DialogTitle>Edit Company Overview</DialogTitle>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-location" className="text-right">
-								Headquarters
-							</Label>
-							<Input
-								id="company-location"
-								value={companyOverview.hqLocation}
-								onChange={(e) => {
-									setCompanyOverview(
-										Object.assign({}, companyOverview, {
-											hqLocation: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-type" className="text-right">
-								Company Type
-							</Label>
-							<select
-								id="company-type"
-								value={companyOverview.type}
-								onChange={(e) => {
-									setCompanyOverview(
-										Object.assign({}, companyOverview, {
-											type: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								<option value="Profit">Profit</option>
-								<option value="NonProfit">NonProfit</option>
-								<option value="Private">Private</option>
-								<option value="Public">Public</option>
-							</select>
-						</div>
-						<div className="grid grid-cols-4 items-start gap-4">
-							<Label htmlFor="company-industry" className="text-right pt-2">
-								Industry
-							</Label>
-							<Textarea
-								id="company-industry"
-								value={
-									Array.isArray(companyOverview.industry)
-										? companyOverview.industry.join(", ")
-										: ""
-								}
-								onChange={(e) =>
-									setCompanyOverview({
-										...companyOverview,
-										industry: e.target.value
-											.split(",")
-											.map((item) => item.trim())
-											.filter((item) => item),
-									})
-								}
-								placeholder="Enter industries separated by commas (e.g. Nike, Adidas, New Balance)"
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-website" className="text-right">
-								Website
-							</Label>
-							<Input
-								id="company-website"
-								value={companyOverview.website}
-								onChange={(e) => {
-									setCompanyOverview(
-										Object.assign({}, companyOverview, {
-											website: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-size" className="text-right">
-								Company Size
-							</Label>
-							<select
-								id="company-size"
-								value={companyOverview.companySize}
-								onChange={(e) => {
-									setCompanyOverview(
-										Object.assign({}, companyOverview, {
-											companySize: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								<option value="1-10 employees">1-10 employees</option>
-								<option value="11-50 employees">11-50 employees</option>
-								<option value="51-200 employees">51-200 employees</option>
-								<option value="201-500 employees">201-500 employees</option>
-								<option value="501+ employees">501+ employees</option>
-							</select>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setIsEditingOverview(false);
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleSaveOverview}>Save Changes</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* Add Activity Dialog */}
-			<Dialog open={isAddingActivity} onOpenChange={setIsAddingActivity}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Add New Activity</DialogTitle>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="activity-title" className="text-right">
-								Title
-							</Label>
-							<Input
-								id="activity-title"
-								value={newActivity.title}
-								onChange={(e) => {
-									setNewActivity(
-										Object.assign({}, newActivity, { title: e.target.value }),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-start gap-4">
-							<Label htmlFor="activity-description" className="text-right pt-2">
-								Description
-							</Label>
-							<Textarea
-								id="activity-description"
-								value={newActivity.description}
-								onChange={(e) => {
-									setNewActivity(
-										Object.assign({}, newActivity, {
-											description: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3 min-h-[100px]"
-							/>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setIsAddingActivity(false);
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleAddActivity}>Add Activity</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* Add Person Dialog */}
-			<Dialog open={isAddingPerson} onOpenChange={setIsAddingPerson}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Add Key Person</DialogTitle>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="person-name" className="text-right">
-								Name
-							</Label>
-							<Input
-								id="person-name"
-								value={newPerson.name}
-								onChange={(e) => {
-									setNewPerson(
-										Object.assign({}, newPerson, { name: e.target.value }),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="person-role" className="text-right">
-								Role
-							</Label>
-							<select
-								id="person-role"
-								value={newPerson.role}
-								onChange={(e) => {
-									setNewPerson(
-										Object.assign({}, newPerson, { role: e.target.value }),
-									);
-								}}
-								className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							>
-								<option value="Founder">Founder</option>
-								<option value="Advisor">Advisor</option>
-								<option value="BoardMember">Board Member</option>
-								<option value="KeyEmployee">Key Employee</option>
-							</select>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="person-crunchbase" className="text-right">
-								CrunchBase Link
-							</Label>
-							<Input
-								id="person-crunchbase"
-								value={newPerson.crunchBaseLink}
-								onChange={(e) => {
-									setNewPerson(
-										Object.assign({}, newPerson, {
-											crunchBaseLink: e.target.value,
-										}),
-									);
-								}}
-								placeholder="https://crunchbase.com/person/name"
-								className="col-span-3"
-							/>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setIsAddingPerson(false);
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleAddPerson}>Add Person</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			{/* Edit Financials Dialog */}
-			<Dialog open={isEditingFinancials} onOpenChange={setIsEditingFinancials}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Edit Financial Information</DialogTitle>
-					</DialogHeader>
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-valuation" className="text-right">
-								Valuation ($)
-							</Label>
-							<Input
-								id="company-valuation"
-								type="number"
-								value={financialInfo.valuation}
-								onChange={(e) => {
-									setFinancialInfo(
-										Object.assign({}, financialInfo, {
-											valuation: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="company-funding" className="text-right">
-								Total Funding ($)
-							</Label>
-							<Input
-								id="company-funding"
-								type="number"
-								value={financialInfo.totalFundingAmount}
-								onChange={(e) => {
-									setFinancialInfo(
-										Object.assign({}, financialInfo, {
-											totalFundingAmount: e.target.value,
-										}),
-									);
-								}}
-								className="col-span-3"
-							/>
-						</div>
-						<div className="grid grid-cols-4 items-start gap-4">
-							<Label htmlFor="company-investors" className="text-right pt-2">
-								Investors
-							</Label>
-							<Textarea
-								id="company-investors"
-								value={financialInfo.investors}
-								onChange={(e) => {
-									setFinancialInfo(
-										Object.assign({}, financialInfo, {
-											investors: e.target.value,
-										}),
-									);
-								}}
-								placeholder="Comma-separated list of investors"
-								className="col-span-3"
-							/>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setIsEditingFinancials(false);
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleSaveFinancials}>Save Changes</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
 		</div>
 	);
 }

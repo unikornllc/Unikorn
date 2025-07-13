@@ -9,19 +9,21 @@ export const fetchCurrentCompanyData = async () => {
 		});
 		return response.data.company;
 	} catch (error) {
-		console.log("Error fetching user data:", error);
+		// console.log("Error fetching user data:", error);
+		throw error;
 	}
 };
 
-export const deleteCompanyPersonnel = async (personnelId) => {
+export const deletePersonnel = async (personnelId) => {
 	try {
 		const response = await axios.delete(`${API_BASE_URL}/deletePersonnel`, {
 			withCredentials: true,
-			data: { personnelId },
+			params: { personnelId },
 		});
 		return response.data;
 	} catch (error) {
-		console.log("Error deleting company personnel:", error);
+		// console.log("Error deleting company personnel:", error);
+		throw error;
 	}
 };
 
@@ -31,12 +33,13 @@ export const deleteCompanyProduct = async (id) => {
 			`${API_BASE_URL}/deleteCompanyProduct`,
 			{
 				withCredentials: true,
-				data: { id },
+				params: { id },
 			},
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error deleting company product:", error);
+		// console.log("Error deleting company product:", error);
+		throw error;
 	}
 };
 
@@ -48,11 +51,12 @@ export const fetchCompanyOverview = async (username) => {
 		});
 		return respnse.data.company;
 	} catch (error) {
-		console.log("Error fetching company data:", error);
+		// console.log("Error fetching company data:", error);
+		throw error;
 	}
 };
 
-export const updateCompnanyItem = async (data) => {
+export const updateCompanyItem = async (data) => {
 	try {
 		const response = await axios.post(
 			`${API_BASE_URL}/updateCompanyItem`,
@@ -63,7 +67,20 @@ export const updateCompnanyItem = async (data) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error updating company item:", error);
+		// console.log("Error updating company item:", error);
+		throw error;
+	}
+};
+
+export const updatePersonnel = async (data) => {
+	try {
+		const response = await axios.put(`${API_BASE_URL}/updatePersonnel`, data, {
+			withCredentials: true,
+		});
+		return response.data;
+	} catch (error) {
+		// console.log("Error updating personnel:", error);
+		throw error;
 	}
 };
 
@@ -75,11 +92,12 @@ export const fetchCompanyProductInfo = async (username) => {
 		});
 		return response.data.productInfo;
 	} catch (error) {
-		console.log("Error fetching user data:", error);
+		// console.log("Error fetching user data:", error);
+		throw error;
 	}
 };
 
-export const updateCompanyProfile = async (data) => {
+export const updateCompany = async (data) => {
 	try {
 		const response = await axios.put(
 			`${API_BASE_URL}/updateCompanyOverview`,
@@ -90,7 +108,8 @@ export const updateCompanyProfile = async (data) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error updating company profile:", error);
+		// console.log("Error updating company profile:", error);
+		throw error;
 	}
 };
 
@@ -105,7 +124,24 @@ export const fetchCompanyFinancialInfo = async (username) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error fetching user data:", error);
+		// console.log("Error fetching user data:", error);
+		throw error;
+	}
+};
+
+export const fetchCompanyActiveRaisingFunds = async (username) => {
+	try {
+		const response = await axios.get(
+			`${API_BASE_URL}/raisingFunds/company/active`,
+			{
+				withCredentials: true,
+				params: { username },
+			},
+		);
+		return response.data;
+	} catch (error) {
+		// console.log("Error fetching user data:", error);
+		throw error;
 	}
 };
 
@@ -120,7 +156,8 @@ export const addCompanyFundingRound = async (data) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error adding company activity:", error);
+		// console.log("Error adding company activity:", error);
+		throw error;
 	}
 };
 
@@ -135,7 +172,8 @@ export const updateCompanyFundingRound = async (data) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error updating company profile:", error);
+		// console.log("Error updating company profile:", error);
+		throw error;
 	}
 };
 
@@ -143,11 +181,12 @@ export const deleteFundingRound = async (id) => {
 	try {
 		const response = await axios.delete(`${API_BASE_URL}/deleteFundingRound`, {
 			withCredentials: true,
-			data: { fundingRoundId: id },
+			params: { fundingRoundId: id },
 		});
 		return response.data;
 	} catch (error) {
-		console.log("Error deleting company product:", error);
+		// console.log("Error deleting company product:", error);
+		throw error;
 	}
 };
 
@@ -162,7 +201,8 @@ export const addCompanyActivity = async (data) => {
 		);
 		return response.data;
 	} catch (error) {
-		console.log("Error adding company activity:", error);
+		// console.log("Error adding company activity:", error);
+		throw error;
 	}
 };
 
@@ -182,7 +222,8 @@ export const fetchCompanyData = async (username) => {
 		});
 		return response.data.company;
 	} catch (error) {
-		console.log("Error fetching user data:", error);
+		// console.log("Error fetching user data:", error);
+		throw error;
 	}
 };
 
@@ -193,6 +234,7 @@ export const fetchTier = async () => {
 		});
 		return response.data;
 	} catch (error) {
-		console.log("Error fetching user data:", error);
+		// console.log("Error fetching user data:", error);
+		throw error;
 	}
 };

@@ -40,7 +40,7 @@ export default function PersonnelModal({
 		id: "",
 		name: "",
 		role: "KeyEmployee",
-		crunchBaseLink: "",
+		linkedInLink: "",
 		userId: null,
 		user: null,
 	});
@@ -63,7 +63,7 @@ export default function PersonnelModal({
 				id: personnel.id,
 				name: personnel.name,
 				role: personnel.role,
-				crunchBaseLink: personnel.crunchBaseLink,
+				linkedInLink: personnel.linkedInLink,
 				userId: personnel.userId,
 				user: personnel.user,
 			});
@@ -73,7 +73,7 @@ export default function PersonnelModal({
 				id: "",
 				name: "",
 				role: "KeyEmployee",
-				crunchBaseLink: "",
+				linkedInLink: "",
 				userId: null,
 				user: null,
 			});
@@ -263,13 +263,13 @@ export default function PersonnelModal({
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="crunchBaseLink">CrunchBase Link</Label>
+							<Label htmlFor="linkedInLink">LinkedIn Link</Label>
 							<Input
-								id="crunchBaseLink"
-								placeholder="https://www.crunchbase.com/person/..."
-								value={formData.crunchBaseLink}
+								id="linkedInLink"
+								placeholder="https://www.linkedin.com/in/name"
+								value={formData.linkedInLink}
 								onChange={(e) =>
-									setFormData({ ...formData, crunchBaseLink: e.target.value })
+									setFormData({ ...formData, linkedInLink: e.target.value })
 								}
 								// required
 							/>

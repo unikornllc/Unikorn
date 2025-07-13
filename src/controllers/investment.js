@@ -13,6 +13,7 @@ export const createInvestment = async (req, res) => {
 				},
 			},
 		});
+		investment.external = true;
 		res.status(200).json({ investment });
 	} catch (e) {
 		console.log(e);
@@ -41,6 +42,7 @@ export const updateInvestment = async (req, res) => {
 				date: new Date(req.body.date),
 			},
 		});
+		updatedInvestment.external = true;
 		res.status(200).json({ investment: updatedInvestment });
 	} catch (e) {
 		console.log(e);
@@ -106,14 +108,16 @@ export const getInvestments = async (req, res) => {
 				date: true,
 				companyName: true,
 				fundraiser: {
-					raisingFunds: {
-						select: {
-							company: {
-								select: {
-									name: true,
-									account: {
-										select: {
-											username: true,
+					select: {
+						raisingFunds: {
+							select: {
+								company: {
+									select: {
+										name: true,
+										account: {
+											select: {
+												username: true,
+											},
 										},
 									},
 								},
@@ -123,6 +127,16 @@ export const getInvestments = async (req, res) => {
 				},
 			},
 		});
+		if (!investments) {
+			return res.status(400).json({ message: "No investments found" });
+		}
+		for (let investment of investments) {
+			if (investment.fundraiser) {
+				investment.external = false;
+			} else {
+				investment.external = true;
+			}
+		}
 		res.status(200).json({ investments });
 	} catch (e) {
 		console.log(e);

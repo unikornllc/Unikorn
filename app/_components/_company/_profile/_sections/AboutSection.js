@@ -31,14 +31,13 @@ import { PencilIcon, PlusIcon } from "@heroicons/react/24/solid";
 import EditableField from "@/app/_components/_company/_profile/EditableField";
 import { formatDate } from "@/app/_utils/utils";
 import DeleteButton from "@/app/_components/_ui/DeleteButton";
-
-export default function AboutSection({
-	company,
-	isOwner,
+import {
 	updateCompany,
-	updateCompanyProfile,
+	updateCompanyItem,
 	deleteCompanyProduct,
-}) {
+} from "@/app/_utils/_api/companyAPIs";
+
+export default function AboutSection({ company, isOwner }) {
 	const [isEditingAbout, setIsEditingAbout] = useState(false);
 	const [isEditingProduct, setIsEditingProduct] = useState(false);
 	const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -63,11 +62,13 @@ export default function AboutSection({
 					id: company.productInformation[0].id,
 					product: company.productInformation[0].product,
 					market: company.productInformation[0].market,
+					link: company.productInformation[0].link,
 					partnerships: company.productInformation[0].partnerships.join(", "),
 				}
 			: {
 					product: "",
 					market: "",
+					link: "",
 					partnerships: "",
 				},
 	);
@@ -75,6 +76,7 @@ export default function AboutSection({
 	const [newProduct, setNewProduct] = useState({
 		product: "",
 		market: "",
+		link: "",
 		partnerships: "",
 	});
 
@@ -84,7 +86,7 @@ export default function AboutSection({
 			: aboutInfo.industry || "",
 	);
 
-	const handleSaveAbout = () => {
+	const handleSaveAbout = async () => {
 		const processedIndustry = industryInput
 			.split(",")
 			.map((item) => item.trim())
@@ -95,12 +97,11 @@ export default function AboutSection({
 		};
 
 		setAboutInfo(processedAboutInfo);
-		updateCompany(processedAboutInfo);
-		updateCompanyProfile(processedAboutInfo);
+		await updateCompany(processedAboutInfo);
 		setIsEditingAbout(false);
 	};
 
-	const handleSaveProduct = () => {
+	const handleSaveProduct = async () => {
 		const partnerships = productInfo.partnerships
 			.split(",")
 			.map((p) => p.trim())
@@ -110,22 +111,24 @@ export default function AboutSection({
 			id: productInfo.id,
 			product: productInfo.product,
 			market: productInfo.market,
+			link: productInfo.link,
 			partnerships: partnerships,
 			companyId: company.id,
 		};
 
-		const updatedProductInfo = company.productInformation
-			? company.productInformation.map((p) =>
-					p.id === updatedProduct.id ? updatedProduct : p,
-				)
-			: [updatedProduct];
+		// const updatedProductInfo = company.productInformation
+		// 	? company.productInformation.map((p) =>
+		// 			p.id === updatedProduct.id ? updatedProduct : p,
+		// 		)
+		// 	: [updatedProduct];
 
-		updateCompany({
+		await updateCompanyItem({
 			model: "productInformation",
 			id: updatedProduct.id,
 			data: {
 				product: updatedProduct.product,
 				market: updatedProduct.market,
+				link: updatedProduct.link,
 				partnerships: updatedProduct.partnerships,
 			},
 		});
@@ -136,7 +139,7 @@ export default function AboutSection({
 		setIsEditingProduct(false);
 	};
 
-	const handleAddProduct = () => {
+	const handleAddProduct = async () => {
 		if (!newProduct.product || !newProduct.market) return;
 
 		const partnerships = newProduct.partnerships
@@ -148,24 +151,22 @@ export default function AboutSection({
 			id: Date.now().toString(),
 			product: newProduct.product,
 			market: newProduct.market,
+			link: newProduct.link,
 			partnerships: partnerships,
 			companyId: company.id,
 		};
 
-		const updatedProductInfo = company.productInformation
-			? [...company.productInformation, product]
-			: [product];
-
-		updateCompany({
+		await updateCompanyItem({
 			model: "productInformation",
 			id: product.id,
 			data: {
 				product: product.product,
 				market: product.market,
+				link: product.link,
 				partnerships: product.partnerships,
 			},
 		});
-		setProducts([...updatedProductInfo]);
+		setProducts((prev) => [...prev, product]);
 		setIsAddingProduct(false);
 	};
 
@@ -193,7 +194,9 @@ export default function AboutSection({
 							{isOwner ? (
 								<EditableField
 									value={aboutInfo.description}
-									onSave={(value) => updateCompany({ description: value })}
+									onSave={async (value) =>
+										await updateCompany({ description: value })
+									}
 									multiline
 									className="text-gray-600"
 								/>
@@ -347,6 +350,19 @@ export default function AboutSection({
 									</CardHeader>
 									<CardContent className="p-6">
 										<div className="space-y-4">
+											{product.link && (
+												<div>
+													<h3 className="text-lg font-medium">Product Link</h3>
+													<a
+														href={product.link}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-blue-600 hover:underline"
+													>
+														{product.link}
+													</a>
+												</div>
+											)}
 											<div>
 												<h3 className="text-lg font-medium">Market</h3>
 												<p className="text-gray-600">{product.market}</p>
@@ -495,7 +511,7 @@ export default function AboutSection({
 								<option value="1000+">1000+ employees</option>
 							</select>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
+						{/* <div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="about-tier" className="text-right">
 								Tier
 							</Label>
@@ -510,7 +526,7 @@ export default function AboutSection({
 								<option value="Hunter">Hunter</option>
 								<option value="Holder">Holder</option>
 							</select>
-						</div>
+						</div> */}
 					</div>
 					<DialogFooter>
 						<Button variant="outline" onClick={() => setIsEditingAbout(false)}>
@@ -542,6 +558,20 @@ export default function AboutSection({
 							/>
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="product-link" className="text-right">
+								Product Link
+							</Label>
+							<Input
+								id="product-link"
+								value={productInfo.link}
+								onChange={(e) =>
+									setProductInfo({ ...productInfo, link: e.target.value })
+								}
+								placeholder="https://example.com/product"
+								className="col-span-3"
+							/>
+						</div>
+						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="product-market" className="text-right">
 								Market
 							</Label>
@@ -554,6 +584,7 @@ export default function AboutSection({
 								className="col-span-3"
 							/>
 						</div>
+
 						<div className="grid grid-cols-4 items-start gap-4">
 							<Label htmlFor="product-partnerships" className="text-right pt-2">
 								Partnerships
@@ -577,7 +608,7 @@ export default function AboutSection({
 							onDelete={() => {
 								deleteCompanyProduct(productInfo.id);
 								const updatedProducts = products.filter(
-									(p) => p.id !== productInfo.id,
+									(p) => p.id != productInfo.id,
 								);
 								setProducts(updatedProducts);
 								setIsEditingProduct(false);
@@ -619,6 +650,20 @@ export default function AboutSection({
 							/>
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
+							<Label htmlFor="new-product-link" className="text-right">
+								Product Link
+							</Label>
+							<Input
+								id="new-product-link"
+								value={newProduct.link}
+								onChange={(e) =>
+									setNewProduct({ ...newProduct, link: e.target.value })
+								}
+								placeholder="https://example.com/product"
+								className="col-span-3"
+							/>
+						</div>
+						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="new-product-market" className="text-right">
 								Market
 							</Label>
@@ -631,6 +676,7 @@ export default function AboutSection({
 								className="col-span-3"
 							/>
 						</div>
+
 						<div className="grid grid-cols-4 items-start gap-4">
 							<Label
 								htmlFor="new-product-partnerships"

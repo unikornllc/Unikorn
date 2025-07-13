@@ -25,7 +25,7 @@ import {
 } from "@/app/_components/_ui/Alert";
 import { Separator } from "@/app/_components/_ui/Separator";
 import Link from "next/link";
-import Navbar from "@/app/_components/_ui/Navbar";
+import LandingNavbar from "@/app/_components/LandingNavbar";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaFacebook } from "react-icons/fa";
@@ -275,7 +275,7 @@ export default function CompanySignUp() {
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-			<Navbar />
+			<LandingNavbar />
 			<div className="container mx-auto px-4 py-20">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}

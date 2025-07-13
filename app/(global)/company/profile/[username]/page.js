@@ -11,10 +11,10 @@ export default async function CompanyPage({ params }) {
 	const include = {
 		// founders: true,
 		// keyEmployees: true,
-		personnel: { include: { user: true } },
+		// personnel: { include: { user: true } },
 		productInformation: true,
 		activities: true,
-		raisingFunds: true,
+		// raisingFunds: true,
 	};
 
 	try {

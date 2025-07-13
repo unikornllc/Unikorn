@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "./Button";
+import { Button } from "./_ui/Button";
 import {
 	Menu,
 	X,
@@ -23,7 +23,7 @@ const navItems = [
 	{ name: "Contact", href: "#contact" },
 ];
 
-export default function Navbar() {
+export default function LandingNavbar() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isScrolled, setIsScrolled] = useState(false);
 	const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
@@ -106,7 +106,12 @@ export default function Navbar() {
 					className="flex items-center space-x-2"
 					onClick={() => setIsMenuOpen(false)}
 				>
-					<Image src="/unikorn_logo2.png" alt="Unikorn Logo" width={40} height={40} />
+					<Image
+						src="/unikorn_logo2.png"
+						alt="Unikorn Logo"
+						width={40}
+						height={40}
+					/>
 					<span className="text-2xl font-bold text-indigo-900">Unikorn</span>
 				</Link>
 

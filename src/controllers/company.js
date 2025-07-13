@@ -12,15 +12,16 @@ const sanitizeData = (model, data) => {
 			return {
 				product: data.product,
 				market: data.market,
+				link: data.link,
 				partnerships: data.partnerships,
 			};
-		case "personnel":
-			return {
-				name: data.name,
-				role: data.role,
-				crunchBaseLink: data.crunchBaseLink,
-				user: data.userId ? { connect: { id: data.userId } } : undefined,
-			};
+		// case "personnel":
+		// 	return {
+		// 		name: data.name,
+		// 		role: data.role,
+		// 		linkedInLink: data.linkedInLink,
+		// 		user: data.userId ? { connect: { id: data.userId } } : undefined,
+		// 	};
 		default:
 			throw new Error("Invalid model type");
 	}
@@ -98,12 +99,12 @@ export const updateCompanyItem = async (req, res) => {
 
 export const updatePersonnel = async (req, res) => {
 	try {
-		const person = req.body.formData;
+		const person = req.body;
 		let userId = null;
 
 		if (person.username && person.username !== "") {
 			const account = await prisma.account.findUnique({
-				where: { id: person.user.id },
+				where: { username: person.username },
 				include: { user: true },
 			});
 
@@ -111,22 +112,51 @@ export const updatePersonnel = async (req, res) => {
 				userId = account.user.id;
 			}
 		}
-		const upsertedPersonnel = await prisma.personnel.upsert({
-			where: { id: person.id || "" },
+		let whereCondition = { id: "" };
+		if (person.id && person.id !== "") {
+			whereCondition = { id: person.id, companyId: req.account.id };
+		}
+		let upsertedPersonnel = await prisma.personnel.upsert({
+			where: whereCondition,
 			create: {
 				name: person.name,
 				role: person.role,
-				crunchBaseLink: person.crunchBaseLink,
+				linkedInLink: person.linkedInLink,
 				user: userId ? { connect: { id: userId } } : undefined,
 				company: { connect: { id: req.account.id } },
 			},
 			update: {
 				name: person.name,
 				role: person.role,
-				crunchBaseLink: person.crunchBaseLink,
+				linkedInLink: person.linkedInLink,
 				user: userId ? { connect: { id: userId } } : undefined,
 			},
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				linkedInLink: true,
+				user: {
+					select: {
+						account: {
+							select: {
+								username: true,
+							},
+						},
+					},
+				},
+				userId: true,
+			},
 		});
+		if (!upsertedPersonnel) {
+			return res.status(401).json({
+				message:
+					"Not authorized to update this personnel or personnel not found.",
+			});
+		}
+		if (upsertedPersonnel?.user) {
+			upsertedPersonnel.username = upsertedPersonnel.user.account.username;
+		}
 
 		res.status(200).json({ personnel: upsertedPersonnel });
 	} catch (error) {
@@ -140,7 +170,7 @@ export const deletePersonnel = async (req, res) => {
 		const deleted = await prisma.personnel.delete({
 			where: {
 				companyId: req.account.id,
-				id: req.body.personnelId,
+				id: req.query.personnelId,
 			},
 		});
 		console.log(deleted);
@@ -220,7 +250,7 @@ export const getCompanyPersonnel = async (req, res) => {
 								id: true,
 								name: true,
 								role: true,
-								crunchBaseLink: true,
+								linkedInLink: true,
 								user: {
 									select: {
 										account: {
