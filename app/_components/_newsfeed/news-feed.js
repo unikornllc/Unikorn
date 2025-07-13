@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import PostCard from "./post-card";
 import { Spinner } from "../_ui/spinner";
-import { fetchPosts } from "@/app/_utils/_api/newsfeedAPIs.js";
+import {
+	fetchPosts,
+	fetchCurrentProfilePosts,
+} from "@/app/_utils/_api/newsfeedAPIs.js";
 import { EmptyState } from "../_ui/EmptyState";
 
-export default function NewsFeed() {
+export default function NewsFeed({ username }) {
 	const [posts, setPosts] = useState([]);
 	const [page, setPage] = useState(1);
 	const [loading, setLoading] = useState(false);
@@ -21,7 +24,9 @@ export default function NewsFeed() {
 		setLoading(true);
 
 		try {
-			const result = await fetchPosts(page);
+			const result = username
+				? await fetchCurrentProfilePosts(username, page)
+				: await fetchPosts(page);
 			const newPosts = Array.isArray(result) ? result : result.posts || [];
 
 			if (newPosts.length === 0) {

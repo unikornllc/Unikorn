@@ -204,6 +204,7 @@ import {
 	createType5Post,
 	createType6Post,
 	getAllPosts,
+  getOneProfilePosts,
 	getComments,
 	likePost,
 	unlikePost,
@@ -440,6 +441,7 @@ router.post("/createType4Post", requireFeaturePermission('POSTING'), createType4
 router.post("/createType5Post", requireFeaturePermission('POSTING'), createType5Post);
 router.post("/createType6Post", requireFeaturePermission('POSTING'), createType6Post);
 router.get("/getAllPosts", getAllPosts);
+router.get("/getOneProfilePosts", getOneProfilePosts);
 router.post("/voteOption", votePoll);
 router.get("/checkUserVote/:pollId", checkUserVote);
 router.get("/post/:postId/comments", getComments);

@@ -21,6 +21,7 @@ model Account {
   following     Follow[]       @relation("follower")
   followedBy    Follow[]       @relation("following")
   file          File[]
+  investment    Investment[]   @relation("AccountInvestments")
 
   //chat relations
   sentMessages           Message[]         @relation("SentMessages")
