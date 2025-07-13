@@ -111,7 +111,6 @@ import {
 	createFundingRound,
 	deleteOneFundingRound,
 	getCompanyFinancialInfo,
-	getCompanyFinancialInfo,
 	getOneFundingRound,
 	getUserInvestments,
 	updateFundingRound,
