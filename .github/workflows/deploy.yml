@@ -1,0 +1,38 @@
+name: Deploy to Droplet
+
+on:
+  push:
+    branches:
+      - deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} << 'EOF'
+            set -e
+
+            echo "🔁 Switching to project directory"
+            cd /opt/unikorn
+
+            echo "📦 Pulling latest code"
+            git pull origin deployment
+
+            echo "🛑 Stopping existing containers"
+            docker compose down
+
+            echo "🚀 Rebuilding and starting containers"
+            docker compose up -d --build
+
+            echo "✅ Deployment completed"
+          EOF
