@@ -641,7 +641,7 @@ export default function Home() {
 								<span className="text-2xl font-bold">Unikorn</span>
 							</div>
 							<p className="text-indigo-200">
-								Connecting innovation with investment opportunities worldwide.
+								Connecting innovation with investment opportunities worldwide
 							</p>
 						</div>
 						<div>
