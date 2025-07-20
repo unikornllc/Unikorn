@@ -42,6 +42,9 @@ model Account {
   pollsVoted  PollVote[]
   reportsMade Report[]   @relation("ReporterAccount")
 
+  //newsfeed relations
+  newsfeed NewsFeed[]
+
   @@index([id])
   @@index([username])
 }

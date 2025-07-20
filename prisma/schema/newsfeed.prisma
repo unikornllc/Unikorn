@@ -1,0 +1,40 @@
+model NewsFeed {
+  id String @id @default(uuid())
+
+  account   Account @relation(fields: [accountId], references: [id])
+  accountId String
+
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+
+  priority      Decimal   @db.Decimal(10, 4)
+  insertedAt    DateTime  @default(now())
+  seenAt        DateTime?
+  feedTimestamp DateTime  @default(now())
+  isNew         Boolean   @default(true)
+
+  cursorKey String?
+  
+  // @@index([accountId, isNew, priority(sort: Desc)], where: { isNew: true })
+
+  //    to create this index it has to be edited manually in migration file
+
+  //    1. prisma migrate dev --create-only
+  //    2.  CREATE INDEX "idx_account_priority_new"
+  //        ON "YourTable" ("accountId", "priority" DESC)
+  //        WHERE "isNew" = true;
+  //    3. prisma migrate dev
+
+  @@unique([accountId, postId])
+  @@index([accountId, priority(sort: Desc), feedTimestamp(sort: Desc), id(sort: Desc)])
+  @@index([accountId, cursorKey(sort: Desc)])
+  @@map("user_newsfeed")
+}
+
+model FeedSession {
+  id              String   @id @default(uuid())
+  accountId       String
+  startedAt       DateTime @default(now())
+  lastCursor      String?
+  minSeenPriority Decimal? @db.Decimal(10, 4)
+}
