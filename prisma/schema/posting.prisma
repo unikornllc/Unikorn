@@ -40,6 +40,9 @@ model Post {
   reposts   Repost[]
   reports   Report[]
 
+  //newsfeed
+  newsfeed NewsFeed[]
+
   @@index([createdAt])
   @@index([id])
   @@index([type, createdAt])

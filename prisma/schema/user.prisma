@@ -31,7 +31,6 @@ enum Tier {
   Standard
 }
 
-
 model User {
   id                    String                  @id @unique @default(uuid())
   account               Account                 @relation(fields: [id], references: [id], onDelete: Cascade)
@@ -62,14 +61,14 @@ model Expertise {
 }
 
 model Education {
-  id          String @id @default(uuid())
-  degree      Degree @default(NONE)
-  institution String
-  startDate   DateTime?
-  endDate     DateTime? 
+  id           String    @id @default(uuid())
+  degree       Degree    @default(NONE)
+  institution  String
+  startDate    DateTime?
+  endDate      DateTime?
   fieldofStudy String?
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
 }
 
 model Interest {
@@ -91,13 +90,13 @@ model CorporateExperience {
 }
 
 model StartupExperience {
-  id          String @id @default(uuid())
+  id          String    @id @default(uuid())
   startupName String
   role        String
   startDate   DateTime?
   endDate     DateTime?
-  description String @db.VarChar(500)
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String    @db.VarChar(500)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 }
 
