@@ -1,0 +1,21 @@
+enum TokenType {
+    INVESTMENT
+    FUNDRAISE
+}
+
+model MonthlyTokens {
+    id                         String   @id @default(uuid())
+    accountId                  String   @unique
+    investmentTokensAvailable  Int
+    fundraisingTokensAvailable Int
+    lastReset                  DateTime
+    account                    Account  @relation(fields: [accountId], references: [id])
+}
+
+model TokensUsageLog {
+    id        String    @id @default(uuid())
+    usedAt    DateTime  @default(now())
+    accountId String
+    tokenType TokenType
+    account   Account   @relation(fields: [accountId], references: [id])
+}
