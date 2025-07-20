@@ -23,6 +23,9 @@ model Account {
   file          File[]
   investment    Investment[]   @relation("AccountInvestments")
 
+  //token relations
+  monthlyTokens          MonthlyTokens?
+  tokensUsageLog         TokensUsageLog[]
   //chat relations
   sentMessages           Message[]         @relation("SentMessages")
   participantIn          ChatParticipant[] // change name 3ashan yahia medaye2

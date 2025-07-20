@@ -12,6 +12,7 @@ enum OfferStatus {
 enum ContractStatus {
   Pending
   Active
+  Negotiating
   Completed
   Failed
 }
